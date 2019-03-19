@@ -6,7 +6,7 @@ OBJS = $(addprefix $(BLD_DIR)/, $(SRCS:.c=.o))
 all: $(BLD_DIR)/libzero.a
 
 $(BLD_DIR)/libzero.a: $(OBJS)
-    $(MAKE_STATIC_LIB)
+	$(MAKE_STATIC_LIB)
 
 $(BLD_DIR)/%.o : %.c
-    $(COMPILE_OBJ)
+	$(COMPILE_OBJ)
