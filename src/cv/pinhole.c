@@ -1,4 +1,4 @@
-#include "zero/pinhole.h"
+#include "zero/cv/pinhole.h"
 
 void pinhole_K(const real_t fx,
                              const real_t fy,

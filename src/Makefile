@@ -1,12 +1,16 @@
 include ../config.mk
 
-SRCS = $(wildcard *.c)
+SRCS = $(wildcard *.c) $(wildcard **/*.c)
 OBJS = $(addprefix $(BLD_DIR)/, $(SRCS:.c=.o))
 
-all: $(BLD_DIR)/libzero.a
+all: dirs $(BLD_DIR)/libzero.a
 
-$(BLD_DIR)/libzero.a: $(OBJS)
-	$(MAKE_STATIC_LIB)
+dirs:
+	@mkdir -p $(BLD_DIR)/cv
+	@mkdir -p $(BLD_DIR)/firmware
 
 $(BLD_DIR)/%.o : %.c
 	$(COMPILE_OBJ)
+
+$(BLD_DIR)/libzero.a: $(OBJS)
+	$(MAKE_STATIC_LIB)

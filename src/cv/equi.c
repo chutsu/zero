@@ -1,4 +1,4 @@
-#include "zero/equi.h"
+#include "zero/cv/equi.h"
 
 void equi4_distort(const real_t k1,
                    const real_t k2,

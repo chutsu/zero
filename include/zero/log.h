@@ -5,9 +5,9 @@
 
 /* DEBUG */
 #ifdef NDEBUG
-  #define debug(M, ...)
+  #define DEBUG(M, ...)
 #else
-  #define debug(M, ...) \
+  #define DEBUG(M, ...) \
       fprintf(stderr, \
           "[DEBUG] %s:%d: " M "\n", \
           __func__, \
@@ -17,19 +17,19 @@
 #endif
 
 /* LOG */
-#define log_err(M, ...) \
+#define LOG_ERROR(M, ...) \
     fprintf(stderr,\
         "[ERROR] [%s] " M "\n",\
         __func__,\
         ##__VA_ARGS__\
     )
-#define log_warn(M, ...) \
+#define LOG_WARN(M, ...) \
     fprintf(stderr, "[WARN] " M "\n", ##__VA_ARGS__)
-#define log_info(M, ...) \
+#define LOG_INFO(M, ...) \
     fprintf(stderr, "[INFO] " M "\n", ##__VA_ARGS__)
 
 /* CHECK */
-#define check(A, M, ...) \
+#define CHECK(A, M, ...) \
     if (!(A)) { \
         log_err(M, ##__VA_ARGS__); \
         goto error; \
