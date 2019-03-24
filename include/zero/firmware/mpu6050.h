@@ -270,4 +270,4 @@ int mpu6050_set_accel_range(const mpu6050_t *imu, const int setting);
  */
 int mpu6050_get_accel_range(const mpu6050_t *imu);
 
-#endif  /* MPU6050_H */
+#endif /* MPU6050_H */

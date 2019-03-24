@@ -138,4 +138,4 @@ void pca9685_set_all_pwm(const pca9685_t *pwm, const int16_t off);
  */
 void pca9685_reset(const pca9685_t *pwm);
 
-#endif  /* PCA9685_H */
+#endif /* PCA9685_H */

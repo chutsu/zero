@@ -311,7 +311,8 @@ int sbgc_disconnect(sbgc_t *sbgc) {
 /*  */
 /*   // Set object board info */
 /*   sbgc->board_version = frame->data[0]; */
-/*   sbgc->firmware_version = (frame->data[2] << 8) | (frame->data[1] & 0xff); */
+/*   sbgc->firmware_version = (frame->data[2] << 8) | (frame->data[1] & 0xff);
+ */
 /*   sbgc->debug_mode = frame->data[3]; */
 /*   sbgc->board_features = (frame->data[5] << 8) | (frame->data[4] & 0xff); */
 /*   sbgc->connection_flags = frame->data[6]; */
@@ -373,9 +374,12 @@ int sbgc_disconnect(sbgc_t *sbgc) {
 /*   sbgc->data.rc_angles(1) = S16BIT(frame->data, 47, 45); */
 /*   sbgc->data.rc_angles(2) = S16BIT(frame->data, 49, 46); */
 /*  */
-/*   sbgc->data.camera_angles(0) = (DEG_PER_BIT) *sbgc->data.camera_angles(0); */
-/*   sbgc->data.camera_angles(1) = (DEG_PER_BIT) *sbgc->data.camera_angles(1); */
-/*   sbgc->data.camera_angles(2) = (DEG_PER_BIT) *sbgc->data.camera_angles(2); */
+/*   sbgc->data.camera_angles(0) = (DEG_PER_BIT) *sbgc->data.camera_angles(0);
+ */
+/*   sbgc->data.camera_angles(1) = (DEG_PER_BIT) *sbgc->data.camera_angles(1);
+ */
+/*   sbgc->data.camera_angles(2) = (DEG_PER_BIT) *sbgc->data.camera_angles(2);
+ */
 /*  */
 /*   sbgc->data.frame_angles(0) = (DEG_PER_BIT) *sbgc->data.frame_angles(0); */
 /*   sbgc->data.frame_angles(1) = (DEG_PER_BIT) *sbgc->data.frame_angles(1); */
@@ -452,9 +456,12 @@ int sbgc_disconnect(sbgc_t *sbgc) {
 /*   sbgc->data.encoder_angles(1) = S16BIT(frame->data, 66, 65); */
 /*   sbgc->data.encoder_angles(2) = S16BIT(frame->data, 68, 67); */
 /*  */
-/*   sbgc->data.camera_angles(0) = (DEG_PER_BIT) *sbgc->data.camera_angles(0); */
-/*   sbgc->data.camera_angles(1) = (DEG_PER_BIT) *sbgc->data.camera_angles(1); */
-/*   sbgc->data.camera_angles(2) = (DEG_PER_BIT) *sbgc->data.camera_angles(2); */
+/*   sbgc->data.camera_angles(0) = (DEG_PER_BIT) *sbgc->data.camera_angles(0);
+ */
+/*   sbgc->data.camera_angles(1) = (DEG_PER_BIT) *sbgc->data.camera_angles(1);
+ */
+/*   sbgc->data.camera_angles(2) = (DEG_PER_BIT) *sbgc->data.camera_angles(2);
+ */
 /*  */
 /*   sbgc->data.frame_angles(0) = (DEG_PER_BIT) *sbgc->data.frame_angles(0); */
 /*   sbgc->data.frame_angles(1) = (DEG_PER_BIT) *sbgc->data.frame_angles(1); */
@@ -464,9 +471,12 @@ int sbgc_disconnect(sbgc_t *sbgc) {
 /*   sbgc->data.rc_angles(1) = (DEG_PER_BIT) *sbgc->data.rc_angles(1); */
 /*   sbgc->data.rc_angles(2) = (DEG_PER_BIT) *sbgc->data.rc_angles(2); */
 /*  */
-/*   sbgc->data.encoder_angles(0) = (DEG_PER_BIT) *sbgc->data.encoder_angles(0); */
-/*   sbgc->data.encoder_angles(1) = (DEG_PER_BIT) *sbgc->data.encoder_angles(1); */
-/*   sbgc->data.encoder_angles(2) = (DEG_PER_BIT) *sbgc->data.encoder_angles(2); */
+/*   sbgc->data.encoder_angles(0) = (DEG_PER_BIT) *sbgc->data.encoder_angles(0);
+ */
+/*   sbgc->data.encoder_angles(1) = (DEG_PER_BIT) *sbgc->data.encoder_angles(1);
+ */
+/*   sbgc->data.encoder_angles(2) = (DEG_PER_BIT) *sbgc->data.encoder_angles(2);
+ */
 /*  */
 /*   // Misc */
 /*   sbgc->data.cycle_time = U16BIT(frame->data, 51, 50); */
@@ -510,17 +520,23 @@ int sbgc_disconnect(sbgc_t *sbgc) {
 /*   sbgc->data.rc_angles(2) = S16BIT(frame->data, 39, 38); */
 /*   sbgc->data.encoder_angles(2) = S16BIT(frame->data, 44, 40); */
 /*  */
-/*   sbgc->data.camera_angles(0) = (DEG_PER_BIT) *sbgc->data.camera_angles(0); */
-/*   sbgc->data.camera_angles(1) = (DEG_PER_BIT) *sbgc->data.camera_angles(1); */
-/*   sbgc->data.camera_angles(2) = (DEG_PER_BIT) *sbgc->data.camera_angles(2); */
+/*   sbgc->data.camera_angles(0) = (DEG_PER_BIT) *sbgc->data.camera_angles(0);
+ */
+/*   sbgc->data.camera_angles(1) = (DEG_PER_BIT) *sbgc->data.camera_angles(1);
+ */
+/*   sbgc->data.camera_angles(2) = (DEG_PER_BIT) *sbgc->data.camera_angles(2);
+ */
 /*  */
 /*   sbgc->data.rc_angles(0) = (DEG_PER_BIT) *sbgc->data.rc_angles(0); */
 /*   sbgc->data.rc_angles(1) = (DEG_PER_BIT) *sbgc->data.rc_angles(1); */
 /*   sbgc->data.rc_angles(2) = (DEG_PER_BIT) *sbgc->data.rc_angles(2); */
 /*  */
-/*   sbgc->data.encoder_angles(0) = (DEG_PER_BIT) *sbgc->data.encoder_angles(0); */
-/*   sbgc->data.encoder_angles(1) = (DEG_PER_BIT) *sbgc->data.encoder_angles(1); */
-/*   sbgc->data.encoder_angles(2) = (DEG_PER_BIT) *sbgc->data.encoder_angles(2); */
+/*   sbgc->data.encoder_angles(0) = (DEG_PER_BIT) *sbgc->data.encoder_angles(0);
+ */
+/*   sbgc->data.encoder_angles(1) = (DEG_PER_BIT) *sbgc->data.encoder_angles(1);
+ */
+/*   sbgc->data.encoder_angles(2) = (DEG_PER_BIT) *sbgc->data.encoder_angles(2);
+ */
 /*  */
 /*   // sbgc_realtime_data_print(sbgc->data); */
 /*  */

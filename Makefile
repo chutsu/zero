@@ -6,5 +6,8 @@ all: dirs
 dirs:
 	@mkdir -p build
 
+format_code:
+	@bash scripts/format_code.bash
+
 clean:
 	@rm -rf build

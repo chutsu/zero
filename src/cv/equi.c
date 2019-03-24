@@ -26,11 +26,11 @@ void equi4_distort(const real_t k1,
 }
 
 void equi4_point_jacobian(const real_t k1,
-                                const real_t k2,
-                                const real_t k3,
-                                const real_t k4,
-                                const pt2_t p,
-                                mat4_t *J_point) {
+                          const real_t k2,
+                          const real_t k3,
+                          const real_t k4,
+                          const pt2_t p,
+                          mat4_t *J_point) {
   const real_t x = p[0];
   const real_t y = p[1];
   const real_t r = sqrt(x * x + y * y);
@@ -43,7 +43,8 @@ void equi4_point_jacobian(const real_t k1,
   const real_t thd = th * (1.0 + k1 * th2 + k2 * th4 + k3 * th6 + k4 * th8);
 
   const real_t th_r = 1.0 / (r * r + 1.0);
-  const real_t thd_th = 1.0 + 3.0 * k1 * th2 + 5.0 * k2 * th4 + 7.0 * k3 * th6 + 9.0 * k4 * th8;
+  const real_t thd_th =
+      1.0 + 3.0 * k1 * th2 + 5.0 * k2 * th4 + 7.0 * k3 * th6 + 9.0 * k4 * th8;
   const real_t s = thd / r;
   const real_t s_r = thd_th * th_r / r - thd / (r * r);
   const real_t r_x = 1.0 / r * x;
@@ -56,11 +57,11 @@ void equi4_point_jacobian(const real_t k1,
 }
 
 void equi4_param_jacobian(const real_t k1,
-                                const real_t k2,
-                                const real_t k3,
-                                const real_t k4,
-                                const pt2_t p,
-                                mat_t *J_param) {
+                          const real_t k2,
+                          const real_t k3,
+                          const real_t k4,
+                          const pt2_t p,
+                          mat_t *J_param) {
   const real_t x = p[0];
   const real_t y = p[1];
   const real_t r = sqrt(x * x + y * y);
@@ -72,8 +73,8 @@ void equi4_param_jacobian(const real_t k1,
   const real_t th7 = th5 * th2;
   const real_t th9 = th7 * th2;
 
-    assert(J_param->rows == 2);
-    assert(J_param->cols == 4);
+  assert(J_param->rows == 2);
+  assert(J_param->cols == 4);
   J_param->data[0] = x * th3 / r;
   J_param->data[1] = x * th5 / r;
   J_param->data[2] = x * th7 / r;

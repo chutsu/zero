@@ -2,7 +2,7 @@
 
 int i2c_init(i2c_t *i2c) {
   /* Setup */
-  int adapter_nr = 1;  /* Probably dynamically determined */
+  int adapter_nr = 1; /* Probably dynamically determined */
   char filename[20];
   memset(filename, '\0', sizeof(char) * 20);
   snprintf(filename, 19, "/dev/i2c-%d", adapter_nr);

@@ -87,7 +87,7 @@ int mpu6050_get_data(mpu6050_t *imu) {
   }
 
   /* Accelerometer */
-  const double g = 9.81;  /* Gravitational constant */
+  const double g = 9.81; /* Gravitational constant */
   const int raw_x = (raw_data[0] << 8) | (raw_data[1]);
   const int raw_y = (raw_data[2] << 8) | (raw_data[3]);
   const int raw_z = (raw_data[4] << 8) | (raw_data[5]);
