@@ -6,3 +6,5 @@ set -e
 # make clean
 # make format_code
 make
+
+./bin/test_core

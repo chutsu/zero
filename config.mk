@@ -1,11 +1,15 @@
 BIN_DIR=$(PWD)/bin
 BLD_DIR=$(PWD)/build
 INC_DIR=$(PWD)/include
+DEP_DIR=$(PWD)/dep
+TESTS_DIR=$(PWD)/tests
 
 # COMPILER SETTINGS
 CC=gcc -Wall -g
 CFLAGS=-I$(INC_DIR)
-LIBS=-lm
+LIBS=-L$(BLD_DIR) \
+		 -lzero \
+		 -lm
 
 # ARCHIVER SETTTINGS
 AR = ar
@@ -19,12 +23,15 @@ COMPILE_OBJ = \
 MAKE_STATIC_LIB = \
 	$(AR) $(ARFLAGS) $@ $^
 
-# MAKE_TEST = \
-# 	echo "TEST [${@:.o=}]"; \
-# 	$(CC) $(CFLAGS) -c ${@:.o=.cpp} -o $@; \
-# 	$(CC) $(CFLAGS) $@ \
-# 		-o $(addprefix $(BIN_DIR)/, ${@:.o=}) \
-# 		-L. $(LIBS)
+COMPILE_TEST_OBJ = \
+	$(CC) $(CFLAGS) -c $< -o $@
+
+MAKE_TEST = \
+	echo "TEST [$@]"; \
+	$(CC) $(CFLAGS) \
+		$(subst $(BIN_DIR), $(BLD_DIR), $@.o) \
+		-o $@ \
+		$(LIBS)
 
 # MAKE_EXE = \
 # 	@echo "EXE [$@]"; \
