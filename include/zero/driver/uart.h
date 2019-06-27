@@ -1,5 +1,5 @@
-#ifndef UART_H
-#define UART_H
+#ifndef ZERO_DRIVER_UART_H
+#define ZERO_DRIVER_UART_H
 
 #include <errno.h>
 #include <fcntl.h>
@@ -57,4 +57,4 @@ int uart_configure(const uart_t *uart, const int speed, const int parity);
  */
 int uart_set_blocking(const uart_t *uart, const int blocking);
 
-#endif /* UART_H */
+#endif /* ZERO_DRIVER_UART_H */

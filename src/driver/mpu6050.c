@@ -1,4 +1,4 @@
-#include "zero/firmware/mpu6050.h"
+#include "zero/driver/mpu6050.h"
 
 /* int mpu6050_configure(mpu6050_t *imu, const std::string &config_file) { */
 /*   int retval = 0; */

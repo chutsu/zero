@@ -1,4 +1,4 @@
-#include "zero/firmware/i2c.h"
+#include "zero/driver/i2c.h"
 
 int i2c_init(i2c_t *i2c) {
   /* Setup */

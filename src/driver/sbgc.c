@@ -1,4 +1,4 @@
-#include "zero/firmware/sbgc.h"
+#include "zero/driver/sbgc.h"
 
 void sbgc_frame_print(const sbgc_frame_t *frame) {
   int i;

@@ -1,4 +1,4 @@
-#include "zero/firmware/pca9685.h"
+#include "zero/driver/pca9685.h"
 
 int pca9685_configure(pca9685_t *pwm, const int freq) {
   /* Setup */

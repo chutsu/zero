@@ -1,5 +1,5 @@
-#ifndef SBGC_H
-#define SBGC_H
+#ifndef ZERO_DRIVER_SBGC_H
+#define ZERO_DRIVER_SBGC_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -190,4 +190,4 @@ int sbgc_disconnect(sbgc_t *sbgc);
 //                          const double roll_speed,
 //                          const double pitch_speed,
 //                          const double yaw_speed);
-#endif // SBGC_H
+#endif /* ZERO_DRIVER_SBGC_H */

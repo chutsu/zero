@@ -1,5 +1,5 @@
-#ifndef I2C_H
-#define I2C_H
+#ifndef ZERO_DRIVER_I2C_H
+#define ZERO_DRIVER_I2C_H
 
 #include <errno.h>
 #include <fcntl.h>
@@ -36,4 +36,4 @@ int i2c_write_bytes(const i2c_t *i2c,
                     const char *data,
                     const size_t length);
 
-#endif /* I2C_H */
+#endif /* ZERO_DRIVER_I2C_H */

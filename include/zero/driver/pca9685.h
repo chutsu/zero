@@ -1,10 +1,10 @@
-#ifndef PCA9685_H
-#define PCA9685_H
+#ifndef ZERO_DRIVER_PCA9685_H
+#define ZERO_DRIVER_PCA9685_H
 
 #include <math.h>
 #include <unistd.h>
 
-#include "zero/firmware/i2c.h"
+#include "zero/driver/i2c.h"
 
 /* REGISTERS */
 #define PCA9685_MODE1 0x00
@@ -138,4 +138,4 @@ void pca9685_set_all_pwm(const pca9685_t *pwm, const int16_t off);
  */
 void pca9685_reset(const pca9685_t *pwm);
 
-#endif /* PCA9685_H */
+#endif /* ZERO_DRIVER_PCA9685_H */

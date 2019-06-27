@@ -7,7 +7,7 @@ all: dirs $(BLD_DIR)/libzero.a
 
 dirs:
 	@mkdir -p $(BLD_DIR)/cv
-	@mkdir -p $(BLD_DIR)/firmware
+	@mkdir -p $(BLD_DIR)/driver
 
 $(BLD_DIR)/%.o : %.c
 	$(COMPILE_OBJ)

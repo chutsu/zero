@@ -1,12 +1,12 @@
-#ifndef MPU6050_H
-#define MPU6050_H
+#ifndef ZERO_DRIVER_MPU6050_H
+#define ZERO_DRIVER_MPU6050_H
 
 #include <math.h>
 #include <time.h>
 
 #include "zero/log.h"
 #include "zero/core.h"
-#include "zero/firmware/i2c.h"
+#include "zero/driver/i2c.h"
 
 // GENERAL
 #define MPU6050_ADDRESS 0x68
@@ -270,4 +270,4 @@ int mpu6050_set_accel_range(const mpu6050_t *imu, const int setting);
  */
 int mpu6050_get_accel_range(const mpu6050_t *imu);
 
-#endif /* MPU6050_H */
+#endif /* ZERO_DRIVER_MPU6050_H */
