@@ -34,12 +34,6 @@ typedef struct mat_t {
 real_t deg2rad(const real_t d);
 real_t rad2deg(const real_t r);
 
-real_t *mat_new(const size_t rows, const size_t cols, const real_t *data);
-void mat_free(real_t *m);
-
-real_t *vec_new(const size_t length, const real_t *data);
-void vec_free(real_t *m);
-
 void print_matrix(const char *prefix, const real_t *data,
                   const size_t rows, const size_t cols);
 void print_vector(const char *prefix, const real_t *data, const size_t length);

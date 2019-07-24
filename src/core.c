@@ -4,44 +4,6 @@ real_t deg2rad(const real_t d) { return d * (M_PI / 180.0); }
 
 real_t rad2deg(const real_t r) { return r * (180.0 / M_PI); }
 
-real_t *mat_new(const size_t rows, const size_t cols, const real_t *data) {
-  real_t *m = calloc(rows * cols, sizeof(real_t));
-
-  if (m != NULL) {
-    size_t idx = 0;
-    for (size_t i = 0; i < rows; i++) {
-      for (size_t j = 0; j < cols; j++) {
-        m[idx] = data[idx];
-        idx++;
-      }
-    }
-  }
-
-  return m;
-}
-
-void mat_free(real_t *m) {
-  free(m);
-}
-
-real_t *vec_new(const size_t length, const real_t *data) {
-  real_t *v = calloc(length, sizeof(real_t));
-
-  if (v != NULL) {
-    size_t idx = 0;
-    for (size_t i = 0; i < length; i++) {
-      v[idx] = data[idx];
-      idx++;
-    }
-  }
-
-  return v;
-}
-
-void vec_free(real_t *v) {
-  free(v);
-}
-
 void print_matrix(const char *prefix, const real_t *data,
                   const size_t rows, const size_t cols) {
   assert(prefix != NULL);

@@ -210,60 +210,70 @@ int ubx_parser_update(ubx_parser_t *parser, uint8_t data) {
   return 0;
 }
 
-/* #<{(|**************************************************************************** */
-/*  * RTCM3 Stream Parser */
-/*  ***************************************************************************|)}># */
-/*  */
-/* rtcm3_parser_t::rtcm3_parser_t() {} */
-/*  */
-/* void rtcm3_parser_reset(rtcm3_parser_t &parser) { */
-/*   for (size_t i = 0; i < 9046; i++) { */
-/*     parser.buf_data[i] = 0; */
-/*   } */
-/*   parser.buf_pos = 0; */
-/*   parser.msg_len = 0; */
-/* } */
-/*  */
-/* int rtcm3_parser_update(rtcm3_parser_t &parser, uint8_t data) { */
-/*   // Add byte to buffer */
-/*   parser.buf_data[parser.buf_pos] = data; */
-/*  */
-/*   // Parse message */
-/*   if (parser.buf_data[0] != 0xD3) { */
-/*     rtcm3_parser_reset(parser); */
-/*   } else if (parser.buf_pos == 1) { */
-/*     // Get the last two bits of this byte. Bits 8 and 9 of 10-bit length */
-/*     parser.msg_len = (data & 0x03) << 8; */
-/*   } else if (parser.buf_pos == 2) { */
-/*     parser.msg_len |= data; // Bits 0-7 of packet length */
-/*     parser.msg_len += 6; */
-/*     // There are 6 additional bytes of what we presume is */
-/*     // header, msgType, CRC, and stuff */
-/*   } else if (parser.buf_pos == 3) { */
-/*     parser.msg_type = data << 4; // Message Type, most significant 4 bits */
-/*   } else if (parser.buf_pos == 4) { */
-/*     parser.msg_type |= (data >> 4); // Message Type, bits 0-7 */
-/*   } */
-/*   parser.buf_pos++; */
-/*  */
-/*   // Check if end of message */
-/*   if (parser.buf_pos == parser.msg_len) { */
-/*     return 1; */
-/*   } */
-/*  */
-/*   return 0; */
-/* } */
-/*  */
-/* #<{(|**************************************************************************** */
-/*  * Ublox */
-/*  ***************************************************************************|)}># */
-/*  */
+/*****************************************************************************
+ * RTCM3 Stream Parser
+ ****************************************************************************/
+
+void rtcm3_parser_init(rtcm3_parser_t *parser) {
+  for (size_t i = 0; i < 9046; i++) {
+    parser->buf_data[i] = 0;
+  }
+  parser->buf_pos = 0;
+  parser->msg_len = 0;
+}
+
+int rtcm3_parser_update(rtcm3_parser_t *parser, uint8_t data) {
+  // Add byte to buffer
+  parser->buf_data[parser->buf_pos] = data;
+
+  // Parse message
+  if (parser->buf_data[0] != 0xD3) {
+    rtcm3_parser_init(parser);
+  } else if (parser->buf_pos == 1) {
+    // Get the last two bits of this byte. Bits 8 and 9 of 10-bit length
+    parser->msg_len = (data & 0x03) << 8;
+  } else if (parser->buf_pos == 2) {
+    parser->msg_len |= data; // Bits 0-7 of packet length
+    parser->msg_len += 6;
+    // There are 6 additional bytes of what we presume is
+    // header, msgType, CRC, and stuff
+  } else if (parser->buf_pos == 3) {
+    parser->msg_type = data << 4; // Message Type, most significant 4 bits
+  } else if (parser->buf_pos == 4) {
+    parser->msg_type |= (data >> 4); // Message Type, bits 0-7
+  }
+  parser->buf_pos++;
+
+  // Check if end of message
+  if (parser->buf_pos == parser->msg_len) {
+    return 1;
+  }
+
+  return 0;
+}
+
+/*****************************************************************************
+ * Ublox
+ ****************************************************************************/
+
+void ublox_init(ublox_t *ublox, const char *port, const int speed) {
+  ublox->ok = 0;
+
+  /* ublox->uart = ; */
+  ublox->sockfd = -1;
+  /* std::vector<int> conns; */
+
+  /* ublox->msg_type = ""; // Current msg type */
+  ubx_parser_init(&ublox->ubx_parser);
+  rtcm3_parser_init(&ublox->rtcm3_parser);
+}
+
 /* ublox_t::ublox_t(const std::string &port, const int speed) { */
 /*   uart = uart_t{port, speed}; */
 /* } */
-/*  */
+
 /* ublox_t::ublox_t(const uart_t &uart_) : uart{uart_} { ok = 1; } */
-/*  */
+
 /* ublox_t::~ublox_t() { */
 /*   if (uart.connection != -1 && uart_disconnect(uart)) { */
 /*     LOG_ERROR("Failed to disconnect from serial"); */
@@ -271,17 +281,26 @@ int ubx_parser_update(ubx_parser_t *parser, uint8_t data) {
 /*     ok = false; */
 /*   } */
 /* } */
-/*  */
-/* int ublox_connect(ublox_t &ublox) { */
-/*   if (uart_connect(ublox.uart) != 0) { */
-/*     return -1; */
-/*   } */
-/*  */
-/*   ublox.ok = 1; */
-/*   return 0; */
-/* } */
-/*  */
-/* int ubx_write(const ublox_t &ublox, */
+
+int ublox_connect(ublox_t *ublox) {
+  if (uart_connect(&ublox->uart) != 0) {
+    return -1;
+  }
+  ublox->ok = 1;
+  return 0;
+}
+
+int ublox_disconnect(ublox_t *ublox) {
+  if (ublox->uart.connection != -1 && uart_disconnect(&ublox->uart)) {
+    LOG_ERROR("Failed to disconnect from serial");
+    return -1;
+  }
+
+  ublox->ok = 0;
+  return 0;
+}
+
+/* int ubx_write(const ublox_t *ublox, */
 /*               uint8_t msg_class, */
 /*               uint8_t msg_id, */
 /*               uint16_t length, */
@@ -293,14 +312,14 @@ int ubx_parser_update(ubx_parser_t *parser, uint8_t data) {
 /*   ubx_msg_serialize(msg, frame, frame_size); */
 /*  */
 /*   // Transmit msg */
-/*   if (uart_write(ublox.uart, frame, frame_size) != 0) { */
+/*   if (uart_write(ublox->uart, frame, frame_size) != 0) { */
 /*     LOG_ERROR("Failed to send data to UART!"); */
 /*     return -1; */
 /*   } */
 /*  */
 /*   return 0; */
 /* } */
-/*  */
+
 /* int ubx_poll(const ublox_t &ublox, */
 /*              const uint8_t msg_class, */
 /*              const uint8_t msg_id, */

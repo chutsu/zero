@@ -681,78 +681,81 @@ void ubx_parser_init(ubx_parser_t *parser);
 void ubx_parser_reset(ubx_parser_t *parser);
 int ubx_parser_update(ubx_parser_t *parser, uint8_t data);
 
-/* #<{(|**************************************************************************** */
-/*  * RTCM3 Stream Parser */
-/*  ***************************************************************************|)}># */
-/*  */
-/* #<{(|* */
-/*  * RTCM3 Stream Parser */
-/*  |)}># */
-/* struct rtcm3_parser_t { */
-/*   uint8_t buf_data[9046] = {0}; */
-/*   size_t buf_pos = 0; */
-/*   size_t msg_len = 0; */
-/*   size_t msg_type = 0; */
-/*  */
-/*   rtcm3_parser_t(); */
-/* }; */
-/*  */
-/* void rtcm3_parser_reset(rtcm3_parser_t &parser); */
-/*  */
-/* #<{(|* */
-/*  * RTCM 3.2 Frame */
-/*  * -------------- */
-/*  * Byte 0: Always 0xD3 */
-/*  * Byte 1: 6-bits of zero */
-/*  * Byte 2: 10-bits of length of this packet including the first two-ish header */
-/*  *         bytes, + 6. */
-/*  * byte 3 + 4: Msg type 12 bits */
-/*  * */
-/*  * Example [Msg type 1087]: */
-/*  * */
-/*  *   D3 00 7C 43 F0 ... */
-/*  * */
-/*  * Where 0x7C is the payload size = 124 */
-/*  * = 124 + 6 [header] */
-/*  * = 130 total bytes in this packet */
-/*  |)}># */
-/* int rtcm3_parser_update(rtcm3_parser_t &parser, uint8_t data); */
-/*  */
-/* #<{(|**************************************************************************** */
-/*  * UBlox */
-/*  ***************************************************************************|)}># */
-/*  */
-/* #<{(|* */
-/*  * UBlox */
-/*  |)}># */
-/* struct ublox_t { */
-/*   bool ok = false; */
-/*  */
-/*   uart_t uart; */
-/*   int sockfd = -1; */
-/*   std::vector<int> conns; */
-/*  */
-/*   std::string msg_type = ""; // Current msg type */
-/*   ubx_parser_t ubx_parser; */
-/*   rtcm3_parser_t rtcm3_parser; */
-/*  */
-/*   std::function<void(ublox_t &ublox)> nav_dop_cb = nullptr; */
-/*   std::function<void(ublox_t &ublox)> nav_eoe_cb = nullptr; */
-/*   std::function<void(ublox_t &ublox)> nav_hpposllh_cb = nullptr; */
-/*   std::function<void(ublox_t &ublox)> nav_pvt_cb = nullptr; */
-/*   std::function<void(ublox_t &ublox)> nav_svin_cb = nullptr; */
-/*   std::function<void(ublox_t &ublox)> nav_status_cb = nullptr; */
-/*   std::function<void(ublox_t &ublox)> nav_velned_cb = nullptr; */
-/*   std::function<void(ublox_t &ublox)> mon_rf_cb = nullptr; */
-/*   std::function<void(ublox_t &ublox)> rxm_rtcm_cb = nullptr; */
-/*  */
-/*   ublox_t(const std::string &port = "/dev/ttyACM0", const int speed = B57600); */
-/*   ublox_t(const uart_t &uart); */
-/*   ~ublox_t(); */
-/* }; */
-/*  */
-/* int ublox_connect(ublox_t &ublox); */
-/*  */
+/*****************************************************************************
+ * RTCM3 Stream Parser
+ ****************************************************************************/
+
+/**
+ * RTCM3 Stream Parser
+ */
+typedef struct rtcm3_parser_t {
+  /* uint8_t buf_data[9046] = {0}; */
+  /* size_t buf_pos = 0; */
+  /* size_t msg_len = 0; */
+  /* size_t msg_type = 0; */
+  uint8_t buf_data[9046];
+  size_t buf_pos;
+  size_t msg_len;
+  size_t msg_type;
+} rtcm3_parser_t;
+
+void rtcm3_parser_init(rtcm3_parser_t *parser);
+
+/**
+ * RTCM 3.2 Frame
+ * --------------
+ * Byte 0: Always 0xD3
+ * Byte 1: 6-bits of zero
+ * Byte 2: 10-bits of length of this packet including the first two-ish header
+ *         bytes, + 6.
+ * byte 3 + 4: Msg type 12 bits
+ *
+ * Example [Msg type 1087]:
+ *
+ *   D3 00 7C 43 F0 ...
+ *
+ * Where 0x7C is the payload size = 124
+ * = 124 + 6 [header]
+ * = 130 total bytes in this packet
+ */
+int rtcm3_parser_update(rtcm3_parser_t *parser, uint8_t data);
+
+/*****************************************************************************
+ * UBlox
+ ****************************************************************************/
+
+/**
+ * UBlox
+ */
+typedef struct ublox_t {
+  uint8_t ok;
+
+  uart_t uart;
+  int sockfd;
+  /* std::vector<int> conns; */
+
+  char *msg_type; // Current msg type
+  ubx_parser_t ubx_parser;
+  rtcm3_parser_t rtcm3_parser;
+
+  /* std::function<void(ublox_t &ublox)> nav_dop_cb = nullptr; */
+  /* std::function<void(ublox_t &ublox)> nav_eoe_cb = nullptr; */
+  /* std::function<void(ublox_t &ublox)> nav_hpposllh_cb = nullptr; */
+  /* std::function<void(ublox_t &ublox)> nav_pvt_cb = nullptr; */
+  /* std::function<void(ublox_t &ublox)> nav_svin_cb = nullptr; */
+  /* std::function<void(ublox_t &ublox)> nav_status_cb = nullptr; */
+  /* std::function<void(ublox_t &ublox)> nav_velned_cb = nullptr; */
+  /* std::function<void(ublox_t &ublox)> mon_rf_cb = nullptr; */
+  /* std::function<void(ublox_t &ublox)> rxm_rtcm_cb = nullptr; */
+
+  /* ublox_t(const std::string &port = "/dev/ttyACM0", const int speed = B57600); */
+  /* ublox_t(const uart_t &uart); */
+  /* ~ublox_t(); */
+} ublox_t;
+
+int ublox_connect(ublox_t *ublox);
+int ublox_disconnect(ublox_t *ublox);
+
 /* int ubx_write(const ublox_t &ublox, */
 /*               uint8_t msg_class, */
 /*               uint8_t msg_id, */
