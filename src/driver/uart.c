@@ -1,6 +1,6 @@
 #include "zero/driver/uart.h"
 
-int uart_connect(uart_t *uart) {
+int8_t uart_connect(uart_t *uart) {
   uart->speed = 0;
   uart->parity = 0;
   uart->blocking = 1;
@@ -14,7 +14,7 @@ int uart_connect(uart_t *uart) {
   return 0;
 }
 
-int uart_disconnect(uart_t *uart) {
+int8_t uart_disconnect(uart_t *uart) {
   if (close(uart->connection) != 0) {
     return -1;
   }
@@ -24,7 +24,7 @@ int uart_disconnect(uart_t *uart) {
   return 0;
 }
 
-int uart_configure(const uart_t *uart, const int speed, const int parity) {
+int8_t uart_configure(const uart_t *uart, const int speed, const int parity) {
   // Setup
   struct termios tty;
   memset(&tty, 0, sizeof(tty));
@@ -62,7 +62,7 @@ int uart_configure(const uart_t *uart, const int speed, const int parity) {
   return 0;
 }
 
-int uart_set_blocking(const uart_t *uart, const int blocking) {
+int8_t uart_set_blocking(const uart_t *uart, const int blocking) {
   // Setup
   struct termios tty;
   memset(&tty, 0, sizeof(tty));

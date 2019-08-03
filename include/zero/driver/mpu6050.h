@@ -125,11 +125,8 @@
 #define MPU6050_RA_FIFO_R_W 0x74
 #define MPU6050_RA_WHO_AM_I 0x75
 
-/**
- * Invensense MPU6050 I2C Driver
- */
 typedef struct mpu6050_t {
-  int ok;
+  int8_t ok;
   i2c_t *i2c;
 
   real_t accel_sensitivity;
@@ -143,22 +140,28 @@ typedef struct mpu6050_t {
   clock_t last_updated;
 } mpu6050_t;
 
-// /**
-//  * Configure
-//  *
-//  * @param[in,out] imu IMU
-//  * @param[in] config_file Path to configuration file
-//  * @returns 0 for success, -1 for failure
-//  */
-// int mpu6050_configure(mpu6050_t *imu, const std::string &config_file);
+typedef struct mpu6050_config_t {
+  uint8_t dplf;
+  uint8_t gyro_range;
+  uint8_t accel_range;
+} mpu6050_config_t;
+
+/**
+ * Configure
+ *
+ * @param[in,out] imu IMU
+ * @param config_file Path to configuration file
+ * @returns 0 for success, -1 for failure
+ */
+int8_t mpu6050_init(mpu6050_t *imu, const mpu6050_config_t *config);
 
 /**
  * Ping
  *
- * @param[in] imu IMU
+ * @param imu IMU
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_ping(const mpu6050_t *imu);
+int8_t mpu6050_ping(const mpu6050_t *imu);
 
 /**
  * Get IMU data
@@ -166,7 +169,7 @@ int mpu6050_ping(const mpu6050_t *imu);
  * @param[in,out] imu IMU
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_get_data(mpu6050_t *imu);
+int8_t mpu6050_get_data(mpu6050_t *imu);
 
 /**
  * Set DPLF
@@ -197,77 +200,79 @@ int mpu6050_get_data(mpu6050_t *imu);
  * 7           RESERVED        RESERVED    8
  * ```
  *
- * @param[in] imu IMU
- * @param[in] setting
+ * @param imu IMU
+ * @param setting
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_set_dplf(const mpu6050_t *imu, const int setting);
+int8_t mpu6050_set_dplf(const mpu6050_t *imu, const uint8_t setting);
 
 /**
  * Get DPLF
  *
- * @param[in] imu IMU
+ * @param imu IMU
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_get_dplf(const mpu6050_t *imu);
+int8_t mpu6050_get_dplf(const mpu6050_t *imu);
 
 /**
  * Set sample rate division
  *
- * @param[in] imu IMU
- * @param[in] setting Setting
+ * @param imu IMU
+ * @param div Setting
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_set_sample_rate_div(const mpu6050_t *imu, const int setting);
+int8_t mpu6050_set_sample_rate_div(const mpu6050_t *imu, const int8_t setting);
 
 /**
  * Get sample rate division
  *
- * @param[in] imu IMU
+ * @param imu IMU
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_get_sample_rate_div(const mpu6050_t *imu);
+int8_t mpu6050_get_sample_rate_div(const mpu6050_t *imu);
 
 /**
  * Get sample rate
  *
- * @param[in] imu IMU
+ * @param imu IMU
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_get_sample_rate(const mpu6050_t *imu);
+int8_t mpu6050_get_sample_rate(const mpu6050_t *imu);
 
 /**
  * Set gyro range
  *
- * @param[in] imu IMU
- * @param[in] setting Setting
+ * @param imu IMU
+ * @param range Range
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_set_gyro_range(const mpu6050_t *imu, const int setting);
+int8_t mpu6050_set_gyro_range(const mpu6050_t *imu, const int8_t range);
 
 /**
- * Set gyro range
+ * Get gyro range
  *
- * @param[in] imu IMU
+ * @param imu IMU
+ * @param range Range
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_get_gyro_range(const mpu6050_t *imu);
+int8_t mpu6050_get_gyro_range(const mpu6050_t *imu, int8_t *range);
 
 /**
  * Set accelerometer range
  *
- * @param[in] imu IMU
- * @param[in] setting Setting
+ * @param imu IMU
+ * @param range Range
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_set_accel_range(const mpu6050_t *imu, const int setting);
+int8_t mpu6050_set_accel_range(const mpu6050_t *imu, const int8_t setting);
 
 /**
  * Get accelerometer range
  *
- * @param[in] imu IMU
+ * @param imu IMU
+ * @param range Range
  * @returns 0 for success, -1 for failure
  */
-int mpu6050_get_accel_range(const mpu6050_t *imu);
+int8_t mpu6050_get_accel_range(const mpu6050_t *imu, int8_t *range);
 
 #endif /* ZERO_DRIVER_MPU6050_H */

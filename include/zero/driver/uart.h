@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#include <stdint.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -28,7 +29,7 @@ typedef struct uart_t {
  * @param[in,out] uart UART
  * @returns 0 or -1 for success or failure
  */
-int uart_connect(uart_t *uart);
+int8_t uart_connect(uart_t *uart);
 
 /**
  * Disconnect
@@ -36,7 +37,7 @@ int uart_connect(uart_t *uart);
  * @param[in,out] uart UART
  * @returns 0 or -1 for success or failure
  */
-int uart_disconnect(uart_t *uart);
+int8_t uart_disconnect(uart_t *uart);
 
 /**
  * Set interface attributes
@@ -46,7 +47,7 @@ int uart_disconnect(uart_t *uart);
  * @param[in] parity UART parity
  * @returns 0 or -1 for success or failure
  */
-int uart_configure(const uart_t *uart, const int speed, const int parity);
+int8_t uart_configure(const uart_t *uart, const int speed, const int parity);
 
 /**
  * Set blocking
@@ -55,6 +56,6 @@ int uart_configure(const uart_t *uart, const int speed, const int parity);
  * @param[in] blocking Blocking
  * @returns 0 or -1 for success or failure
  */
-int uart_set_blocking(const uart_t *uart, const int blocking);
+int8_t uart_set_blocking(const uart_t *uart, const int blocking);
 
 #endif /* ZERO_DRIVER_UART_H */

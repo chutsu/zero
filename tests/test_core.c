@@ -1,7 +1,6 @@
 #include "zero/munit.h"
 #include "zero/core.h"
 
-
 int test_eye() {
   real_t A[25] = {0.0};
   eye(A, 5, 5);

@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <sys/poll.h>
 
+#include "zero/core.h"
 #include "zero/driver/uart.h"
 /* #include "zero/comm/tcp.hpp" */
 
@@ -216,6 +217,14 @@ typedef struct ubx_msg_t {
 
 } ubx_msg_t;
 
+void ubx_msg_init(ubx_msg_t *msg);
+void ubx_msg_checksum(const uint8_t msg_class,
+                      const uint8_t msg_id,
+                      const uint16_t payload_length,
+                      const uint8_t *payload,
+                      uint8_t *ck_a,
+                      uint8_t *ck_b);
+uint8_t ubx_msg_is_valid(const ubx_msg_t *msg);
 void ubx_msg_build(ubx_msg_t *msg,
                    const uint8_t msg_class,
                    const uint8_t msg_id,
@@ -225,13 +234,6 @@ void ubx_msg_parse(ubx_msg_t *msg, const uint8_t *data);
 void ubx_msg_serialize(const ubx_msg_t *msg,
                        uint8_t *frame,
                        size_t *frame_size);
-void ubx_msg_checksum(const uint8_t msg_class,
-                      const uint8_t msg_id,
-                      const uint16_t payload_length,
-                      const uint8_t *payload,
-                      uint8_t *ck_a,
-                      uint8_t *ck_b);
-uint8_t ubx_msg_is_valid(const ubx_msg_t *msg);
 void ubx_msg_print(const ubx_msg_t *msg);
 
 /* #<{(|* */
@@ -671,7 +673,7 @@ void ubx_msg_print(const ubx_msg_t *msg);
  * UBX Stream Parser
  */
 typedef struct ubx_parser_t {
-  int state;
+  uint8_t state;
   uint8_t buf_data[9046];
   size_t buf_pos;
   ubx_msg_t msg;
@@ -689,10 +691,6 @@ int ubx_parser_update(ubx_parser_t *parser, uint8_t data);
  * RTCM3 Stream Parser
  */
 typedef struct rtcm3_parser_t {
-  /* uint8_t buf_data[9046] = {0}; */
-  /* size_t buf_pos = 0; */
-  /* size_t msg_len = 0; */
-  /* size_t msg_type = 0; */
   uint8_t buf_data[9046];
   size_t buf_pos;
   size_t msg_len;
@@ -700,6 +698,7 @@ typedef struct rtcm3_parser_t {
 } rtcm3_parser_t;
 
 void rtcm3_parser_init(rtcm3_parser_t *parser);
+void rtcm3_parser_reset(rtcm3_parser_t *parser);
 
 /**
  * RTCM 3.2 Frame
@@ -756,29 +755,29 @@ typedef struct ublox_t {
 int ublox_connect(ublox_t *ublox);
 int ublox_disconnect(ublox_t *ublox);
 
-/* int ubx_write(const ublox_t &ublox, */
-/*               uint8_t msg_class, */
-/*               uint8_t msg_id, */
-/*               uint16_t length, */
-/*               uint8_t *payload); */
-/* int ubx_poll(const ublox_t &ublox, */
-/*              const uint8_t msg_class, */
-/*              const uint8_t msg_id, */
-/*              uint16_t &payload_length, */
-/*              uint8_t *payload, */
-/*              const bool expect_ack = false, */
-/*              const int retry = 5); */
-/* int ubx_read_ack(const ublox_t &ublox, uint8_t msg_class, uint8_t msg_id); */
-/* int ubx_val_get(const ublox_t &ublox, */
-/*                 const uint8_t layer, */
-/*                 const uint32_t key, */
-/*                 uint32_t &val); */
-/* int ubx_val_set(const ublox_t &ublox, */
-/*                 const uint8_t layer, */
-/*                 const uint32_t key, */
-/*                 const uint32_t val, */
-/*                 const uint8_t val_size); */
-/*  */
+int ubx_write(const ublox_t *ublox,
+              uint8_t msg_class,
+              uint8_t msg_id,
+              uint16_t length,
+              uint8_t *payload);
+int ubx_poll(const ublox_t *ublox,
+             const uint8_t msg_class,
+             const uint8_t msg_id,
+             uint16_t *payload_length,
+             uint8_t *payload,
+             const uint8_t expect_ack,
+             const int retry);
+int ubx_read_ack(const ublox_t *ublox, uint8_t msg_class, uint8_t msg_id);
+int ubx_val_get(const ublox_t *ublox,
+                const uint8_t layer,
+                const uint32_t key,
+                uint32_t *val);
+int ubx_val_set(const ublox_t *ublox,
+                const uint8_t layer,
+                const uint32_t key,
+                const uint32_t val,
+                const uint8_t val_size);
+
 /* void ublox_version(const ublox_t &ublox); */
 /* int ublox_parse_ubx(ublox_t &ublox, uint8_t data); */
 /* int ublox_parse_rtcm3(ublox_t &ublox, uint8_t data); */
