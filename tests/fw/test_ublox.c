@@ -1,5 +1,5 @@
 #include "zero/munit.h"
-#include "zero/driver/ublox.h"
+#include "zero/fw/ublox.h"
 
 /*****************************************************************************
  * UBX Message
@@ -118,7 +118,7 @@ int test_ubx_msg_print() {
  * UBX Stream Parser
  ****************************************************************************/
 
-int test_parser_init() {
+int test_ubx_parser_init() {
   ubx_parser_t parser;
 
   ubx_parser_init(&parser);
@@ -277,61 +277,6 @@ int test_ubx_parser_update() {
 /*  */
 /*   return 0; */
 /* } */
-/*  */
-/* int test_ublox_timing() { */
-/*   ublox_t ublox; */
-/*   if (ublox_connect(ublox) != 0) { */
-/*     FATAL("Failed to connect to ublox!"); */
-/*   } */
-/*  */
-/*   // Configure rover */
-/*   const uint8_t layer = 1; // RAM */
-/*   int retval = 0; */
-/*   retval += ubx_val_set(ublox, layer, CFG_RATE_MEAS, 1000, 2); // 1000ms = 1Hz */
-/*   // retval += ubx_val_set(ublox, layer, CFG_RATE_MEAS, 100, 2);  // 100ms = */
-/*   // 10Hz */
-/*   retval += ubx_val_set(ublox, layer, CFG_USBOUTPROT_NMEA, 1, 1); */
-/*   retval += ubx_val_set(ublox, layer, CFG_MSGOUT_UBX_NAV_CLOCK_USB, 0, 1); */
-/*   retval += ubx_val_set(ublox, layer, CFG_MSGOUT_UBX_NAV_HPPOSEECF_USB, 0, 1); */
-/*   retval += ubx_val_set(ublox, layer, CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB, 0, 1); */
-/*   retval += ubx_val_set(ublox, layer, CFG_MSGOUT_UBX_NAV_STATUS_USB, 0, 1); */
-/*   retval += ubx_val_set(ublox, layer, CFG_MSGOUT_UBX_NAV_SVIN_USB, 0, 1); */
-/*   retval += ubx_val_set(ublox, layer, CFG_MSGOUT_UBX_NAV_PVT_USB, 0, 1); */
-/*   retval += ubx_val_set(ublox, layer, CFG_MSGOUT_UBX_RXM_RTCM_USB, 0, 1); */
-/*   retval += ubx_val_set(ublox, layer, CFG_TMODE_MODE, 0, 1); */
-/*   // retval += ubx_val_set(rover, layer, CFG_NAVSPG_DYNMODEL, 6, 1); */
-/*   if (retval != 0) { */
-/*     return -1; */
-/*   } */
-/*  */
-/*   return 0; */
-/* } */
-/*  */
-/* int test_ublox_gui() { */
-/*  */
-/*   // ImGuiWindowFlags window_flags = 0; */
-/*   // // if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar; */
-/*   // // if (no_scrollbar)       window_flags |= ImGuiWindowFlags_NoScrollbar; */
-/*   // // if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar; */
-/*   // // if (no_move)            window_flags |= ImGuiWindowFlags_NoMove; */
-/*   // // if (no_resize)          window_flags |= ImGuiWindowFlags_NoResize; */
-/*   // // if (no_collapse)        window_flags |= ImGuiWindowFlags_NoCollapse; */
-/*   // // if (no_nav)             window_flags |= ImGuiWindowFlags_NoNav; */
-/*   // // if (no_background)      window_flags |= ImGuiWindowFlags_NoBackground; */
-/*   // // if (no_bring_to_front)  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus; */
-/*   // // if (no_close)           p_open = NULL; // Don't pass our bool* to Begin */
-/*   // bool *p_open = NULL; */
-/*  */
-/*   // if (!ImGui::Begin("ImGui Demo")) { */
-/*   //   // Early out if the window is collapsed, as an optimization. */
-/*   //   ImGui::End(); */
-/*   //   return -1; */
-/*   // } */
-/*   // ImGui::Text("Hello, world %d", 123); */
-/*   // ImGui::End(); */
-/*  */
-/*   return 0; */
-/* } */
 
 void test_suite() {
   MU_ADD_TEST(test_ubx_msg_init);
@@ -341,7 +286,7 @@ void test_suite() {
   MU_ADD_TEST(test_ubx_msg_parse_and_serialize);
   MU_ADD_TEST(test_ubx_msg_print);
 
-  MU_ADD_TEST(test_parser_init);
+  MU_ADD_TEST(test_ubx_parser_init);
   MU_ADD_TEST(test_ubx_parser_reset);
   MU_ADD_TEST(test_ubx_parser_update);
 }

@@ -6,7 +6,7 @@
 
 #include "zero/log.h"
 #include "zero/core.h"
-#include "zero/driver/i2c.h"
+#include "zero/fw/i2c.h"
 
 // GENERAL
 #define MPU6050_ADDRESS 0x68

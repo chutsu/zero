@@ -1,6 +1,6 @@
 #include "zero/core.h"
 
-int8_t sint8(const uint8_t *data, const size_t offset) {
+int8_t int8(const uint8_t *data, const size_t offset) {
   return (int8_t)(data[offset]);
 }
 
@@ -8,7 +8,7 @@ uint8_t uint8(const uint8_t *data, const size_t offset) {
   return (uint8_t)(data[offset]);
 }
 
-int16_t sint16(const uint8_t *data, const size_t offset) {
+int16_t int16(const uint8_t *data, const size_t offset) {
   return (int16_t)((data[offset + 1] << 8) | (data[offset]));
 }
 
@@ -16,7 +16,7 @@ uint16_t uint16(const uint8_t *data, const size_t offset) {
   return (uint16_t)((data[offset + 1] << 8) | (data[offset]));
 }
 
-int32_t sint32(const uint8_t *data, const size_t offset) {
+int32_t int32(const uint8_t *data, const size_t offset) {
   return (int32_t)((data[offset + 3] << 24) | (data[offset + 2] << 16) |
       (data[offset + 1] << 8) | (data[offset]));
 }
@@ -29,6 +29,34 @@ uint32_t uint32(const uint8_t *data, const size_t offset) {
 real_t deg2rad(const real_t d) { return d * (M_PI / 180.0); }
 
 real_t rad2deg(const real_t r) { return r * (180.0 / M_PI); }
+
+int fltcmp(const float x, const float y) {
+  if (fabs(x -  y) < 1e-6) {
+    return 0;
+  } else if (x > y) {
+    return 1;
+  }
+
+  return -1;
+}
+
+int dblcmp(const double x, const double y) {
+  if (fabs(x -  y) < 1e-6) {
+    return 0;
+  } else if (x > y) {
+    return 1;
+  }
+
+  return -1;
+}
+
+double lerpd(const double a, const double b, const double t) {
+  return a * (1.0 - t) + b * t;
+}
+
+float lerpf(const float a, const float b, const float t) {
+  return a * (1.0 - t) + b * t;
+}
 
 void print_matrix(const char *prefix, const real_t *data,
                   const size_t rows, const size_t cols) {
@@ -99,6 +127,29 @@ void zeros(real_t *A, const size_t rows, const size_t cols) {
   for (size_t i = 0; i < rows; i++) {
     for (size_t j = 0; j < cols; j++) {
       A[idx] = 0.0;
+      idx++;
+    }
+  }
+}
+
+real_t mat_val(const real_t *m,
+               const size_t nb_cols,
+               const size_t i,
+               const size_t j) {
+  return m[(i * nb_cols) + j];
+}
+
+void mat_block(const real_t *m,
+               const size_t nb_cols,
+               const size_t row_start,
+               const size_t col_start,
+               const size_t row_end,
+               const size_t col_end,
+               real_t *block) {
+  size_t idx = 0;
+  for (size_t i = row_start; i <= row_end; i++) {
+    for (size_t j = col_start; j <= col_end; j++) {
+      block[idx] = m[(i * nb_cols) + j];
       idx++;
     }
   }

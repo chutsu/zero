@@ -1,4 +1,4 @@
-#include "zero/driver/mpu6050.h"
+#include "zero/fw/mpu6050.h"
 
 int8_t mpu6050_init(mpu6050_t *imu, const mpu6050_config_t *config) {
   int8_t retval = 0;
@@ -72,7 +72,7 @@ int8_t mpu6050_ping(const mpu6050_t *imu) {
 }
 
 int8_t mpu6050_get_data(mpu6050_t *imu) {
-  /* Read data */
+  // Read data
   uint8_t raw_data[14];
   memset(raw_data, '\0', 14);
   i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
@@ -81,8 +81,8 @@ int8_t mpu6050_get_data(mpu6050_t *imu) {
     return -1;
   }
 
-  /* Accelerometer */
-  const double g = 9.81; /* Gravitational constant */
+  // Accelerometer
+  const double g = 9.81; // Gravitational constant
   const int8_t raw_x = (raw_data[0] << 8) | (raw_data[1]);
   const int8_t raw_y = (raw_data[2] << 8) | (raw_data[3]);
   const int8_t raw_z = (raw_data[4] << 8) | (raw_data[5]);
@@ -90,11 +90,11 @@ int8_t mpu6050_get_data(mpu6050_t *imu) {
   imu->accel[1] = (raw_y / imu->accel_sensitivity) * g;
   imu->accel[2] = (raw_z / imu->accel_sensitivity) * g;
 
-  /* Temperature */
+  // Temperature
   const int8_t raw_temp = (raw_data[6] << 8) | (raw_data[7]);
   imu->temperature = raw_temp / 340.0 + 36.53;
 
-  /* Gyroscope */
+  // Gyroscope
   const int8_t gyro_raw_x = (raw_data[8] << 8) | (raw_data[9]);
   const int8_t gyro_raw_y = (raw_data[10] << 8) | (raw_data[11]);
   const int8_t gyro_raw_z = (raw_data[12] << 8) | (raw_data[13]);
@@ -102,7 +102,7 @@ int8_t mpu6050_get_data(mpu6050_t *imu) {
   imu->gyro[1] = deg2rad(gyro_raw_y / imu->gyro_sensitivity);
   imu->gyro[2] = deg2rad(gyro_raw_z / imu->gyro_sensitivity);
 
-  /* Set last_updated */
+  // Set last_updated
   imu->last_updated = clock();
 
   return 0;

@@ -9,8 +9,8 @@
 
 #include <cblas.h>
 
-// typedef float real_t;
-typedef double real_t;
+typedef float real_t;
+/* typedef double real_t; */
 
 typedef real_t pt2_t[2];
 typedef real_t pt3_t[3];
@@ -42,6 +42,12 @@ uint32_t uint32(const uint8_t *data, const size_t offset);
 real_t deg2rad(const real_t d);
 real_t rad2deg(const real_t r);
 
+int fltcmp(const float x, const float y);
+int dblcmp(const double x, const double y);
+
+double lerpd(const double a, const double b, const double t);
+float lerpf(const float a, const float b, const float t);
+
 void print_matrix(const char *prefix, const real_t *data,
                   const size_t rows, const size_t cols);
 void print_vector(const char *prefix, const real_t *data, const size_t length);
@@ -49,13 +55,17 @@ void print_vector(const char *prefix, const real_t *data, const size_t length);
 void eye(real_t *A, const size_t rows, const size_t cols);
 void ones(real_t *A, const size_t rows, const size_t cols);
 void zeros(real_t *A, const size_t rows, const size_t cols);
-// real_t mat_val(const real_t *m, const size_t row, const size_t col);
-// int mat_block(const real_t *m,
-//               const size_t row_start,
-//               const size_t col_start,
-//               const size_t row_end,
-//               const size_t col_end,
-//               real_t *block);
+real_t mat_val(const real_t *m,
+               const size_t nb_cols,
+               const size_t i,
+               const size_t j);
+void mat_block(const real_t *m,
+               const size_t nb_cols,
+               const size_t row_start,
+               const size_t col_start,
+               const size_t row_end,
+               const size_t col_end,
+               real_t *block);
 
 /* void dot(const real_t *A, const size_t A_m, const size_t A_n, */
 /*          const real_t *B, const size_t B_m, const size_t B_n, */

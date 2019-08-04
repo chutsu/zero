@@ -14,7 +14,7 @@
  * UART
  */
 typedef struct uart_t {
-  int connected;
+  uint8_t connected;
   int connection;
   char *port;
 

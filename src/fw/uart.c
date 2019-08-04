@@ -1,4 +1,4 @@
-#include "zero/driver/uart.h"
+#include "zero/fw/uart.h"
 
 int8_t uart_connect(uart_t *uart) {
   uart->speed = 0;

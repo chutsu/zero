@@ -10,7 +10,8 @@ int test_eye() {
   size_t cols = 5;
   for (size_t i = 0; i < rows; i++) {
     for (size_t j = 0; j < cols; j++) {
-      MU_CHECK(A[idx] == ((i == j) ? 1.0 : 0.0));
+      real_t expected = (i == j) ? 1.0 : 0.0;
+      MU_CHECK(fltcmp(A[idx], expected) == 0);
       idx++;
     }
   }
@@ -55,10 +56,37 @@ int test_zeros() {
   return 0;
 }
 
+int test_mat_val() {
+  real_t A[9] = {1.0, 2.0, 3.0,
+                 4.0, 5.0, 6.0,
+                 7.0, 8.0, 9.0};
+
+  MU_CHECK(fltcmp(mat_val(A, 3, 0, 0), 1.0) == 0);
+  MU_CHECK(fltcmp(mat_val(A, 3, 0, 1), 2.0) == 0);
+  MU_CHECK(fltcmp(mat_val(A, 3, 0, 2), 3.0) == 0);
+  MU_CHECK(fltcmp(mat_val(A, 3, 1, 0), 4.0) == 0);
+
+  return 0;
+}
+
+int test_mat_block() {
+  real_t A[9] = {1.0, 2.0, 3.0,
+                 4.0, 5.0, 6.0,
+                 7.0, 8.0, 9.0};
+  real_t B[4] = {0.0};
+
+  mat_block(A, 3, 1, 1, 2, 2, B);
+  print_matrix("B", B, 2, 2);
+
+  return 0;
+}
+
 void test_suite() {
   MU_ADD_TEST(test_eye);
   MU_ADD_TEST(test_ones);
   MU_ADD_TEST(test_zeros);
+  MU_ADD_TEST(test_mat_val);
+  MU_ADD_TEST(test_mat_block);
 }
 
 MU_RUN_TESTS(test_suite);

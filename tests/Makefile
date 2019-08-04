@@ -5,8 +5,11 @@ TESTS = $(addprefix $(BIN_DIR)/, $(SRCS:.c=))
 
 all: $(TESTS)
 
-$(BLD_DIR)/%.o : %.c $(BLD_DIR)/libzero.a
+$(BLD_DIR)/%.o: %.c $(BLD_DIR)/libzero.a
 	$(COMPILE_TEST_OBJ)
 
-$(BIN_DIR)/test_% : $(BLD_DIR)/test_%.o
+$(BIN_DIR)/test_%: $(BLD_DIR)/test_%.o
+	$(MAKE_TEST)
+
+$(BIN_DIR)/fw/test_%: $(BLD_DIR)/fw/test_%.o
 	$(MAKE_TEST)

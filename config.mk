@@ -32,9 +32,3 @@ MAKE_TEST = \
 		$(subst $(BIN_DIR), $(BLD_DIR), $@.o) \
 		-o $@ \
 		$(LIBS)
-
-# MAKE_EXE = \
-# 	@echo "EXE [$@]"; \
-# 	$(CC) $(CFLAGS) $@.o \
-# 		-o $(addprefix $(BIN_DIR)/, $@) \
-# 		-L. -lzp3 $(LIBS)
