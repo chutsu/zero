@@ -10,7 +10,6 @@
 #include <sys/poll.h>
 
 #include "zero/core.h"
-#include "zero/data.h"
 #include "zero/tcp.h"
 #include "zero/fw/uart.h"
 

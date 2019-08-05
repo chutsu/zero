@@ -522,18 +522,23 @@ int rtcm3_parser_update(rtcm3_parser_t *parser, uint8_t data) {
   // Parse message
   if (parser->buf_data[0] != 0xD3) {
     rtcm3_parser_init(parser);
+
   } else if (parser->buf_pos == 1) {
     // Get the last two bits of this byte. Bits 8 and 9 of 10-bit length
     parser->msg_len = (data & 0x03) << 8;
+
   } else if (parser->buf_pos == 2) {
     parser->msg_len |= data; // Bits 0-7 of packet length
     parser->msg_len += 6;
     // There are 6 additional bytes of what we presume is
     // header, msgType, CRC, and stuff
+    //
   } else if (parser->buf_pos == 3) {
     parser->msg_type = data << 4; // Message Type, most significant 4 bits
+
   } else if (parser->buf_pos == 4) {
     parser->msg_type |= (data >> 4); // Message Type, bits 0-7
+
   }
   parser->buf_pos++;
 
