@@ -132,6 +132,14 @@ void zeros(real_t *A, const size_t rows, const size_t cols) {
   }
 }
 
+void mat_set(real_t *A,
+             const size_t cols,
+             const size_t i,
+             const size_t j,
+             const real_t val) {
+  A[(i * cols) + j] = val;
+}
+
 real_t mat_val(const real_t *m,
                const size_t nb_cols,
                const size_t i,
@@ -155,9 +163,31 @@ void mat_block(const real_t *m,
   }
 }
 
-/* void dot(const real_t *A, const size_t A_m, const size_t A_n, */
-/*          const real_t *B, const size_t B_m, const size_t B_n, */
-/*          real_t *C, const size_t C_m, const size_t C_n) { */
+void mat_transpose(real_t *A, size_t m, size_t n) {
+  printf("nb_rows: %zu\n", m);
+  printf("nb_cols: %zu\n", n);
+
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < n; j++) {
+      if (i == j) {
+        continue;
+      }
+
+      const real_t A_ij = mat_val(A, n, i, j);
+      const real_t A_ji = mat_val(A, n, j, i);
+      printf("[%zu][%zu]: %f\n", i, j, A_ij);
+      printf("[%zu][%zu]: %f\n", j, i, A_ji);
+
+      mat_set(A, n, i, j, A_ji);
+      /* mat_set(A, n, j, i, A_ij); */
+    }
+    printf("\n");
+  }
+}
+
+/* void mat_dot(const real_t *A, const size_t A_m, const size_t A_n, */
+/*              const real_t *B, const size_t B_m, const size_t B_n, */
+/*              real_t *C, const size_t C_m, const size_t C_n) { */
 /*   assert(A_n == B_m); */
 /*   assert(C_m == B_n); */
 /*   assert(C_n == A_m); */

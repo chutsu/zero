@@ -7,5 +7,5 @@ set -e
 # make format_code
 make
 
-# ./bin/test_core
+./bin/test_core
 # ./bin/test_data

@@ -5,6 +5,7 @@ int test_eye() {
   real_t A[25] = {0.0};
   eye(A, 5, 5);
 
+  /* print_matrix("I", A, 5, 5); */
   size_t idx = 0;
   size_t rows = 5;
   size_t cols = 5;
@@ -15,7 +16,6 @@ int test_eye() {
       idx++;
     }
   }
-  /* print_matrix("I", A, 5, 5); */
 
   return 0;
 }
@@ -24,6 +24,7 @@ int test_ones() {
   real_t A[25] = {0.0};
   ones(A, 5, 5);
 
+  /* print_matrix("A", A, 5, 5); */
   size_t idx = 0;
   size_t rows = 5;
   size_t cols = 5;
@@ -33,7 +34,6 @@ int test_ones() {
       idx++;
     }
   }
-  /* print_matrix("A", A, 5, 5); */
 
   return 0;
 }
@@ -42,6 +42,7 @@ int test_zeros() {
   real_t A[25] = {0.0};
   zeros(A, 5, 5);
 
+  /* print_matrix("A", A, 5, 5); */
   size_t idx = 0;
   size_t rows = 5;
   size_t cols = 5;
@@ -51,7 +52,23 @@ int test_zeros() {
       idx++;
     }
   }
-  /* print_matrix("A", A, 5, 5); */
+
+  return 0;
+}
+
+int test_mat_set() {
+  real_t A[9] = {0.0, 0.0, 0.0,
+                 0.0, 0.0, 0.0,
+                 0.0, 0.0, 0.0};
+
+  mat_set(A, 3, 0, 0, 1.0);
+  mat_set(A, 3, 1, 1, 1.0);
+  mat_set(A, 3, 2, 2, 1.0);
+
+  /* print_matrix("A", A, 3, 3); */
+  MU_CHECK(fltcmp(mat_val(A, 3, 0, 0), 1.0) == 0);
+  MU_CHECK(fltcmp(mat_val(A, 3, 1, 1), 1.0) == 0);
+  MU_CHECK(fltcmp(mat_val(A, 3, 2, 2), 1.0) == 0);
 
   return 0;
 }
@@ -61,6 +78,7 @@ int test_mat_val() {
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
 
+  /* print_matrix("A", A, 3, 3); */
   MU_CHECK(fltcmp(mat_val(A, 3, 0, 0), 1.0) == 0);
   MU_CHECK(fltcmp(mat_val(A, 3, 0, 1), 2.0) == 0);
   MU_CHECK(fltcmp(mat_val(A, 3, 0, 2), 3.0) == 0);
@@ -74,9 +92,24 @@ int test_mat_block() {
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
   real_t B[4] = {0.0};
-
   mat_block(A, 3, 1, 1, 2, 2, B);
-  print_matrix("B", B, 2, 2);
+
+  /* print_matrix("B", B, 2, 2); */
+  MU_CHECK(fltcmp(mat_val(B, 2, 0, 0), 5.0) == 0);
+  MU_CHECK(fltcmp(mat_val(B, 2, 0, 1), 6.0) == 0);
+  MU_CHECK(fltcmp(mat_val(B, 2, 1, 0), 8.0) == 0);
+  MU_CHECK(fltcmp(mat_val(B, 2, 1, 1), 9.0) == 0);
+
+  return 0;
+}
+
+int test_mat_transpose() {
+  real_t A[9] = {1.0, 2.0, 3.0,
+                 4.0, 5.0, 6.0,
+                 7.0, 8.0, 9.0};
+  mat_transpose(A, 3, 3);
+
+  /* print_matrix("A", A, 3, 3); */
 
   return 0;
 }
@@ -85,8 +118,10 @@ void test_suite() {
   MU_ADD_TEST(test_eye);
   MU_ADD_TEST(test_ones);
   MU_ADD_TEST(test_zeros);
+  MU_ADD_TEST(test_mat_set);
   MU_ADD_TEST(test_mat_val);
   MU_ADD_TEST(test_mat_block);
+  MU_ADD_TEST(test_mat_transpose);
 }
 
 MU_RUN_TESTS(test_suite);
