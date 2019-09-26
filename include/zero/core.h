@@ -82,6 +82,9 @@ void dot(const real_t *A, const size_t A_m, const size_t A_n,
          const real_t *B, const size_t B_m, const size_t B_n,
          real_t *C);
 
+void mat_scale(real_t *A, const size_t m, const size_t n, const real_t scale);
+void vec_scale(real_t *A, const size_t length, const real_t scale);
+
 /* void mat_dot(const real_t *A, const size_t A_m, const size_t A_n, */
 /*              const real_t *B, const size_t B_m, const size_t B_n, */
 /*              real_t *C, const size_t C_m, const size_t C_n); */

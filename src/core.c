@@ -218,3 +218,17 @@ void dot(const real_t *A, const size_t A_m, const size_t A_n,
     }
   }
 }
+
+void mat_scale(real_t *A, const size_t m, const size_t n, const real_t scale) {
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < n; j++) {
+      mat_set(A, n, i, j, mat_val(A, n, i, j) * scale);
+    }
+  }
+}
+
+void vec_scale(real_t *x, const size_t length, const real_t scale) {
+  for (size_t i = 0; i < length; i++) {
+    x[i] = x[i] * scale;
+  }
+}
