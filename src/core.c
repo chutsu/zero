@@ -30,17 +30,7 @@ real_t deg2rad(const real_t d) { return d * (M_PI / 180.0); }
 
 real_t rad2deg(const real_t r) { return r * (180.0 / M_PI); }
 
-int fltcmp(const float x, const float y) {
-  if (fabs(x -  y) < 1e-6) {
-    return 0;
-  } else if (x > y) {
-    return 1;
-  }
-
-  return -1;
-}
-
-int dblcmp(const double x, const double y) {
+int fltcmp(const double x, const double y) {
   if (fabs(x -  y) < 1e-6) {
     return 0;
   } else if (x > y) {
@@ -133,79 +123,98 @@ void zeros(real_t *A, const size_t rows, const size_t cols) {
 }
 
 void mat_set(real_t *A,
-             const size_t cols,
+             const size_t stride,
              const size_t i,
              const size_t j,
              const real_t val) {
-  A[(i * cols) + j] = val;
+  A[(i * stride) + j] = val;
 }
 
-real_t mat_val(const real_t *m,
-               const size_t nb_cols,
+real_t mat_val(const real_t *A,
+               const size_t stride,
                const size_t i,
                const size_t j) {
-  return m[(i * nb_cols) + j];
+  return A[(i * stride) + j];
 }
 
-void mat_block(const real_t *m,
-               const size_t nb_cols,
+void mat_block(const real_t *A,
+               const size_t stride,
                const size_t row_start,
                const size_t col_start,
                const size_t row_end,
                const size_t col_end,
                real_t *block) {
+  assert(A != block);
   size_t idx = 0;
   for (size_t i = row_start; i <= row_end; i++) {
     for (size_t j = col_start; j <= col_end; j++) {
-      block[idx] = m[(i * nb_cols) + j];
+      block[idx] = mat_val(A, stride, i, j);
       idx++;
     }
   }
 }
 
-void mat_transpose(real_t *A, size_t m, size_t n) {
-  printf("nb_rows: %zu\n", m);
-  printf("nb_cols: %zu\n", n);
+void mat_transpose(real_t *A, size_t m, size_t n, real_t *A_t) {
+  assert(A != A_t);
 
   for (size_t i = 0; i < m; i++) {
     for (size_t j = 0; j < n; j++) {
-      if (i == j) {
-        continue;
-      }
-
-      const real_t A_ij = mat_val(A, n, i, j);
-      const real_t A_ji = mat_val(A, n, j, i);
-      printf("[%zu][%zu]: %f\n", i, j, A_ij);
-      printf("[%zu][%zu]: %f\n", j, i, A_ji);
-
-      mat_set(A, n, i, j, A_ji);
-      /* mat_set(A, n, j, i, A_ij); */
+      mat_set(A_t, m, j, i, mat_val(A, n, i, j));
     }
-    printf("\n");
   }
 }
 
-/* void mat_dot(const real_t *A, const size_t A_m, const size_t A_n, */
-/*              const real_t *B, const size_t B_m, const size_t B_n, */
-/*              real_t *C, const size_t C_m, const size_t C_n) { */
-/*   assert(A_n == B_m); */
-/*   assert(C_m == B_n); */
-/*   assert(C_n == A_m); */
-/*  */
-/*   cblas_dgemm( */
-/*     CblasRowMajor, #<{(| Matrix data arrangement |)}># */
-/*     CblasNoTrans,  #<{(| Transpose A |)}># */
-/*     CblasNoTrans,  #<{(| Transpose B |)}># */
-/*     A_m,           #<{(| Number of rows in A and C |)}># */
-/*     B_n,           #<{(| Number of cols in B and C |)}># */
-/*     A_n,           #<{(| Number of cols in A |)}># */
-/*     1.0,           #<{(| Scaling factor for the product of A and B |)}># */
-/*     A,             #<{(| Matrix A |)}># */
-/*     A_n,           #<{(| First dimension of A |)}># */
-/*     B,             #<{(| Matrix B |)}># */
-/*     B_n,           #<{(| First dimension of B |)}># */
-/*     1.0,           #<{(| Scale factor for C |)}># */
-/*     C,             #<{(| Output |)}># */
-/*     A_m            #<{(| First dimension of C |)}># */
-/*   ); */
-/* } */
+void mat_add(real_t *A, real_t *B, real_t *C, size_t m, size_t n) {
+  assert(A != C);
+
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < n; j++) {
+      mat_set(C, n, i, j, mat_val(A, n, i, j) + mat_val(B, n, i, j));
+    }
+  }
+}
+
+void mat_sub(real_t *A, real_t *B, real_t *C, size_t m, size_t n) {
+  assert(A != C);
+
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < n; j++) {
+      mat_set(C, n, i, j, mat_val(A, n, i, j) - mat_val(B, n, i, j));
+    }
+  }
+}
+
+void vec_add(real_t *x, real_t *y, real_t *z, size_t length) {
+  assert(x != z);
+
+  for (size_t i = 0; i < length; i++) {
+    z[i] = x[i] + y[i];
+  }
+}
+
+void vec_sub(real_t *x, real_t *y, real_t *z, size_t length) {
+  assert(x != z);
+
+  for (size_t i = 0; i < length; i++) {
+    z[i] = x[i] + y[i];
+  }
+}
+
+void dot(const real_t *A, const size_t A_m, const size_t A_n,
+         const real_t *B, const size_t B_m, const size_t B_n,
+         real_t *C) {
+  assert(A_n == B_m);
+
+  size_t m = A_m;
+  size_t n = B_n;
+
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < n; j++) {
+      real_t sum = 0.0;
+      for (size_t k = 0; k < A_n; k++) {
+        sum += mat_val(A, A_n, i, k) * mat_val(B, B_n, k, j);
+      }
+      mat_set(C, n, i, j, sum);
+    }
+  }
+}

@@ -42,8 +42,7 @@ uint32_t uint32(const uint8_t *data, const size_t offset);
 real_t deg2rad(const real_t d);
 real_t rad2deg(const real_t r);
 
-int fltcmp(const float x, const float y);
-int dblcmp(const double x, const double y);
+int fltcmp(const double x, const double y);
 
 double lerpd(const double a, const double b, const double t);
 float lerpf(const float a, const float b, const float t);
@@ -57,22 +56,31 @@ void ones(real_t *A, const size_t rows, const size_t cols);
 void zeros(real_t *A, const size_t rows, const size_t cols);
 
 void mat_set(real_t *A,
-             const size_t nb_cols,
+             const size_t stride,
              const size_t i,
              const size_t j,
              const real_t val);
 real_t mat_val(const real_t *A,
-               const size_t nb_cols,
+               const size_t stride,
                const size_t i,
                const size_t j);
 void mat_block(const real_t *A,
-               const size_t nb_cols,
+               const size_t stride,
                const size_t row_start,
                const size_t col_start,
                const size_t row_end,
                const size_t col_end,
                real_t *block);
-void mat_transpose(real_t *A, size_t rows, size_t cols);
+void mat_transpose(real_t *A, size_t m, size_t n, real_t *A_t);
+void mat_add(real_t *A, real_t *B, real_t *C, size_t m, size_t n);
+void mat_sub(real_t *A, real_t *B, real_t *C, size_t m, size_t n);
+
+void vec_add(real_t *x, real_t *y, real_t *z, size_t length);
+void vec_sub(real_t *x, real_t *y, real_t *z, size_t length);
+
+void dot(const real_t *A, const size_t A_m, const size_t A_n,
+         const real_t *B, const size_t B_m, const size_t B_n,
+         real_t *C);
 
 /* void mat_dot(const real_t *A, const size_t A_m, const size_t A_n, */
 /*              const real_t *B, const size_t B_m, const size_t B_n, */

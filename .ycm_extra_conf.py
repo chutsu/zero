@@ -13,7 +13,7 @@ flags = [
     '-Wno-long-long',
     '-Wno-variadic-macros',
     '-fexceptions',
-    '-DNDEBUG',
+    # '-DNDEBUG',
     # You 100% do NOT need -DUSE_CLANG_COMPLETER in your flags; only the YCM
     # source code needs it.
     '-DUSE_CLANG_COMPLETER',
@@ -22,7 +22,7 @@ flags = [
     # will be compiled as C headers. You don't want that so ALWAYS specify the
     # '-x' flag.  # For a C project, you would set this to 'c' instead of 'c++'.
     '-x',
-    'c++',
+    'c',
     '-isystem',
     '../BoostParts',
     '-isystem',
