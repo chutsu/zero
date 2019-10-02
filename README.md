@@ -1,3 +1,8 @@
 # zero
 
-Drivers for SLAM research.
+Just bits and bobs.
+
+
+## LICENCE
+
+GPLv3
