@@ -74,9 +74,9 @@ int8_t i2c_write_raw_byte(const i2c_t *i2c, const uint8_t byte) {
 }
 
 int8_t i2c_write_bytes(const i2c_t *i2c,
-                    const uint8_t reg_addr,
-                    const uint8_t *data,
-                    const size_t length) {
+                       const uint8_t reg_addr,
+                       const uint8_t *data,
+                       const size_t length) {
   /* Create buf */
   uint8_t buf[I2C_BUF_MAX];
   memset(buf, '\0', sizeof(char) * I2C_BUF_MAX);
