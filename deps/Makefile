@@ -18,3 +18,8 @@ stlink:
 		&& cd stlink \
 		&& make > /dev/null \
 		&& cd build/Release && sudo make install
+
+clean:
+	@sudo apt-get purge gcc-arm-none-eabi
+	@rm -rf libopencm3
+	@rm -rf stlink
