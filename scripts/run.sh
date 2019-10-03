@@ -5,7 +5,14 @@ set -e
 
 # make clean
 # make format_code
-make
+# make
 
-./bin/test_core
+# ./bin/test_core
 # ./bin/test_data
+
+
+cd firmware
+make clean
+# make blink.o
+make blink.elf
+make flash
