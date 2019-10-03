@@ -27,6 +27,7 @@ flags = [
     '-isystem', get_python_inc(),
     '-isystem', '../llvm/include',
     '-isystem', '../llvm/tools/clang/include',
+    '-DSTM32F1', # <- SPECIFIC FOR LIBOPENCM3
     '-I', '.',
     '-I', 'include',
     '-I', './deps/libopencm3/include',

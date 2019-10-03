@@ -7,13 +7,12 @@ all: dirs
 	@make -s -C tests
 
 dirs:
-	@mkdir -p build
-	@mkdir -p bin
-	@mkdir -p bin/fw
+	@mkdir -p $(BLD_DIR)
+	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(BIN_DIR)/fw
 
 format_code:
 	@bash scripts/format_code.bash
 
 clean:
-	@rm -rf build
-	@rm -rf bin
+	@rm -rf $(BLD_DIR)

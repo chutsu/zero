@@ -6,3 +6,8 @@ build
 
 deps/libopencm3
 deps/stlink
+
+*.bin
+*.elf
+*.d
+*.o

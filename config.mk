@@ -1,5 +1,5 @@
-BIN_DIR=$(PWD)/bin
 BLD_DIR=$(PWD)/build
+BIN_DIR=$(PWD)/build/bin
 INC_DIR=$(PWD)/include
 DEP_DIR=$(PWD)/dep
 TESTS_DIR=$(PWD)/tests
