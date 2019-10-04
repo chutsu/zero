@@ -8,14 +8,19 @@ LDLIBS = -lopencm3_stm32f1 -lc -lnosys
 
 .PHONY: clean flash
 
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:.c=.o)
+
+default: $(OBJS) firmware.bin
+
 clean:
 	@rm -f *.o *.bin *.elf *.map *.d
 
-firmware.o: firmware.c
+%.o: %.c
 	@echo "CC [$@]"
 	@$(CC) $(CFLAGS) -c $^ -o $@
 
-firmware.elf: firmware.o
+firmware.elf: $(OBJS)
 	@echo "ELF [$@]"
 	@$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 

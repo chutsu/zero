@@ -1,4 +1,4 @@
-#include "zero/fw/mpu6050.h"
+#include "mpu6050.h"
 
 int8_t mpu6050_init(mpu6050_t *imu, const mpu6050_config_t *config) {
   int8_t retval = 0;
@@ -64,7 +64,7 @@ error:
 }
 
 int8_t mpu6050_ping(const mpu6050_t *imu) {
-  uint8_t buf;
+  uint8_t buf = 0;
   i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
   i2c_read_byte(imu->i2c, MPU6050_RA_WHO_AM_I, &buf);
   LOG_INFO("MPU6050 ADDRESS: 0x%02X\n", buf);
@@ -73,13 +73,10 @@ int8_t mpu6050_ping(const mpu6050_t *imu) {
 
 int8_t mpu6050_get_data(mpu6050_t *imu) {
   // Read data
-  uint8_t raw_data[14];
+  uint8_t raw_data[14] = {0};
   memset(raw_data, '\0', 14);
   i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
-  int8_t retval = i2c_read_bytes(imu->i2c, MPU6050_RA_ACCEL_XOUT_H, raw_data, 14);
-  if (retval != 0) {
-    return -1;
-  }
+  i2c_read_bytes(imu->i2c, MPU6050_RA_ACCEL_XOUT_H, raw_data, 14);
 
   // Accelerometer
   const double g = 9.81; // Gravitational constant
@@ -137,51 +134,35 @@ int8_t mpu6050_set_dplf(const mpu6050_t *imu, const uint8_t setting) {
   */
 
   // Check setting range
-  if (setting > 7 || setting < 0) {
+  if (setting > 7) {
     return -2;
   }
 
   // Set DPLF
   i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
-  int8_t retval = i2c_write_byte(imu->i2c, MPU6050_RA_CONFIG, (char) setting);
-  if (retval != 0) {
-    return -1;
-  }
+  i2c_write_byte(imu->i2c, MPU6050_RA_CONFIG, (char) setting);
 
   return 0;
 }
 
 int8_t mpu6050_get_dplf(const mpu6050_t *imu) {
-  // Get dplf config
   uint8_t data[1] = {0x00};
   i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
-  int8_t retval = i2c_read_bytes(imu->i2c, MPU6050_RA_CONFIG, data, 1);
-  if (retval != 0) {
-    return -1;
-  }
-  LOG_INFO("GOT DPLF: %d", data[0]);
+  i2c_read_bytes(imu->i2c, MPU6050_RA_CONFIG, data, 1);
   data[0] = data[0] & 0b00000111;
-
   return data[0];
 }
 
 int8_t mpu6050_set_sample_rate_div(const mpu6050_t *imu, const int8_t div) {
   i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
-  int8_t retval = i2c_write_byte(imu->i2c, MPU6050_RA_SMPLRT_DIV, div);
-  if (retval != 0) {
-    return -1;
-  }
-
+  i2c_write_byte(imu->i2c, MPU6050_RA_SMPLRT_DIV, div);
   return 0;
 }
 
 int8_t mpu6050_get_sample_rate_div(const mpu6050_t *imu) {
-  i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
   uint8_t data = 0;
-  int8_t retval = i2c_read_byte(imu->i2c, MPU6050_RA_SMPLRT_DIV, &data);
-  if (retval != 0) {
-    return -1;
-  }
+  i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
+  i2c_read_byte(imu->i2c, MPU6050_RA_SMPLRT_DIV, &data);
   return data;
 }
 
@@ -219,10 +200,7 @@ int8_t mpu6050_set_gyro_range(const mpu6050_t *imu, const int8_t range) {
   // Set sample rate
   uint8_t data = range << 3;
   i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
-  int8_t retval = i2c_write_byte(imu->i2c, MPU6050_RA_GYRO_CONFIG, data);
-  if (retval != 0) {
-    return -1;
-  }
+  i2c_write_byte(imu->i2c, MPU6050_RA_GYRO_CONFIG, data);
 
   return 0;
 }
@@ -231,10 +209,7 @@ int8_t mpu6050_get_gyro_range(const mpu6050_t *imu, int8_t *range) {
   // Get gyro config
   uint8_t data = 0x00;
   i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
-  int8_t retval = i2c_read_byte(imu->i2c, MPU6050_RA_GYRO_CONFIG, &data);
-  if (retval != 0) {
-    return -1;
-  }
+  i2c_read_byte(imu->i2c, MPU6050_RA_GYRO_CONFIG, &data);
 
   // Get gyro range bytes
   *range = (data >> 3) & 0b00000011;
@@ -251,10 +226,7 @@ int8_t mpu6050_set_accel_range(const mpu6050_t *imu, const int8_t range) {
   // Set sample rate
   uint8_t data = range << 3;
   i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
-  int8_t retval = i2c_write_byte(imu->i2c, MPU6050_RA_ACCEL_CONFIG, data);
-  if (retval != 0) {
-    return -1;
-  }
+  i2c_write_byte(imu->i2c, MPU6050_RA_ACCEL_CONFIG, data);
 
   return 0;
 }
@@ -263,10 +235,7 @@ int8_t mpu6050_get_accel_range(const mpu6050_t *imu, int8_t *range) {
   // Get accel config
   uint8_t data = 0x00;
   i2c_set_slave(imu->i2c, MPU6050_ADDRESS);
-  int8_t retval = i2c_read_byte(imu->i2c, MPU6050_RA_ACCEL_CONFIG, &data);
-  if (retval != 0) {
-    return -1;
-  }
+  i2c_read_byte(imu->i2c, MPU6050_RA_ACCEL_CONFIG, &data);
 
   // Get accel range bytes
   *range = (data >> 3) & 0b00000011;

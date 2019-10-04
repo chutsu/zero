@@ -1,5 +1,5 @@
-#ifndef ZERO_FW_ZERO_UBLOX_H
-#define ZERO_FW_ZERO_UBLOX_H
+#ifndef UBLOX_H
+#define UBLOX_H
 
 #include <stdlib.h>
 #include <netdb.h>
@@ -9,9 +9,9 @@
 #include <sys/socket.h>
 #include <sys/poll.h>
 
-#include "zero/core.h"
-#include "zero/tcp.h"
-#include "zero/fw/uart.h"
+#include "core.h"
+#include "tcp.h"
+#include "serial.h"
 
 /**
  * UBX Class IDs
@@ -462,7 +462,7 @@ typedef void (*rtcm3_msg_callback)(ublox_t *ublox);
 typedef struct ublox_t {
   int state;
   uint8_t ok;
-  uart_t uart;
+  serial_t serial;
 
   int sockfd;
   int conns[UBLOX_MAX_CONNS];
@@ -516,4 +516,4 @@ int ublox_rover_config(ublox_t *rover);
 void ublox_rover_loop(ublox_t *rover);
 int ublox_rover_run(ublox_t *rover, const char *base_ip, const int base_port);
 
-#endif /* ZERO_FW_ZERO_UBLOX_H */
+#endif /* UBLOX_H */

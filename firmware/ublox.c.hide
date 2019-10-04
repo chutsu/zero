@@ -1,4 +1,4 @@
-#include "zero/fw/ublox.h"
+#include "ublox.h"
 
 /*****************************************************************************
  * UBX Message
@@ -558,9 +558,9 @@ void ublox_init(ublox_t *ublox) {
   ublox->state = UBLOX_READY;
   ublox->ok = 0;
 
-  // UART
-  if (ublox->uart.connected) {
-    uart_disconnect(&ublox->uart);
+  // Serial
+  if (ublox->serial.connected) {
+    serial_disconnect(&ublox->serial);
   }
 
   // Connections
@@ -586,7 +586,7 @@ void ublox_reset(ublox_t *ublox) {
 }
 
 int ublox_connect(ublox_t *ublox) {
-  if (uart_connect(&ublox->uart) != 0) {
+  if (serial_connect(&ublox->serial) != 0) {
     return -1;
   }
   ublox->ok = 1;
@@ -612,7 +612,7 @@ int ubx_write(const ublox_t *ublox,
   ubx_msg_serialize(&msg, frame, &frame_size);
 
   // Transmit msg
-  size_t retval = write(ublox->uart.connection, frame, frame_size);
+  size_t retval = write(ublox->serial.connfd, frame, frame_size);
   if (retval != frame_size) {
     LOG_ERROR("Failed to send data to UART!");
     return -1;
@@ -646,7 +646,7 @@ response:
   // Response
   while (counter < 1024) {
     uint8_t data = 0;
-    if (read(ublox->uart.connection, &data, 1) == 0) {
+    if (serial_read(&ublox->serial, &data, 1) == 0) {
       if (ubx_parser_update(&parser, data) == 1) {
         break;
       }
@@ -713,7 +713,7 @@ int ubx_read_ack(const ublox_t *ublox,
   int counter = 0; // Arbitrary counter for timeout
   while (counter != 1024) {
     uint8_t data = 0;
-    if (read(ublox->uart.connection, &data, 1) != 0) {
+    if (serial_read(&ublox->serial, &data, 1) != 0) {
       continue;
     }
 
@@ -948,7 +948,7 @@ void ublox_base_station_loop(ublox_t *base) {
 
     // Read byte
     uint8_t data = 0;
-    if (read(base->uart.connection, &data, 1) != 0) {
+    if (serial_read(&base->serial, &data, 1) != 0) {
       continue;
     }
 
@@ -1068,7 +1068,7 @@ void ublox_rover_loop(ublox_t *rover) {
   // Setup poll file descriptors
   struct pollfd fds[2];
   // -- UART
-  fds[0].fd = rover->uart.connection;
+  fds[0].fd = rover->serial.connfd;
   fds[0].events = POLLIN;
   // -- Server
   fds[1].fd = rover->sockfd;
@@ -1079,7 +1079,7 @@ void ublox_rover_loop(ublox_t *rover) {
     // Read byte from serial and parse
     if (fds[0].revents & POLLIN) {
       uint8_t data = 0;
-      if (read(rover->uart.connection, &data, 1) != 0) {
+      if (serial_read(&rover->serial, &data, 1) != 0) {
         continue;
       }
       ublox_parse_ubx(rover, data);
@@ -1099,7 +1099,7 @@ void ublox_rover_loop(ublox_t *rover) {
       if (rtcm3_parser_update(&rover->rtcm3_parser, data)) {
         const uint8_t *msg_data = rover->rtcm3_parser.buf_data;
         const size_t msg_len = rover->rtcm3_parser.msg_len;
-        write(rover->uart.connection, msg_data, msg_len);
+        serial_write(&rover->serial, msg_data, msg_len);
         rtcm3_parser_reset(&rover->rtcm3_parser);
       }
     }

@@ -3,17 +3,14 @@ set -e
 
 # bash scripts/format_code.bash
 
-# make clean
 # make format_code
-# make
+make clean
+make
 
 # ./bin/test_core
 # ./bin/test_data
 
-
 cd firmware
 make clean
-make firmware.o
-make firmware.elf
 make firmware.bin
-make flash
+# make flash

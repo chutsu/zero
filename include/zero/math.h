@@ -7,8 +7,6 @@
 #include <math.h>
 #include <assert.h>
 
-#include <cblas.h>
-
 /* typedef float real_t; */
 typedef double real_t;
 
@@ -31,13 +29,6 @@ typedef struct mat_t {
   int rows;
   int cols;
 } mat_t;
-
-int8_t int8(const uint8_t *data, const size_t offset);
-uint8_t uint8(const uint8_t *data, const size_t offset);
-int16_t int16(const uint8_t *data, const size_t offset);
-uint16_t uint16(const uint8_t *data, const size_t offset);
-int32_t int32(const uint8_t *data, const size_t offset);
-uint32_t uint32(const uint8_t *data, const size_t offset);
 
 real_t deg2rad(const real_t d);
 real_t rad2deg(const real_t r);

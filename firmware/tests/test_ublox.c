@@ -1,5 +1,5 @@
 #include "zero/munit.h"
-#include "zero/fw/ublox.h"
+#include "ublox.h"
 
 /*****************************************************************************
  * UBX Message

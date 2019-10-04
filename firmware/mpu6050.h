@@ -1,12 +1,13 @@
-#ifndef ZERO_DRIVER_MPU6050_H
-#define ZERO_DRIVER_MPU6050_H
+#ifndef MPU6050_H
+#define MPU6050_H
 
 #include <math.h>
 #include <time.h>
+#include <string.h>
 
-#include "zero/log.h"
-#include "zero/core.h"
-#include "zero/fw/i2c.h"
+#include "log.h"
+#include "core.h"
+#include "i2c.h"
 
 // GENERAL
 #define MPU6050_ADDRESS 0x68
@@ -129,13 +130,13 @@ typedef struct mpu6050_t {
   int8_t ok;
   i2c_t *i2c;
 
-  real_t accel_sensitivity;
-  real_t gyro_sensitivity;
-  vec3_t accel;
-  vec3_t gyro;
+  float accel_sensitivity;
+  float gyro_sensitivity;
+  float accel[3];
+  float gyro[3];
 
-  real_t temperature;
-  real_t sample_rate;
+  float temperature;
+  float sample_rate;
   int8_t dplf_config;
   clock_t last_updated;
 } mpu6050_t;
@@ -275,4 +276,4 @@ int8_t mpu6050_set_accel_range(const mpu6050_t *imu, const int8_t setting);
  */
 int8_t mpu6050_get_accel_range(const mpu6050_t *imu, int8_t *range);
 
-#endif /* ZERO_DRIVER_MPU6050_H */
+#endif /* MPU6050_H */

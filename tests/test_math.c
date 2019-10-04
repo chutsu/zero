@@ -1,5 +1,5 @@
 #include "zero/munit.h"
-#include "zero/core.h"
+#include "zero/math.h"
 
 int test_eye() {
   real_t A[25] = {0.0};
