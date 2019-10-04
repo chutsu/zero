@@ -1,13 +1,17 @@
 include ../config.mk
 
-SRCS = $(wildcard *.c) $(wildcard **/*.c)
+SRCS = $(wildcard *.c)
 OBJS = $(addprefix $(BLD_DIR)/, $(SRCS:.c=.o))
+
+.PHONY: all tests dirs
 
 all: dirs $(BLD_DIR)/libzero.a
 
+tests:
+	@make -C tests
+
 dirs:
-	@mkdir -p $(BLD_DIR)/cv
-	@mkdir -p $(BLD_DIR)/fw
+	@mkdir -p $(BLD_DIR)
 
 $(BLD_DIR)/%.o : %.c
 	$(COMPILE_OBJ)

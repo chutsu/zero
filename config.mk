@@ -1,6 +1,6 @@
 BLD_DIR=$(PWD)/build
 BIN_DIR=$(PWD)/build/bin
-INC_DIR=$(PWD)/include
+INC_DIR=$(PWD)
 DEP_DIR=$(PWD)/dep
 TESTS_DIR=$(PWD)/tests
 
