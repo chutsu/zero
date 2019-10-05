@@ -17,7 +17,7 @@ void serial_configure(serial_t *s,
 	              GPIO_USART1_TX);
   gpio_set_mode(GPIOA,
                 GPIO_MODE_INPUT,
-                GPIO_CNF_INPUT_FLOAT,
+                GPIO_CNF_INPUT_PULL_UPDOWN,
                 GPIO_USART1_RX);
   usart_set_mode(USART1, USART_MODE_TX_RX);
 
@@ -43,6 +43,12 @@ void serial_write_byte(const serial_t *s, const uint8_t data) {
 void serial_write(const serial_t *s, const uint8_t *data, const size_t size) {
   for (size_t i = 0; i < size; i++) {
     usart_send_blocking(s->connfd, data[i]);
+  }
+}
+
+void serial_write_string(const serial_t *s, const char *str) {
+  for (size_t i = 0; i < strlen(s); i++) {
+    serial_write_byte(s, str[i]);
   }
 }
 

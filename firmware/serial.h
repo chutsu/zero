@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "core.h"
 
@@ -61,6 +62,14 @@ void serial_write_byte(const serial_t *s, const uint8_t data);
 void serial_write(const serial_t *s,
                   const uint8_t *data,
                   const size_t size);
+
+/**
+ * Write string to serial.
+ *
+ * @param[in] s Serial
+ * @param[in] str String
+ */
+void serial_write_string(const serial_t *s, const char *str);
 
 /**
  * Read a single byte to serial.
