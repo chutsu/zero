@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name SN754410)(type Legacy)(uri ${KIPRJMOD}/SN754410.lib)(options "")(descr ""))
-)

@@ -1,7 +1,3 @@
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/usart.h>
-
 #include "serial.h"
 
 void setup(serial_t *serial) {
@@ -13,17 +9,32 @@ void setup(serial_t *serial) {
 	              GPIO13);
 
   // Serial
-  serial_configure(serial, USART1, 384000, 0);
+  serial_configure(serial, 38400, 0);
+  serial_connect(serial);
 }
 
-int main(void) {
+int main() {
   serial_t serial;
   setup(&serial);
 
-	while (1) {
-		gpio_set(GPIOC, GPIO13);
-		for (int i = 0; i < 1000000; ++i) __asm__("nop");
-		gpio_clear(GPIOC, GPIO13);
-		for (int i = 0; i <  500000; ++i) __asm__("nop");
-	}
+  for (size_t i = 0; i < 30; i++) {
+    serial_write_byte(&serial, '-');
+  }
+  serial_write_byte(&serial, '\r');
+  serial_write_byte(&serial, '\n');
+
+  while (1) {
+		/* gpio_set(GPIOC, GPIO13); */
+		/* for (int i = 0; i < 1000000; ++i) __asm__("nop"); */
+		/* gpio_clear(GPIOC, GPIO13); */
+		/* for (int i = 0; i <  500000; ++i) __asm__("nop"); */
+
+    uint8_t data = 0;
+    serial_read_byte(&serial, &data);
+    serial_write_byte(&serial, data);
+    serial_write_byte(&serial, '\r');
+    serial_write_byte(&serial, '\n');
+  }
+
+  return 0;
 }
