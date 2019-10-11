@@ -47,7 +47,7 @@ void serial_write(const serial_t *s, const uint8_t *data, const size_t size) {
 }
 
 void serial_write_string(const serial_t *s, const char *str) {
-  for (size_t i = 0; i < strlen(s); i++) {
+  for (size_t i = 0; i < strlen(str); i++) {
     serial_write_byte(s, str[i]);
   }
 }
