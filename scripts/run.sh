@@ -8,7 +8,6 @@ set -e
 # ./build/bin/test_template
 
 cd firmware
-cd MPU6050
-arduino --upload MPU6050.ino --port /dev/ttyUSB0
+arduino --upload firmware6050.ino --port /dev/ttyUSB0
 # make clean
 # make flash

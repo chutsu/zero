@@ -1,7 +1,9 @@
-#ifndef BME280_H
-#define BME280_H
+#ifndef BME280_HPP
+#define BME280_HPP
 
-#include "i2c.h"
+#include <stdint.h>
+
+#include "i2c.hpp"
 
 /* BME280 I2C Addresses */
 #define BME280_ADDR (0x77)      // Primary I2C Address
@@ -92,30 +94,13 @@ typedef struct {
   int8_t dig_H6;    // humidity compensation value
 } bme280_calib_data;
 
-/* BME280 Configuration */
-typedef struct bme280_config_t {
-
-
-} bme280_config_t;
-
 /* BME280 */
 typedef struct bme280_t {
-  i2c_t *i2c;
 } bme280_t;
 
-/**
- * Configure BME280
- *
- * @param[in,out] sensor Sensor
- * @param[in] config Configuration
- * @param[in] i2c I2C
- */
-void bme280_configure(bme280_t *sensor,
-											const bme280_config_t *config,
-											const i2c_t *i2c);
-
+void bme280_configure(bme280_t *sensor);
 float bme280_read_temperature(bme280_t *sensor);
 float bme280_read_pressure(bme280_t *sensor);
 float bme280_read_humidity(bme280_t *sensor);
 
-#endif /* ZERO_FW_BME280_H */
+#endif // ZERO_FW_BME280_HPP
