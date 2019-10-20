@@ -1,13 +1,12 @@
-#ifndef MPU6050_H
-#define MPU6050_H
+#ifndef MPU6050_HPP
+#define MPU6050_HPP
 
-#include <math.h>
+// #include <math.h>
 #include <time.h>
 #include <string.h>
 
-#include "log.h"
-#include "core.h"
-#include "i2c.h"
+#include "core.hpp"
+#include "i2c.hpp"
 
 // GENERAL
 #define MPU6050_ADDRESS 0x68
@@ -127,50 +126,25 @@
 #define MPU6050_REG_WHO_AM_I 0x75
 
 typedef struct mpu6050_t {
-  int8_t ok;
-  i2c_t *i2c;
+  int8_t ok = 0;
 
-  float accel_sensitivity;
-  float gyro_sensitivity;
-  float accel[3];
-  float gyro[3];
+  float accel_sensitivity = 0.0f;
+  float gyro_sensitivity = 0.0f;
+  float accel[3] = {0.0f};
+  float gyro[3] = {0.0f};
 
-  float temperature;
-  float sample_rate;
-  int8_t dplf_config;
-  clock_t last_updated;
+  float temperature = 0.0f;
+  float sample_rate = 0.0f;
 } mpu6050_t;
 
-typedef struct mpu6050_config_t {
-  uint8_t dplf;
-  uint8_t gyro_range;
-  uint8_t accel_range;
-} mpu6050_config_t;
+/** Initialize MPU6050 sensor */
+void mpu6050_init(mpu6050_t *imu);
 
-/**
- * Configure
- *
- * @param[in,out] imu IMU
- * @param config_file Path to configuration file
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_init(mpu6050_t *imu, const mpu6050_config_t *config);
+/** Get MPU6050 address */
+int8_t mpu6050_ping();
 
-/**
- * Ping
- *
- * @param imu IMU
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_ping(const mpu6050_t *imu);
-
-/**
- * Get IMU data
- *
- * @param[in,out] imu IMU
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_get_data(mpu6050_t *imu);
+/** Get DPLF */
+uint8_t mpu6050_get_dplf();
 
 /**
  * Set DPLF
@@ -200,80 +174,31 @@ int8_t mpu6050_get_data(mpu6050_t *imu);
  * 6           5               18.5        1
  * 7           RESERVED        RESERVED    8
  * ```
- *
- * @param imu IMU
- * @param setting
- * @returns 0 for success, -1 for failure
  */
-int8_t mpu6050_set_dplf(const mpu6050_t *imu, const uint8_t setting);
+void mpu6050_set_dplf(const uint8_t setting);
 
-/**
- * Get DPLF
- *
- * @param imu IMU
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_get_dplf(const mpu6050_t *imu);
+/** Get sample rate division */
+uint8_t mpu6050_get_sample_rate_div();
 
-/**
- * Set sample rate division
- *
- * @param imu IMU
- * @param div Setting
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_set_sample_rate_div(const mpu6050_t *imu, const int8_t setting);
+/** Set sample rate division */
+void mpu6050_set_sample_rate_div(const int8_t setting);
 
-/**
- * Get sample rate division
- *
- * @param imu IMU
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_get_sample_rate_div(const mpu6050_t *imu);
+/** Get sample rate */
+uint8_t mpu6050_get_sample_rate();
 
-/**
- * Get sample rate
- *
- * @param imu IMU
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_get_sample_rate(const mpu6050_t *imu);
+/** Set gyro range */
+void mpu6050_set_gyro_range(const int8_t range);
 
-/**
- * Set gyro range
- *
- * @param imu IMU
- * @param range Range
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_set_gyro_range(const mpu6050_t *imu, const int8_t range);
+/** Get gyro range */
+uint8_t mpu6050_get_gyro_range();
 
-/**
- * Get gyro range
- *
- * @param imu IMU
- * @param range Range
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_get_gyro_range(const mpu6050_t *imu, int8_t *range);
+/** Set accelerometer range */
+void mpu6050_set_accel_range(const int8_t setting);
 
-/**
- * Set accelerometer range
- *
- * @param imu IMU
- * @param range Range
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_set_accel_range(const mpu6050_t *imu, const int8_t setting);
+/** Get accelerometer range */
+uint8_t mpu6050_get_accel_range();
 
-/**
- * Get accelerometer range
- *
- * @param imu IMU
- * @param range Range
- * @returns 0 for success, -1 for failure
- */
-int8_t mpu6050_get_accel_range(const mpu6050_t *imu, int8_t *range);
+/** Get IMU data */
+void mpu6050_get_data(mpu6050_t *imu);
 
 #endif /* MPU6050_H */
