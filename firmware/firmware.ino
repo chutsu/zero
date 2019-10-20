@@ -7,39 +7,40 @@ pwm_t pwm;
 
 void setup() {
   Serial.begin(115200);
-  /* Serial.print("------------"); */
-  /* Serial.print("\n\r"); */
+  Serial.print("------------");
+  Serial.print("\n\r");
 
-	pwm_setup(&pwm, 2, 5);
-	pwm_set(&pwm, 10);
+	/* pwm_setup(&pwm, 2, 5); */
+	/* pwm_set(&pwm, 10); */
 
   i2c_setup();
-  delay(1000);
 	mpu6050_init(&imu);
 
-  /* Serial.print("Accel sensitivity: "); */
-  /* Serial.print(imu.accel_sensitivity); */
-  /* Serial.print("\n\r"); */
+  Serial.print("Accel sensitivity: ");
+  Serial.print(imu.accel_sensitivity);
+  Serial.print("\n\r");
 
-  /* Serial.print("Gyro sensitivity: "); */
-  /* Serial.print(imu.gyro_sensitivity); */
-  /* Serial.print("\n\r"); */
+  Serial.print("Gyro sensitivity: ");
+  Serial.print(imu.gyro_sensitivity);
+  Serial.print("\n\r");
 
-  /* Serial.print("DPLF: "); */
-  /* Serial.print(mpu6050_get_dplf()); */
-  /* Serial.print("\n\r"); */
+  Serial.print("DPLF: ");
+  Serial.print(mpu6050_get_dplf());
+  Serial.print("\n\r");
 
-  /* Serial.print("Ping: "); */
-  /* Serial.print(mpu6050_ping()); */
-  /* Serial.print("\n\r"); */
+  Serial.print("Ping: ");
+  Serial.print(mpu6050_ping());
+  Serial.print("\n\r");
 
-  /* Serial.print("Sample rate div: "); */
-  /* Serial.print(mpu6050_get_sample_rate_div()); */
-  /* Serial.print("\n\r"); */
+  Serial.print("Sample rate div: ");
+  Serial.print(mpu6050_get_sample_rate_div());
+  Serial.print("\n\r");
 
-  /* Serial.print("Sample rate: "); */
-  /* Serial.print(imu.sample_rate); */
-  /* Serial.print("\n\r"); */
+  Serial.print("Sample rate: ");
+  Serial.print(imu.sample_rate);
+  Serial.print("\n\r");
+
+  exit(0);
 
 	/* delay(5000); */
 }

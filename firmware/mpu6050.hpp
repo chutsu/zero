@@ -143,13 +143,12 @@ void mpu6050_init(mpu6050_t *imu);
 /** Get MPU6050 address */
 int8_t mpu6050_ping();
 
-/** Get DPLF */
+/** Get Digital Low-Pass Filter config */
 uint8_t mpu6050_get_dplf();
 
 /**
- * Set DPLF
+ * Set Digital Low-Pass Filter
  *
- * ```
  * DPLF_CFG    Accelerometer
  * ----------------------------------------
  *             Bandwidth(Hz) | Delay(ms)
@@ -173,7 +172,6 @@ uint8_t mpu6050_get_dplf();
  * 5           10              13.4        1
  * 6           5               18.5        1
  * 7           RESERVED        RESERVED    8
- * ```
  */
 void mpu6050_set_dplf(const uint8_t setting);
 
@@ -184,7 +182,10 @@ uint8_t mpu6050_get_sample_rate_div();
 void mpu6050_set_sample_rate_div(const int8_t setting);
 
 /** Get sample rate */
-uint8_t mpu6050_get_sample_rate();
+float mpu6050_get_sample_rate();
+
+/** Set sample rate */
+void mpu6050_set_sample_rate(float sample_rate);
 
 /** Set gyro range */
 void mpu6050_set_gyro_range(const int8_t range);

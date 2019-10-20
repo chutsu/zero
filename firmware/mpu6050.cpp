@@ -2,7 +2,8 @@
 
 void mpu6050_init(mpu6050_t *imu) {
 	// Configure Digital low-pass filter
-	mpu6050_set_dplf(0);
+	uint8_t dlpf_cfg = 0;
+	mpu6050_set_dplf(dlpf_cfg);
 
   // Set power management register
   i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, 0x00);
@@ -28,7 +29,9 @@ void mpu6050_init(mpu6050_t *imu) {
   }
 
   // Configure sample rate
-  // imu->sample_rate = mpu6050_get_sample_rate();
+  float sample_rate = 400;
+  mpu6050_set_sample_rate(sample_rate);
+  imu->sample_rate = mpu6050_get_sample_rate();
 }
 
 int8_t mpu6050_ping() {
@@ -75,33 +78,40 @@ uint8_t mpu6050_get_sample_rate_div() {
   return i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV);
 }
 
+void mpu6050_set_sample_rate(float sample_rate) {
+  // gyro_output_rate = 8kHz (iff DPLF_CFG: 0 or 7) or 1kHz
+  uint8_t dlpf_cfg = mpu6050_get_dplf();
+  float gyro_rate = ((dlpf_cfg == 0) || (dlpf_cfg == 7)) ? 8000.0f : 1000.0f;
+
+  // Calculate and set sample rate divider needed to get desired sample rate.
+  // The equation is given in MPU6050 register map documentation (page 12 of
+  // 46). Under the sample rate divider register section.
+  //
+  // sample_rate = gyro_output_rate / (1 + smplrt_div)
+  // smplrt_div = (gyro_output_rate / sample_rate) - 1
+  float smplrt_div = (gyro_rate / sample_rate) - 1;
+  mpu6050_set_sample_rate_div(smplrt_div);
+}
+
 void mpu6050_set_sample_rate_div(const int8_t div) {
   i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV, div);
 }
 
-uint8_t mpu6050_get_sample_rate() {
+float mpu6050_get_sample_rate() {
   // Get sample rate divider
   uint8_t smplrt_div = mpu6050_get_sample_rate_div();
 
   // Get gyro sample rate
-  float gyro_rate = 0.0f;
   uint8_t dlpf_cfg = mpu6050_get_dplf();
-  switch (dlpf_cfg) {
-  case 0:
-  case 7:
-    gyro_rate = 8000.0f;  // 8kHz
-    break;
-  default:
-    gyro_rate = 1000.0f;  // 1kHz
-    break;
-  }
+  float gyro_rate = ((dlpf_cfg == 0) || (dlpf_cfg == 7)) ? 8000.0f : 1000.0f;
 
-  // Calculate sample rate
-  return gyro_rate / (float) (1 + smplrt_div);
+  // Calculate sample rate. The equation is given in MPU6050 register map
+  // documentation (page 12 of 46). Under the sample rate divider register
+  // section.
+  return gyro_rate / (1 + smplrt_div);
 }
 
 void mpu6050_set_gyro_range(const int8_t range) {
-  // assert(range > 3 || range < 0);
   uint8_t data = range << 3;
   i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_GYRO_CONFIG, data);
 }
