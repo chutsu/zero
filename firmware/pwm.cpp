@@ -1,6 +1,7 @@
 #include "pwm.hpp"
 
 void pwm_setup(pwm_t *pwm, const uint8_t pin, const uint8_t freq) {
+  pinMode(pin, OUTPUT);
 	PinName pin_name = digitalPinToPinName(pin);
 	TIM_TypeDef *instance = (TIM_TypeDef *) pinmap_peripheral(pin_name, PinMap_PWM);
 

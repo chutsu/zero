@@ -1,6 +1,6 @@
 #include "mpu6050.hpp"
 
-void mpu6050_init(mpu6050_t *imu) {
+void mpu6050_setup(mpu6050_t *imu) {
 	// Configure Digital low-pass filter
 	uint8_t dlpf_cfg = 0;
 	mpu6050_set_dplf(dlpf_cfg);

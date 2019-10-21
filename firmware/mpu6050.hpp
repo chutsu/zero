@@ -138,7 +138,7 @@ typedef struct mpu6050_t {
 } mpu6050_t;
 
 /** Initialize MPU6050 sensor */
-void mpu6050_init(mpu6050_t *imu);
+void mpu6050_setup(mpu6050_t *imu);
 
 /** Get MPU6050 address */
 int8_t mpu6050_ping();
