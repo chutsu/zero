@@ -7,72 +7,81 @@
 #include <math.h>
 #include <assert.h>
 
-/* typedef float real_t; */
-typedef double real_t;
+#ifndef M_PI
+#define M_PI (3.14159265358979323846)
+#endif
 
-typedef real_t pt2_t[2];
-typedef real_t pt3_t[3];
-typedef real_t hp3_t[3];
-typedef real_t hp4_t[4];
+/******************************************************************************
+ *																 GENERAL
+ ******************************************************************************/
 
-typedef real_t vec2_t[2];
-typedef real_t vec3_t[3];
-typedef real_t vec4_t[4];
-typedef real_t vec5_t[5];
-
-typedef real_t mat2_t[4];
-typedef real_t mat3_t[9];
-typedef real_t mat4_t[16];
-
-typedef struct mat_t {
-  real_t *data;
-  int rows;
-  int cols;
-} mat_t;
-
-real_t deg2rad(const real_t d);
-real_t rad2deg(const real_t r);
-
+double deg2rad(const double d);
+double rad2deg(const double r);
 int fltcmp(const double x, const double y);
-
 double lerpd(const double a, const double b, const double t);
 float lerpf(const float a, const float b, const float t);
+double sinc(const double x);
 
-void print_matrix(const char *prefix, const real_t *data,
-                  const size_t m, const size_t n);
-void print_vector(const char *prefix, const real_t *data, const size_t length);
+/******************************************************************************
+ *															LINEAR ALGEBRA
+ ******************************************************************************/
 
-void eye(real_t *A, const size_t m, const size_t n);
-void ones(real_t *A, const size_t m, const size_t n);
-void zeros(real_t *A, const size_t m, const size_t n);
+void print_matrix(const char *prefix, const double *data,
+									const size_t m, const size_t n);
+void print_vector(const char *prefix, const double *data, const size_t length);
 
-void mat_set(real_t *A,
+void eye(double *A, const size_t m, const size_t n);
+void ones(double *A, const size_t m, const size_t n);
+void zeros(double *A, const size_t m, const size_t n);
+
+void mat_set(double *A,
              const size_t stride,
              const size_t i,
              const size_t j,
-             const real_t val);
-real_t mat_val(const real_t *A,
+             const double val);
+double mat_val(const double *A,
                const size_t stride,
                const size_t i,
                const size_t j);
-void mat_block(const real_t *A,
+void mat_block(const double *A,
                const size_t stride,
                const size_t rs,
                const size_t cs,
                const size_t re,
                const size_t ce,
-               real_t *block);
-void mat_transpose(const real_t *A, size_t m, size_t n, real_t *A_t);
-void mat_add(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n);
-void mat_sub(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n);
-void mat_scale(real_t *A, const size_t m, const size_t n, const real_t scale);
+               double *block);
+void mat_transpose(const double *A, size_t m, size_t n, double *A_t);
+void mat_add(const double *A, const double *B, double *C, size_t m, size_t n);
+void mat_sub(const double *A, const double *B, double *C, size_t m, size_t n);
+void mat_scale(double *A, const size_t m, const size_t n, const double scale);
 
-void vec_add(const real_t *x, const real_t *y, real_t *z, size_t length);
-void vec_sub(const real_t *x, const real_t *y, real_t *z, size_t length);
-void vec_scale(real_t *A, const size_t length, const real_t scale);
+void vec_add(const double *x, const double *y, double *z, size_t length);
+void vec_sub(const double *x, const double *y, double *z, size_t length);
+void vec_scale(double *x, const size_t length, const double scale);
+double vec_norm(const double *x, const size_t length);
 
-void dot(const real_t *A, const size_t A_m, const size_t A_n,
-         const real_t *B, const size_t B_m, const size_t B_n,
-         real_t *C);
+void dot(const double *A, const size_t A_m, const size_t A_n,
+         const double *B, const size_t B_m, const size_t B_n,
+         double *C);
+
+/******************************************************************************
+ *															TRANSFORMS
+ ******************************************************************************/
+
+void tf_set_rot(double T[4*4], double C[3*3]);
+void tf_set_trans(double T[4*4], double r[3]);
+void tf_trans(const double T[4*4], double r[3]);
+void tf_rot(const double T[4*4], double C[3*3]);
+void tf_quat(const double T[4*4], double q[4]);
+void tf_inv(const double T[4*4], double T_inv[4*4]);
+void tf_point(const double T[4*4], const double p[3], double retval[3]);
+void tf_hpoint(const double T[4*4], const double p[4], double retval[4]);
+void euler321(const double euler[3], double C[3*3]);
+void rot2quat(const double C[3*3], double q[4]);
+void quat2euler(const double q[4], double euler[3]);
+void quat2rot(const double q[4], double C[3*3]);
+void quatlmul(const double p[4], const double q[4], double r[4]);
+void quatrmul(const double p[4], const double q[4], double r[4]);
+void quatmul(const double p[4], const double q[4], double r[4]);
 
 #endif // CORE_H

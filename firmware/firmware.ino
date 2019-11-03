@@ -3,12 +3,12 @@
 #include "i2c.hpp"
 #include "mpu6050.hpp"
 #include "pwm.hpp"
-#include "hc_sr04.hpp"
+#include "hcsr04.hpp"
 
 // GLOBAL VARIABLES
 mpu6050_t imu;
 pwm_t pwm;
-hc_sr04_t uds;
+hcsr04_t uds;
 
 uint8_t trig_pin = PB0;
 uint8_t echo_pin = PB1;

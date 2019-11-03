@@ -2,7 +2,7 @@
 #include "zero/math.h"
 
 int test_eye() {
-  real_t A[25] = {0.0};
+  double A[25] = {0.0};
   eye(A, 5, 5);
 
   /* print_matrix("I", A, 5, 5); */
@@ -11,7 +11,7 @@ int test_eye() {
   size_t cols = 5;
   for (size_t i = 0; i < rows; i++) {
     for (size_t j = 0; j < cols; j++) {
-      real_t expected = (i == j) ? 1.0 : 0.0;
+      double expected = (i == j) ? 1.0 : 0.0;
       MU_CHECK(fltcmp(A[idx], expected) == 0);
       idx++;
     }
@@ -21,7 +21,7 @@ int test_eye() {
 }
 
 int test_ones() {
-  real_t A[25] = {0.0};
+  double A[25] = {0.0};
   ones(A, 5, 5);
 
   /* print_matrix("A", A, 5, 5); */
@@ -39,7 +39,7 @@ int test_ones() {
 }
 
 int test_zeros() {
-  real_t A[25] = {0.0};
+  double A[25] = {0.0};
   zeros(A, 5, 5);
 
   /* print_matrix("A", A, 5, 5); */
@@ -57,7 +57,7 @@ int test_zeros() {
 }
 
 int test_mat_set() {
-  real_t A[9] = {0.0, 0.0, 0.0,
+  double A[9] = {0.0, 0.0, 0.0,
                  0.0, 0.0, 0.0,
                  0.0, 0.0, 0.0};
 
@@ -74,7 +74,7 @@ int test_mat_set() {
 }
 
 int test_mat_val() {
-  real_t A[9] = {1.0, 2.0, 3.0,
+  double A[9] = {1.0, 2.0, 3.0,
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
 
@@ -88,10 +88,10 @@ int test_mat_val() {
 }
 
 int test_mat_block() {
-  real_t A[9] = {1.0, 2.0, 3.0,
+  double A[9] = {1.0, 2.0, 3.0,
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
-  real_t B[4] = {0.0};
+  double B[4] = {0.0};
   mat_block(A, 3, 1, 1, 2, 2, B);
 
   /* print_matrix("B", B, 2, 2); */
@@ -104,10 +104,10 @@ int test_mat_block() {
 }
 
 int test_mat_transpose() {
-  real_t A[9] = {1.0, 2.0, 3.0,
+  double A[9] = {1.0, 2.0, 3.0,
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
-  real_t C[9] = {0.0};
+  double C[9] = {0.0};
   mat_transpose(A, 3, 3, C);
   print_matrix("C", C, 3, 3);
 
@@ -115,13 +115,13 @@ int test_mat_transpose() {
 }
 
 int test_mat_add() {
-  real_t A[9] = {1.0, 2.0, 3.0,
+  double A[9] = {1.0, 2.0, 3.0,
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
-  real_t B[9] = {9.0, 8.0, 7.0,
+  double B[9] = {9.0, 8.0, 7.0,
                  6.0, 5.0, 4.0,
                  3.0, 2.0, 1.0};
-  real_t C[9] = {0.0};
+  double C[9] = {0.0};
   mat_add(A, B, C, 3, 3);
   print_matrix("C", C, 3, 3);
 
@@ -129,13 +129,13 @@ int test_mat_add() {
 }
 
 int test_mat_sub() {
-  real_t A[9] = {1.0, 2.0, 3.0,
+  double A[9] = {1.0, 2.0, 3.0,
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
-  real_t B[9] = {1.0, 2.0, 3.0,
+  double B[9] = {1.0, 2.0, 3.0,
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
-  real_t C[9] = {0.0};
+  double C[9] = {0.0};
   mat_sub(A, B, C, 3, 3);
   print_matrix("C", C, 3, 3);
 
@@ -143,13 +143,13 @@ int test_mat_sub() {
 }
 
 int test_vec_add() {
-  real_t A[9] = {1.0, 2.0, 3.0,
+  double A[9] = {1.0, 2.0, 3.0,
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
-  real_t B[9] = {9.0, 8.0, 7.0,
+  double B[9] = {9.0, 8.0, 7.0,
                  6.0, 5.0, 4.0,
                  3.0, 2.0, 1.0};
-  real_t C[9] = {0.0};
+  double C[9] = {0.0};
   vec_add(A, B, C, 9);
   print_vector("C", C, 9);
 
@@ -157,22 +157,22 @@ int test_vec_add() {
 }
 
 int test_vec_sub() {
-  real_t A[9] = {1.0, 2.0, 3.0,
+  double A[9] = {1.0, 2.0, 3.0,
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
-  real_t B[9] = {1.0, 2.0, 3.0,
+  double B[9] = {1.0, 2.0, 3.0,
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
-  real_t C[9] = {0.0};
+  double C[9] = {0.0};
   vec_sub(A, B, C, 9);
   print_vector("C", C, 9);
 
   return 0;
 }
 
-/* void mat_dot(const real_t *A, const size_t A_m, const size_t A_n, */
-/*              const real_t *B, const size_t B_m, const size_t B_n, */
-/*              real_t *C) { */
+/* void mat_dot(const double *A, const size_t A_m, const size_t A_n, */
+/*              const double *B, const size_t B_m, const size_t B_n, */
+/*              double *C) { */
 /*   assert(A_n == B_m); */
 /*  */
 /*   cblas_dgemm( */
@@ -194,20 +194,263 @@ int test_vec_sub() {
 /* } */
 
 int test_dot() {
-  real_t A[9] = {1.0, 2.0, 3.0,
+  double A[9] = {1.0, 2.0, 3.0,
                  4.0, 5.0, 6.0,
                  7.0, 8.0, 9.0};
-  /* real_t B[3] = {1.0, 2.0, 3.0}; */
-  real_t C[9] = {0.0};
+  double B[3] = {1.0, 2.0, 3.0};
+  double C[9] = {0.0};
 
-  dot(A, 3, 3, A, 3, 3, C);
-  print_matrix("C", C, 3, 3);
-  /* print_vector("C", C, 3); */
+  /* Multiply matrix A and B */
+  dot(A, 3, 3, B, 3, 1, C);
+  print_vector("C", C, 3);
 
   return 0;
 }
 
+int test_tf_set_rot() {
+	double C[9];
+	for (int i = 0; i < 9; i++) {
+		C[i] = 1.0;
+	}
+
+  double T[16] = {0.0};
+	tf_set_rot(T, C);
+  /* print_matrix("T", T, 4, 4); */
+
+	MU_CHECK(fltcmp(T[0], 1.0) == 0);
+	MU_CHECK(fltcmp(T[1], 1.0) == 0);
+	MU_CHECK(fltcmp(T[2], 1.0) == 0);
+	MU_CHECK(fltcmp(T[3], 0.0) == 0);
+
+	MU_CHECK(fltcmp(T[4], 1.0) == 0);
+	MU_CHECK(fltcmp(T[5], 1.0) == 0);
+	MU_CHECK(fltcmp(T[6], 1.0) == 0);
+	MU_CHECK(fltcmp(T[7], 0.0) == 0);
+
+	MU_CHECK(fltcmp(T[8], 1.0) == 0);
+	MU_CHECK(fltcmp(T[9], 1.0) == 0);
+	MU_CHECK(fltcmp(T[10], 1.0) == 0);
+	MU_CHECK(fltcmp(T[11], 0.0) == 0);
+
+	MU_CHECK(fltcmp(T[12], 0.0) == 0);
+	MU_CHECK(fltcmp(T[13], 0.0) == 0);
+	MU_CHECK(fltcmp(T[14], 0.0) == 0);
+	MU_CHECK(fltcmp(T[15], 0.0) == 0);
+
+  return 0;
+}
+
+int test_tf_set_trans() {
+	double r[3] = {1.0, 2.0, 3.0};
+
+  double T[16] = {0.0};
+	tf_set_trans(T, r);
+  /* print_matrix("T", T, 4, 4); */
+
+	MU_CHECK(fltcmp(T[0], 0.0) == 0);
+	MU_CHECK(fltcmp(T[1], 0.0) == 0);
+	MU_CHECK(fltcmp(T[2], 0.0) == 0);
+	MU_CHECK(fltcmp(T[3], 1.0) == 0);
+
+	MU_CHECK(fltcmp(T[4], 0.0) == 0);
+	MU_CHECK(fltcmp(T[5], 0.0) == 0);
+	MU_CHECK(fltcmp(T[6], 0.0) == 0);
+	MU_CHECK(fltcmp(T[7], 2.0) == 0);
+
+	MU_CHECK(fltcmp(T[8], 0.0) == 0);
+	MU_CHECK(fltcmp(T[9], 0.0) == 0);
+	MU_CHECK(fltcmp(T[10], 0.0) == 0);
+	MU_CHECK(fltcmp(T[11], 3.0) == 0);
+
+	MU_CHECK(fltcmp(T[12], 0.0) == 0);
+	MU_CHECK(fltcmp(T[13], 0.0) == 0);
+	MU_CHECK(fltcmp(T[14], 0.0) == 0);
+	MU_CHECK(fltcmp(T[15], 0.0) == 0);
+
+  return 0;
+}
+
+int test_tf_trans() {
+  double T[16] = {1.0, 2.0, 3.0, 4.0,
+								  5.0, 6.0, 7.0, 8.0,
+								  9.0, 10.0, 11.0, 12.0,
+								  13.0, 14.0, 15.0, 16.0};
+  print_matrix("T", T, 4, 4);
+
+	/* Get translation vector */
+	double r[3];
+	tf_trans(T, r);
+  print_vector("r", r, 3);
+
+	MU_CHECK(fltcmp(r[0], 4.0) == 0);
+	MU_CHECK(fltcmp(r[1], 8.0) == 0);
+	MU_CHECK(fltcmp(r[2], 12.0) == 0);
+
+  return 0;
+}
+
+int test_tf_rot() {
+  /* Transform */
+  double T[16] = {1.0, 2.0, 3.0, 4.0,
+								  5.0, 6.0, 7.0, 8.0,
+								  9.0, 10.0, 11.0, 12.0,
+								  13.0, 14.0, 15.0, 16.0};
+  print_matrix("T", T, 4, 4);
+
+	/* Get rotation matrix */
+	double C[9];
+	tf_rot(T, C);
+  print_matrix("C", C, 3, 3);
+
+	for (size_t i = 0; i < 9; i++) {
+		MU_CHECK(fltcmp(C[i], i + 1) == 0);
+	}
+
+  return 0;
+}
+
+int test_tf_quat() {
+  /* Transform */
+  double T[16] = {1.0, 0.0, 0.0, 0.0,
+								  0.0, 1.0, 0.0, 0.0,
+								  0.0, 0.0, 1.0, 0.0,
+								  0.0, 0.0, 0.0, 1.0};
+
+	/* Create rotation matrix */
+	const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+	double C[9] = {0};
+	euler321(euler, C);
+	tf_set_rot(T, C);
+
+	/* Extract quaternion from transform */
+	double q[4] = {0};
+	tf_quat(T, q);
+
+	/* Convert quaternion back to euler angles */
+	double rpy[3] = {0};
+	quat2euler(q, rpy);
+
+	MU_CHECK(fltcmp(rad2deg(rpy[0]), 10.0) == 0);
+	MU_CHECK(fltcmp(rad2deg(rpy[1]), 20.0) == 0);
+	MU_CHECK(fltcmp(rad2deg(rpy[2]), 30.0) == 0);
+
+	return 0;
+}
+
+int test_tf_point() {
+  /* Transform */
+  const double T[16] = {1.0, 0.0, 0.0, 1.0,
+								   			0.0, 1.0, 0.0, 2.0,
+								   			0.0, 0.0, 1.0, 3.0,
+								   			0.0, 0.0, 0.0, 1.0};
+  print_matrix("T", T, 4, 4);
+
+  /* Point */
+  double p[3] = {1.0, 2.0, 3.0};
+  print_vector("p", p, 3);
+
+  /* Transform point */
+  double result[3] = {0};
+	tf_point(T, p, result);
+  print_vector("result", result, 3);
+
+  return 0;
+}
+
+int test_tf_hpoint() {
+  /* Transform */
+  const double T[16] = {1.0, 0.0, 0.0, 1.0,
+								   			0.0, 1.0, 0.0, 2.0,
+								   			0.0, 0.0, 1.0, 3.0,
+								   			0.0, 0.0, 0.0, 1.0};
+  print_matrix("T", T, 4, 4);
+
+  /* Homogeneous point */
+  double hp[4] = {1.0, 2.0, 3.0, 1.0};
+  print_vector("hp", hp, 4);
+
+  /* Transform homogeneous point */
+  double result[4] = {0};
+	tf_hpoint(T, hp, result);
+  print_vector("result", result, 4);
+
+  return 0;
+}
+
+int test_euler321() {
+	/* Euler to rotation matrix */
+	const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+	double C[9] = {0};
+	euler321(euler, C);
+
+	/* Rotation matrix to quaternion */
+	double q[4] = {0};
+	rot2quat(C, q);
+
+	/* Quaternion to Euler angles*/
+	double euler2[3] = {0};
+	quat2euler(q, euler2);
+
+  print_vector("euler", euler, 3);
+  print_vector("euler2", euler2, 3);
+
+	return 0;
+}
+
+int test_rot2quat() {
+	/* Rotation matrix to quaternion */
+  const double C[9] = {1.0, 0.0, 0.0,
+								  		 0.0, 1.0, 0.0,
+								  		 0.0, 0.0, 1.0};
+	double q[4] = {0.0};
+	rot2quat(C, q);
+  print_vector("q", q, 4);
+
+	return 0;
+}
+
+int test_quat2euler() {
+  const double C[9] = {1.0, 0.0, 0.0,
+											 0.0, 1.0, 0.0,
+											 0.0, 0.0, 1.0};
+
+	/* Rotation matrix to quaternion */
+	double q[4] = {0.0};
+	rot2quat(C, q);
+  print_vector("q", q, 4);
+
+	/* Quaternion to Euler angles */
+	double rpy[3] = {0.0};
+	quat2euler(q, rpy);
+  print_vector("euler", rpy, 3);
+
+	return 0;
+}
+
+int test_quat2rot() {
+	/* Euler to rotation matrix */
+	const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+	double C[9] = {0};
+	euler321(euler, C);
+
+	/* Rotation matrix to quaternion */
+	double q[4] = {0.0};
+	rot2quat(C, q);
+  /* print_vector("q", q, 4); */
+
+	/* Quaternion to rotation matrix */
+	double rot[9] = {0.0};
+	quat2rot(q, rot);
+
+	for (int i = 0; i < 9; i++) {
+		MU_CHECK(fltcmp(C[i], rot[i]) == 0);
+	}
+
+	return 0;
+}
+
 void test_suite() {
+	/* Linear Algebra */
   MU_ADD_TEST(test_eye);
   MU_ADD_TEST(test_ones);
   MU_ADD_TEST(test_zeros);
@@ -220,6 +463,19 @@ void test_suite() {
   MU_ADD_TEST(test_vec_add);
   MU_ADD_TEST(test_vec_sub);
   MU_ADD_TEST(test_dot);
+
+	/* Transforms */
+  MU_ADD_TEST(test_tf_set_rot);
+  MU_ADD_TEST(test_tf_set_trans);
+  MU_ADD_TEST(test_tf_trans);
+  MU_ADD_TEST(test_tf_rot);
+  MU_ADD_TEST(test_tf_quat);
+  MU_ADD_TEST(test_tf_point);
+  MU_ADD_TEST(test_tf_hpoint);
+  MU_ADD_TEST(test_euler321);
+  MU_ADD_TEST(test_rot2quat);
+  MU_ADD_TEST(test_quat2euler);
+  MU_ADD_TEST(test_quat2rot);
 }
 
 MU_RUN_TESTS(test_suite);
