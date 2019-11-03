@@ -337,6 +337,45 @@ int test_tf_quat() {
 	return 0;
 }
 
+int test_tf_inv() {
+	/* Create Transform */
+  double T[16] = {1.0, 0.0, 0.0, 0.0,
+								  0.0, 1.0, 0.0, 0.0,
+								  0.0, 0.0, 1.0, 0.0,
+								  0.0, 0.0, 0.0, 1.0};
+	/* -- Set rotation component */
+	const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+	double C[9] = {0};
+	euler321(euler, C);
+	tf_set_rot(T, C);
+	/* -- Set translation component */
+	double r[3] = {1.0, 2.0, 3.0};
+	tf_set_trans(T, r);
+	print_matrix("T", T, 4, 4);
+	printf("\n");
+
+	/* Invert transform */
+  double T_inv[16] = {0};
+	tf_inv(T, T_inv);
+	print_matrix("T_inv", T_inv, 4, 4);
+	printf("\n");
+
+	/* Double Invert transform */
+  double T_inv_inv[16] = {0};
+	tf_inv(T_inv, T_inv_inv);
+	print_matrix("T_inv_inv", T_inv_inv, 4, 4);
+
+	/* Assert */
+	int idx = 0;
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			MU_CHECK(fltcmp(T_inv_inv[idx], T[idx]) == 0);
+		}
+	}
+
+	return 0;
+}
+
 int test_tf_point() {
   /* Transform */
   const double T[16] = {1.0, 0.0, 0.0, 1.0,
@@ -470,6 +509,7 @@ void test_suite() {
   MU_ADD_TEST(test_tf_trans);
   MU_ADD_TEST(test_tf_rot);
   MU_ADD_TEST(test_tf_quat);
+  MU_ADD_TEST(test_tf_inv);
   MU_ADD_TEST(test_tf_point);
   MU_ADD_TEST(test_tf_hpoint);
   MU_ADD_TEST(test_euler321);
