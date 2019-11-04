@@ -4,6 +4,30 @@
  *																 GENERAL
  ******************************************************************************/
 
+float randf(float a, float b) {
+	float random = ((float) rand()) / (float) RAND_MAX;
+	float diff = b - a;
+	float r = random * diff;
+	return a + r;
+}
+
+struct timespec tic() {
+  struct timespec time_start;
+  clock_gettime(CLOCK_MONOTONIC, &time_start);
+  return time_start;
+}
+
+float toc(struct timespec *tic) {
+  struct timespec toc;
+  float time_elasped;
+
+  clock_gettime(CLOCK_MONOTONIC, &toc);
+  time_elasped = (toc.tv_sec - tic->tv_sec);
+  time_elasped += (toc.tv_nsec - tic->tv_nsec) / 1000000000.0;
+
+  return time_elasped;
+}
+
 double deg2rad(const double d) { return d * (M_PI / 180.0); }
 
 double rad2deg(const double r) { return r * (180.0 / M_PI); }
@@ -247,7 +271,7 @@ void dot(const double *A, const size_t A_m, const size_t A_n,
     for (size_t j = 0; j < n; j++) {
       double sum = 0.0;
       for (size_t k = 0; k < A_n; k++) {
-        sum += mat_val(A, A_n, i, k) * mat_val(B, B_n, k, j);
+				sum += A[(i * A_n) + j] * B[(i * B_n) + j];
       }
       mat_set(C, n, i, j, sum);
     }

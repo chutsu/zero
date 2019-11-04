@@ -5,6 +5,7 @@ default: all
 all: dirs
 	@make -s -C zero
 	@make -s -C zero/tests
+	@make -s -C zero/benchmarks
 
 clean:
 	@rm -rf $(BLD_DIR)

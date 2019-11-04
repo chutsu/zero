@@ -13,7 +13,7 @@ tests:
 dirs:
 	@mkdir -p $(BLD_DIR)
 
-$(BLD_DIR)/%.o : %.c
+$(BLD_DIR)/%.o : %.c %.h
 	$(COMPILE_OBJ)
 
 $(BLD_DIR)/libzero.a: $(OBJS)

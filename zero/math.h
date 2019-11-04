@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
+#include <time.h>
 #include <assert.h>
 
 #ifndef M_PI
@@ -15,6 +16,9 @@
  *																 GENERAL
  ******************************************************************************/
 
+float randf(float a, float b);
+struct timespec tic();
+float toc(struct timespec *tic);
 double deg2rad(const double d);
 double rad2deg(const double r);
 int fltcmp(const double x, const double y);
