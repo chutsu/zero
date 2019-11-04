@@ -2,9 +2,14 @@
 
 #include <cblas.h>
 
-void dot_cblas(const double *A, const size_t A_m, const size_t A_n,
-							 const double *B, const size_t B_m, const size_t B_n,
-							 double *C) {
+void dot_cblas(const double * restrict A, const size_t A_m, const size_t A_n,
+							 const double * restrict B, const size_t B_m, const size_t B_n,
+							 double * restrict C) {
+	UNUSED(B_m);
+  assert(A != NULL && B != NULL && C != NULL);
+  assert(A_m > 0 && A_n > 0 && B_m > 0 && B_n > 0);
+  assert(A_n == B_m);
+
   cblas_dgemm(
     CblasRowMajor, /* Matrix data arrangement */
     CblasNoTrans,  /* Transpose A */
@@ -68,7 +73,7 @@ int main() {
 	/* } */
 
 	/* Array - Blas */
-	for (size_t k = 1; k < 300; k++) {
+	for (size_t k = 1; k < 1000; k++) {
 		size_t m = k;
 		double *A = malloc(sizeof(double) * m * m);
 		double *B = malloc(sizeof(double) * m * m);

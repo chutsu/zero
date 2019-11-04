@@ -3,7 +3,7 @@
 #include "zero/math.h"
 
 int main() {
-	for (size_t k = 1; k < 300; k++) {
+	for (size_t k = 1; k < 1000; k++) {
 		size_t m = k;
 		Eigen::MatrixXd A;
 		Eigen::MatrixXd B;

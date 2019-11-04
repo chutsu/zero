@@ -9,6 +9,7 @@ TESTS_DIR=$(PWD)/tests
 CC=gcc -O3 -s -DNDEBUG \
 	-std=gnu99 \
 	-march=native \
+	-fopenmp \
 	-D_DEFAULT_SOURCE \
 	-D_POSIX_C_SOURCE=199309L
 CFLAGS=-I$(INC_DIR)

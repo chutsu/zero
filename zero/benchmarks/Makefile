@@ -1,12 +1,18 @@
 include ../../config.mk
 
-SRCS = $(wildcard *.c)
-BENCHMARKS = $(addprefix $(BIN_DIR)/, $(SRCS:.c=))
+CC := gcc
+CXX := g++
+CFLAGS:= -Wall -O3 -march=native -fopenmp
+INCS := -I$(INC_DIR) -I/usr/include/eigen3
+LIBS := -L$(BLD_DIR) -lzero -lopenblas -lm
 
-all: $(BENCHMARKS)
+.PHONY: all
+all: bench_matmul_zero bench_matmul_eigen
 
-$(BLD_DIR)/%.o: %.c $(BLD_DIR)/libzero.a
-	$(COMPILE_TEST_OBJ)
+bench_matmul_zero: bench_matmul_zero.c
+	@echo "CC [$<]"; \
+		$(CC) $(CFLAGS) $< -o $(BIN_DIR)/$@ $(INCS) $(LIBS)
 
-$(BIN_DIR)/bench_%: $(BLD_DIR)/bench_%.o
-	$(MAKE_TEST)
+bench_matmul_eigen: bench_matmul_eigen.cpp
+	@echo "CXX [$<]"; \
+		$(CXX) $(CFLAGS) $< -o $(BIN_DIR)/$@ $(INCS) $(LIBS)

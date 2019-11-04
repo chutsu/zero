@@ -1,6 +1,10 @@
 #ifndef CORE_H
 #define CORE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -11,6 +15,11 @@
 #ifndef M_PI
 #define M_PI (3.14159265358979323846)
 #endif
+
+#define UNUSED(expr)                                                           \
+  do {                                                                         \
+    (void) (expr);                                                             \
+  } while (0)
 
 /******************************************************************************
  *																 GENERAL
@@ -88,4 +97,7 @@ void quatlmul(const double p[4], const double q[4], double r[4]);
 void quatrmul(const double p[4], const double q[4], double r[4]);
 void quatmul(const double p[4], const double q[4], double r[4]);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // CORE_H

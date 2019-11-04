@@ -273,7 +273,7 @@ void dot(const double *A, const size_t A_m, const size_t A_n,
       for (size_t k = 0; k < A_n; k++) {
 				sum += A[(i * A_n) + j] * B[(i * B_n) + j];
       }
-      mat_set(C, n, i, j, sum);
+      C[(i * n) + j] = sum;
     }
   }
 }
