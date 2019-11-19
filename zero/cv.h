@@ -10,7 +10,7 @@
  *****************************************************************************/
 
 typedef struct image_t {
-	uint8_t *data;
+  uint8_t *data;
   int width;
   int height;
 } image_t;
@@ -50,14 +50,14 @@ void radtan4_point_jacobian(const double k1,
                             const double p1,
                             const double p2,
                             const double p[2],
-														double J_point[2 * 2]);
+                            double J_point[2 * 2]);
 
 void radtan4_param_jacobian(const double k1,
                             const double k2,
                             const double p1,
                             const double p2,
                             const double p[2],
-														double J_param[2 * 4]);
+                            double J_param[2 * 4]);
 
 /*****************************************************************************
  * EQUI

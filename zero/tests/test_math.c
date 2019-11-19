@@ -208,83 +208,83 @@ int test_dot() {
 }
 
 int test_tf_set_rot() {
-	double C[9];
-	for (int i = 0; i < 9; i++) {
-		C[i] = 1.0;
-	}
+  double C[9];
+  for (int i = 0; i < 9; i++) {
+    C[i] = 1.0;
+  }
 
   double T[16] = {0.0};
-	tf_set_rot(T, C);
+  tf_set_rot(T, C);
   /* print_matrix("T", T, 4, 4); */
 
-	MU_CHECK(fltcmp(T[0], 1.0) == 0);
-	MU_CHECK(fltcmp(T[1], 1.0) == 0);
-	MU_CHECK(fltcmp(T[2], 1.0) == 0);
-	MU_CHECK(fltcmp(T[3], 0.0) == 0);
+  MU_CHECK(fltcmp(T[0], 1.0) == 0);
+  MU_CHECK(fltcmp(T[1], 1.0) == 0);
+  MU_CHECK(fltcmp(T[2], 1.0) == 0);
+  MU_CHECK(fltcmp(T[3], 0.0) == 0);
 
-	MU_CHECK(fltcmp(T[4], 1.0) == 0);
-	MU_CHECK(fltcmp(T[5], 1.0) == 0);
-	MU_CHECK(fltcmp(T[6], 1.0) == 0);
-	MU_CHECK(fltcmp(T[7], 0.0) == 0);
+  MU_CHECK(fltcmp(T[4], 1.0) == 0);
+  MU_CHECK(fltcmp(T[5], 1.0) == 0);
+  MU_CHECK(fltcmp(T[6], 1.0) == 0);
+  MU_CHECK(fltcmp(T[7], 0.0) == 0);
 
-	MU_CHECK(fltcmp(T[8], 1.0) == 0);
-	MU_CHECK(fltcmp(T[9], 1.0) == 0);
-	MU_CHECK(fltcmp(T[10], 1.0) == 0);
-	MU_CHECK(fltcmp(T[11], 0.0) == 0);
+  MU_CHECK(fltcmp(T[8], 1.0) == 0);
+  MU_CHECK(fltcmp(T[9], 1.0) == 0);
+  MU_CHECK(fltcmp(T[10], 1.0) == 0);
+  MU_CHECK(fltcmp(T[11], 0.0) == 0);
 
-	MU_CHECK(fltcmp(T[12], 0.0) == 0);
-	MU_CHECK(fltcmp(T[13], 0.0) == 0);
-	MU_CHECK(fltcmp(T[14], 0.0) == 0);
-	MU_CHECK(fltcmp(T[15], 0.0) == 0);
+  MU_CHECK(fltcmp(T[12], 0.0) == 0);
+  MU_CHECK(fltcmp(T[13], 0.0) == 0);
+  MU_CHECK(fltcmp(T[14], 0.0) == 0);
+  MU_CHECK(fltcmp(T[15], 0.0) == 0);
 
   return 0;
 }
 
 int test_tf_set_trans() {
-	double r[3] = {1.0, 2.0, 3.0};
+  double r[3] = {1.0, 2.0, 3.0};
 
   double T[16] = {0.0};
-	tf_set_trans(T, r);
+  tf_set_trans(T, r);
   /* print_matrix("T", T, 4, 4); */
 
-	MU_CHECK(fltcmp(T[0], 0.0) == 0);
-	MU_CHECK(fltcmp(T[1], 0.0) == 0);
-	MU_CHECK(fltcmp(T[2], 0.0) == 0);
-	MU_CHECK(fltcmp(T[3], 1.0) == 0);
+  MU_CHECK(fltcmp(T[0], 0.0) == 0);
+  MU_CHECK(fltcmp(T[1], 0.0) == 0);
+  MU_CHECK(fltcmp(T[2], 0.0) == 0);
+  MU_CHECK(fltcmp(T[3], 1.0) == 0);
 
-	MU_CHECK(fltcmp(T[4], 0.0) == 0);
-	MU_CHECK(fltcmp(T[5], 0.0) == 0);
-	MU_CHECK(fltcmp(T[6], 0.0) == 0);
-	MU_CHECK(fltcmp(T[7], 2.0) == 0);
+  MU_CHECK(fltcmp(T[4], 0.0) == 0);
+  MU_CHECK(fltcmp(T[5], 0.0) == 0);
+  MU_CHECK(fltcmp(T[6], 0.0) == 0);
+  MU_CHECK(fltcmp(T[7], 2.0) == 0);
 
-	MU_CHECK(fltcmp(T[8], 0.0) == 0);
-	MU_CHECK(fltcmp(T[9], 0.0) == 0);
-	MU_CHECK(fltcmp(T[10], 0.0) == 0);
-	MU_CHECK(fltcmp(T[11], 3.0) == 0);
+  MU_CHECK(fltcmp(T[8], 0.0) == 0);
+  MU_CHECK(fltcmp(T[9], 0.0) == 0);
+  MU_CHECK(fltcmp(T[10], 0.0) == 0);
+  MU_CHECK(fltcmp(T[11], 3.0) == 0);
 
-	MU_CHECK(fltcmp(T[12], 0.0) == 0);
-	MU_CHECK(fltcmp(T[13], 0.0) == 0);
-	MU_CHECK(fltcmp(T[14], 0.0) == 0);
-	MU_CHECK(fltcmp(T[15], 0.0) == 0);
+  MU_CHECK(fltcmp(T[12], 0.0) == 0);
+  MU_CHECK(fltcmp(T[13], 0.0) == 0);
+  MU_CHECK(fltcmp(T[14], 0.0) == 0);
+  MU_CHECK(fltcmp(T[15], 0.0) == 0);
 
   return 0;
 }
 
 int test_tf_trans() {
   double T[16] = {1.0, 2.0, 3.0, 4.0,
-								  5.0, 6.0, 7.0, 8.0,
-								  9.0, 10.0, 11.0, 12.0,
-								  13.0, 14.0, 15.0, 16.0};
+                  5.0, 6.0, 7.0, 8.0,
+                  9.0, 10.0, 11.0, 12.0,
+                  13.0, 14.0, 15.0, 16.0};
   print_matrix("T", T, 4, 4);
 
-	/* Get translation vector */
-	double r[3];
-	tf_trans(T, r);
+  /* Get translation vector */
+  double r[3];
+  tf_trans(T, r);
   print_vector("r", r, 3);
 
-	MU_CHECK(fltcmp(r[0], 4.0) == 0);
-	MU_CHECK(fltcmp(r[1], 8.0) == 0);
-	MU_CHECK(fltcmp(r[2], 12.0) == 0);
+  MU_CHECK(fltcmp(r[0], 4.0) == 0);
+  MU_CHECK(fltcmp(r[1], 8.0) == 0);
+  MU_CHECK(fltcmp(r[2], 12.0) == 0);
 
   return 0;
 }
@@ -292,19 +292,19 @@ int test_tf_trans() {
 int test_tf_rot() {
   /* Transform */
   double T[16] = {1.0, 2.0, 3.0, 4.0,
-								  5.0, 6.0, 7.0, 8.0,
-								  9.0, 10.0, 11.0, 12.0,
-								  13.0, 14.0, 15.0, 16.0};
+                  5.0, 6.0, 7.0, 8.0,
+                  9.0, 10.0, 11.0, 12.0,
+                  13.0, 14.0, 15.0, 16.0};
   print_matrix("T", T, 4, 4);
 
-	/* Get rotation matrix */
-	double C[9];
-	tf_rot(T, C);
+  /* Get rotation matrix */
+  double C[9];
+  tf_rot(T, C);
   print_matrix("C", C, 3, 3);
 
-	for (size_t i = 0; i < 9; i++) {
-		MU_CHECK(fltcmp(C[i], i + 1) == 0);
-	}
+  for (size_t i = 0; i < 9; i++) {
+    MU_CHECK(fltcmp(C[i], i + 1) == 0);
+  }
 
   return 0;
 }
@@ -312,76 +312,76 @@ int test_tf_rot() {
 int test_tf_quat() {
   /* Transform */
   double T[16] = {1.0, 0.0, 0.0, 0.0,
-								  0.0, 1.0, 0.0, 0.0,
-								  0.0, 0.0, 1.0, 0.0,
-								  0.0, 0.0, 0.0, 1.0};
+                  0.0, 1.0, 0.0, 0.0,
+                  0.0, 0.0, 1.0, 0.0,
+                  0.0, 0.0, 0.0, 1.0};
 
-	/* Create rotation matrix */
-	const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
-	double C[9] = {0};
-	euler321(euler, C);
-	tf_set_rot(T, C);
+  /* Create rotation matrix */
+  const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+  double C[9] = {0};
+  euler321(euler, C);
+  tf_set_rot(T, C);
 
-	/* Extract quaternion from transform */
-	double q[4] = {0};
-	tf_quat(T, q);
+  /* Extract quaternion from transform */
+  double q[4] = {0};
+  tf_quat(T, q);
 
-	/* Convert quaternion back to euler angles */
-	double rpy[3] = {0};
-	quat2euler(q, rpy);
+  /* Convert quaternion back to euler angles */
+  double rpy[3] = {0};
+  quat2euler(q, rpy);
 
-	MU_CHECK(fltcmp(rad2deg(rpy[0]), 10.0) == 0);
-	MU_CHECK(fltcmp(rad2deg(rpy[1]), 20.0) == 0);
-	MU_CHECK(fltcmp(rad2deg(rpy[2]), 30.0) == 0);
+  MU_CHECK(fltcmp(rad2deg(rpy[0]), 10.0) == 0);
+  MU_CHECK(fltcmp(rad2deg(rpy[1]), 20.0) == 0);
+  MU_CHECK(fltcmp(rad2deg(rpy[2]), 30.0) == 0);
 
-	return 0;
+  return 0;
 }
 
 int test_tf_inv() {
-	/* Create Transform */
+  /* Create Transform */
   double T[16] = {1.0, 0.0, 0.0, 0.0,
-								  0.0, 1.0, 0.0, 0.0,
-								  0.0, 0.0, 1.0, 0.0,
-								  0.0, 0.0, 0.0, 1.0};
-	/* -- Set rotation component */
-	const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
-	double C[9] = {0};
-	euler321(euler, C);
-	tf_set_rot(T, C);
-	/* -- Set translation component */
-	double r[3] = {1.0, 2.0, 3.0};
-	tf_set_trans(T, r);
-	print_matrix("T", T, 4, 4);
-	printf("\n");
+                  0.0, 1.0, 0.0, 0.0,
+                  0.0, 0.0, 1.0, 0.0,
+                  0.0, 0.0, 0.0, 1.0};
+  /* -- Set rotation component */
+  const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+  double C[9] = {0};
+  euler321(euler, C);
+  tf_set_rot(T, C);
+  /* -- Set translation component */
+  double r[3] = {1.0, 2.0, 3.0};
+  tf_set_trans(T, r);
+  print_matrix("T", T, 4, 4);
+  printf("\n");
 
-	/* Invert transform */
+  /* Invert transform */
   double T_inv[16] = {0};
-	tf_inv(T, T_inv);
-	print_matrix("T_inv", T_inv, 4, 4);
-	printf("\n");
+  tf_inv(T, T_inv);
+  print_matrix("T_inv", T_inv, 4, 4);
+  printf("\n");
 
-	/* Double Invert transform */
+  /* Double Invert transform */
   double T_inv_inv[16] = {0};
-	tf_inv(T_inv, T_inv_inv);
-	print_matrix("T_inv_inv", T_inv_inv, 4, 4);
+  tf_inv(T_inv, T_inv_inv);
+  print_matrix("T_inv_inv", T_inv_inv, 4, 4);
 
-	/* Assert */
-	int idx = 0;
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			MU_CHECK(fltcmp(T_inv_inv[idx], T[idx]) == 0);
-		}
-	}
+  /* Assert */
+  int idx = 0;
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      MU_CHECK(fltcmp(T_inv_inv[idx], T[idx]) == 0);
+    }
+  }
 
-	return 0;
+  return 0;
 }
 
 int test_tf_point() {
   /* Transform */
   const double T[16] = {1.0, 0.0, 0.0, 1.0,
-								   			0.0, 1.0, 0.0, 2.0,
-								   			0.0, 0.0, 1.0, 3.0,
-								   			0.0, 0.0, 0.0, 1.0};
+                         0.0, 1.0, 0.0, 2.0,
+                         0.0, 0.0, 1.0, 3.0,
+                         0.0, 0.0, 0.0, 1.0};
   print_matrix("T", T, 4, 4);
 
   /* Point */
@@ -390,7 +390,7 @@ int test_tf_point() {
 
   /* Transform point */
   double result[3] = {0};
-	tf_point(T, p, result);
+  tf_point(T, p, result);
   print_vector("result", result, 3);
 
   return 0;
@@ -399,9 +399,9 @@ int test_tf_point() {
 int test_tf_hpoint() {
   /* Transform */
   const double T[16] = {1.0, 0.0, 0.0, 1.0,
-								   			0.0, 1.0, 0.0, 2.0,
-								   			0.0, 0.0, 1.0, 3.0,
-								   			0.0, 0.0, 0.0, 1.0};
+                         0.0, 1.0, 0.0, 2.0,
+                         0.0, 0.0, 1.0, 3.0,
+                         0.0, 0.0, 0.0, 1.0};
   print_matrix("T", T, 4, 4);
 
   /* Homogeneous point */
@@ -410,86 +410,86 @@ int test_tf_hpoint() {
 
   /* Transform homogeneous point */
   double result[4] = {0};
-	tf_hpoint(T, hp, result);
+  tf_hpoint(T, hp, result);
   print_vector("result", result, 4);
 
   return 0;
 }
 
 int test_euler321() {
-	/* Euler to rotation matrix */
-	const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
-	double C[9] = {0};
-	euler321(euler, C);
+  /* Euler to rotation matrix */
+  const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+  double C[9] = {0};
+  euler321(euler, C);
 
-	/* Rotation matrix to quaternion */
-	double q[4] = {0};
-	rot2quat(C, q);
+  /* Rotation matrix to quaternion */
+  double q[4] = {0};
+  rot2quat(C, q);
 
-	/* Quaternion to Euler angles*/
-	double euler2[3] = {0};
-	quat2euler(q, euler2);
+  /* Quaternion to Euler angles*/
+  double euler2[3] = {0};
+  quat2euler(q, euler2);
 
   print_vector("euler", euler, 3);
   print_vector("euler2", euler2, 3);
 
-	return 0;
+  return 0;
 }
 
 int test_rot2quat() {
-	/* Rotation matrix to quaternion */
+  /* Rotation matrix to quaternion */
   const double C[9] = {1.0, 0.0, 0.0,
-								  		 0.0, 1.0, 0.0,
-								  		 0.0, 0.0, 1.0};
-	double q[4] = {0.0};
-	rot2quat(C, q);
+                       0.0, 1.0, 0.0,
+                       0.0, 0.0, 1.0};
+  double q[4] = {0.0};
+  rot2quat(C, q);
   print_vector("q", q, 4);
 
-	return 0;
+  return 0;
 }
 
 int test_quat2euler() {
   const double C[9] = {1.0, 0.0, 0.0,
-											 0.0, 1.0, 0.0,
-											 0.0, 0.0, 1.0};
+                       0.0, 1.0, 0.0,
+                       0.0, 0.0, 1.0};
 
-	/* Rotation matrix to quaternion */
-	double q[4] = {0.0};
-	rot2quat(C, q);
+  /* Rotation matrix to quaternion */
+  double q[4] = {0.0};
+  rot2quat(C, q);
   print_vector("q", q, 4);
 
-	/* Quaternion to Euler angles */
-	double rpy[3] = {0.0};
-	quat2euler(q, rpy);
+  /* Quaternion to Euler angles */
+  double rpy[3] = {0.0};
+  quat2euler(q, rpy);
   print_vector("euler", rpy, 3);
 
-	return 0;
+  return 0;
 }
 
 int test_quat2rot() {
-	/* Euler to rotation matrix */
-	const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
-	double C[9] = {0};
-	euler321(euler, C);
+  /* Euler to rotation matrix */
+  const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+  double C[9] = {0};
+  euler321(euler, C);
 
-	/* Rotation matrix to quaternion */
-	double q[4] = {0.0};
-	rot2quat(C, q);
+  /* Rotation matrix to quaternion */
+  double q[4] = {0.0};
+  rot2quat(C, q);
   /* print_vector("q", q, 4); */
 
-	/* Quaternion to rotation matrix */
-	double rot[9] = {0.0};
-	quat2rot(q, rot);
+  /* Quaternion to rotation matrix */
+  double rot[9] = {0.0};
+  quat2rot(q, rot);
 
-	for (int i = 0; i < 9; i++) {
-		MU_CHECK(fltcmp(C[i], rot[i]) == 0);
-	}
+  for (int i = 0; i < 9; i++) {
+    MU_CHECK(fltcmp(C[i], rot[i]) == 0);
+  }
 
-	return 0;
+  return 0;
 }
 
 void test_suite() {
-	/* Linear Algebra */
+  /* Linear Algebra */
   MU_ADD_TEST(test_eye);
   MU_ADD_TEST(test_ones);
   MU_ADD_TEST(test_zeros);
@@ -503,7 +503,7 @@ void test_suite() {
   MU_ADD_TEST(test_vec_sub);
   MU_ADD_TEST(test_dot);
 
-	/* Transforms */
+  /* Transforms */
   MU_ADD_TEST(test_tf_set_rot);
   MU_ADD_TEST(test_tf_set_trans);
   MU_ADD_TEST(test_tf_trans);

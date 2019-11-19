@@ -22,7 +22,7 @@ extern "C" {
   } while (0)
 
 /******************************************************************************
- *																 GENERAL
+ *                                 GENERAL
  ******************************************************************************/
 
 float randf(float a, float b);
@@ -36,11 +36,11 @@ float lerpf(const float a, const float b, const float t);
 double sinc(const double x);
 
 /******************************************************************************
- *															LINEAR ALGEBRA
+ *                              LINEAR ALGEBRA
  ******************************************************************************/
 
 void print_matrix(const char *prefix, const double *data,
-									const size_t m, const size_t n);
+                  const size_t m, const size_t n);
 void print_vector(const char *prefix, const double *data, const size_t length);
 
 void eye(double *A, const size_t m, const size_t n);
@@ -78,7 +78,7 @@ void dot(const double *A, const size_t A_m, const size_t A_n,
          double *C);
 
 /******************************************************************************
- *															TRANSFORMS
+ *                              TRANSFORMS
  ******************************************************************************/
 
 void tf_set_rot(double T[4*4], double C[3*3]);

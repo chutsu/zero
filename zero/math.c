@@ -1,14 +1,14 @@
 #include "zero/math.h"
 
 /******************************************************************************
- *																 GENERAL
+ *                                 GENERAL
  ******************************************************************************/
 
 float randf(float a, float b) {
-	float random = ((float) rand()) / (float) RAND_MAX;
-	float diff = b - a;
-	float r = random * diff;
-	return a + r;
+  float random = ((float) rand()) / (float) RAND_MAX;
+  float diff = b - a;
+  float r = random * diff;
+  return a + r;
 }
 
 struct timespec tic() {
@@ -53,7 +53,7 @@ float lerpf(const float a, const float b, const float t) {
 double sinc(const double x) {
   if (fabs(x) > 1e-6) {
     return sin(x) / x;
-	} else{
+  } else{
     static const double c_2 = 1.0 / 6.0;
     static const double c_4 = 1.0 / 120.0;
     static const double c_6 = 1.0 / 5040.0;
@@ -65,7 +65,7 @@ double sinc(const double x) {
 }
 
 /******************************************************************************
- *															LINEAR ALGEBRA
+ *                              LINEAR ALGEBRA
  ******************************************************************************/
 
 void print_matrix(const char *prefix, const double *data,
@@ -271,7 +271,7 @@ void dot(const double *A, const size_t A_m, const size_t A_n,
     for (size_t j = 0; j < n; j++) {
       double sum = 0.0;
       for (size_t k = 0; k < A_n; k++) {
-				sum += A[(i * A_n) + j] * B[(i * B_n) + j];
+        sum += A[(i * A_n) + j] * B[(i * B_n) + j];
       }
       C[(i * n) + j] = sum;
     }
@@ -279,89 +279,89 @@ void dot(const double *A, const size_t A_m, const size_t A_n,
 }
 
 /******************************************************************************
- *															TRANSFORMS
+ *                              TRANSFORMS
  ******************************************************************************/
 
 void tf_set_rot(double T[4*4], double C[3*3]) {
-	assert(T != NULL);
-	assert(C != NULL);
-	assert(T != C);
+  assert(T != NULL);
+  assert(C != NULL);
+  assert(T != C);
 
-	T[0] = C[0]; T[1] = C[1]; T[2] = C[2];
-	T[4] = C[3]; T[5] = C[4]; T[6] = C[5];
-	T[8] = C[6]; T[9] = C[7]; T[10] = C[8];
+  T[0] = C[0]; T[1] = C[1]; T[2] = C[2];
+  T[4] = C[3]; T[5] = C[4]; T[6] = C[5];
+  T[8] = C[6]; T[9] = C[7]; T[10] = C[8];
 }
 
 void tf_set_trans(double T[4*4], double r[3]) {
-	assert(T != NULL);
-	assert(r != NULL);
-	assert(T != r);
+  assert(T != NULL);
+  assert(r != NULL);
+  assert(T != r);
 
-	T[3] = r[0];
-	T[7] = r[1];
-	T[11] = r[2];
+  T[3] = r[0];
+  T[7] = r[1];
+  T[11] = r[2];
 }
 
 void tf_trans(const double T[4*4], double r[3]) {
-	assert(T != NULL);
-	assert(r != NULL);
-	assert(T != r);
+  assert(T != NULL);
+  assert(r != NULL);
+  assert(T != r);
 
-	r[0] = T[3];
-	r[1] = T[7];
-	r[2] = T[11];
+  r[0] = T[3];
+  r[1] = T[7];
+  r[2] = T[11];
 }
 
 void tf_rot(const double T[4*4], double C[3*3]) {
-	assert(T != NULL);
-	assert(C != NULL);
-	assert(T != C);
+  assert(T != NULL);
+  assert(C != NULL);
+  assert(T != C);
 
-	C[0] = T[0]; C[1] = T[1]; C[2] = T[2];
-	C[3] = T[4]; C[4] = T[5]; C[5] = T[6];
-	C[6] = T[8]; C[7] = T[9]; C[8] = T[10];
+  C[0] = T[0]; C[1] = T[1]; C[2] = T[2];
+  C[3] = T[4]; C[4] = T[5]; C[5] = T[6];
+  C[6] = T[8]; C[7] = T[9]; C[8] = T[10];
 }
 
 void tf_quat(const double T[4*4], double q[4]) {
-	assert(T != NULL);
-	assert(q != NULL);
-	assert(T != q);
+  assert(T != NULL);
+  assert(q != NULL);
+  assert(T != q);
 
   double C[3*3] = {0};
   tf_rot(T, C);
-	rot2quat(C, q);
+  rot2quat(C, q);
 }
 
 void tf_inv(const double T[4*4], double T_inv[4*4]) {
-	assert(T != NULL);
-	assert(T_inv != NULL);
-	assert(T != T_inv);
+  assert(T != NULL);
+  assert(T_inv != NULL);
+  assert(T != T_inv);
 
-	/* Get original rotation and translation component */
-	double C[3*3] = {0};
-	double r[3] = {0};
-	tf_rot(T, C);
-	tf_trans(T, r);
+  /* Get original rotation and translation component */
+  double C[3*3] = {0};
+  double r[3] = {0};
+  tf_rot(T, C);
+  tf_trans(T, r);
 
-	/* Invert rotation component */
-	double C_inv[3*3] = {0};
-	mat_transpose(C, 3, 3, C_inv);
+  /* Invert rotation component */
+  double C_inv[3*3] = {0};
+  mat_transpose(C, 3, 3, C_inv);
 
-	/* Set rotation component */
-	tf_set_rot(T_inv, C_inv);
+  /* Set rotation component */
+  tf_set_rot(T_inv, C_inv);
 
-	/* Set translation component */
-	double r_inv[3] = {0};
-	mat_scale(C_inv, 3, 3, -1.0);
-	dot(C_inv, 3, 3, r, 3, 1, r_inv);
-	tf_set_trans(T_inv, r_inv);
+  /* Set translation component */
+  double r_inv[3] = {0};
+  mat_scale(C_inv, 3, 3, -1.0);
+  dot(C_inv, 3, 3, r, 3, 1, r_inv);
+  tf_set_trans(T_inv, r_inv);
 }
 
 void tf_point(const double T[4*4], const double p[3], double retval[3]) {
-	assert(T != NULL);
-	assert(p != NULL);
-	assert(retval != NULL);
-	assert(p != retval);
+  assert(T != NULL);
+  assert(p != NULL);
+  assert(retval != NULL);
+  assert(p != retval);
 
   const double hp_a[4] = {p[0], p[1], p[2], 1.0};
   double hp_b[4] = {0.0, 0.0, 0.0, 0.0};
@@ -380,41 +380,41 @@ void tf_hpoint(const double T[4*4], const double hp[4], double retval[4]) {
 }
 
 void euler321(const double euler[3], double C[3*3]) {
-	assert(euler != NULL);
-	assert(C != NULL);
+  assert(euler != NULL);
+  assert(C != NULL);
 
   const float phi = euler[0];
   const float theta = euler[1];
   const float psi = euler[2];
 
-	/* 1st row */
+  /* 1st row */
   C[0] = cos(psi) * cos(theta);
   C[1] = cos(psi) * sin(theta) * sin(phi) - sin(psi) * cos(phi);
   C[2] = cos(psi) * sin(theta) * cos(phi) + sin(psi) * sin(phi);
-	/* 2nd row */
+  /* 2nd row */
   C[3] = sin(psi) * cos(theta);
   C[4] = sin(psi) * sin(theta) * sin(phi) + cos(psi) * cos(phi);
   C[5] = sin(psi) * sin(theta) * cos(phi) - cos(psi) * sin(phi);
-	/* 3rd row */
+  /* 3rd row */
   C[6] = -sin(theta);
   C[7] = cos(theta) * sin(phi);
   C[8] = cos(theta) * cos(phi);
 }
 
 void rot2quat(const double C[3*3], double q[4]) {
-	assert(C != NULL);
-	assert(q != NULL);
+  assert(C != NULL);
+  assert(q != NULL);
 
   const double C00 = C[0]; const double C01 = C[1]; const double C02 = C[2];
   const double C10 = C[3]; const double C11 = C[4]; const double C12 = C[5];
   const double C20 = C[6]; const double C21 = C[7]; const double C22 = C[8];
 
   const double tr = C00 + C11 + C22;
-	double S = 0.0f;
-	double qw = 0.0f;
-	double qx = 0.0f;
-	double qy = 0.0f;
-	double qz = 0.0f;
+  double S = 0.0f;
+  double qw = 0.0f;
+  double qx = 0.0f;
+  double qy = 0.0f;
+  double qz = 0.0f;
 
   if (tr > 0) {
     S = sqrt(tr+1.0) * 2; // S=4*qw
@@ -440,17 +440,17 @@ void rot2quat(const double C[3*3], double q[4]) {
     qx = (C02 + C20) / S;
     qy = (C12 + C21) / S;
     qz = 0.25 * S;
-	}
+  }
 
   q[0] = qw;
-	q[1] = qx;
-	q[2] = qy;
-	q[3] = qz;
+  q[1] = qx;
+  q[2] = qy;
+  q[3] = qz;
 }
 
 void quat2euler(const double q[4], double euler[3]) {
-	assert(q != NULL);
-	assert(euler != NULL);
+  assert(q != NULL);
+  assert(euler != NULL);
 
   const float qw = q[0];
   const float qx = q[1];
@@ -466,14 +466,14 @@ void quat2euler(const double q[4], double euler[3]) {
   const float t2 = asin(2 * (qy * qw - qx * qz));
   const float t3 = atan2(2 * (qx * qy + qz * qw), (qw2 + qx2 - qy2 - qz2));
 
-	euler[0] = t1;
-	euler[1] = t2;
-	euler[2] = t3;
+  euler[0] = t1;
+  euler[1] = t2;
+  euler[2] = t3;
 }
 
 void quat2rot(const double q[4], double C[3*3]) {
-	assert(q != NULL);
-	assert(C != NULL);
+  assert(q != NULL);
+  assert(C != NULL);
 
   const double qw = q[0];
   const double qx = q[1];
@@ -486,15 +486,15 @@ void quat2rot(const double q[4], double C[3*3]) {
   const double qw2 = qw * qw;
 
   /* Homogeneous form */
-	/* -- 1st row */
+  /* -- 1st row */
   C[0] = qw2 + qx2 - qy2 - qz2;
   C[1] = 2 * (qx * qy - qw * qz);
   C[2] = 2 * (qx * qz + qw * qy);
-	/* -- 2nd row */
+  /* -- 2nd row */
   C[3] = 2 * (qx * qy + qw * qz);
   C[4] = qw2 - qx2 + qy2 - qz2;
   C[5] = 2 * (qy * qz - qw * qx);
-	/* -- 3rd row */
+  /* -- 3rd row */
   C[6] = 2 * (qx * qz - qw * qy);
   C[7] = 2 * (qy * qz + qw * qx);
   C[8] = qw2 - qx2 - qy2 + qz2;
@@ -509,14 +509,14 @@ void quatlmul(const double p[4], const double q[4], double r[4]) {
   const double py = p[2];
   const double pz = p[3];
 
-	/* clang-format off */
+  /* clang-format off */
   const double lprod[4*4] = {
     pw, -px, -py, -pz,
     px, pw, -pz, py,
     py, pz, pw, -px,
     pz, -py, px, pw
   };
-	/* clang-format on */
+  /* clang-format on */
 
   dot(lprod, 4, 4, q, 4, 1, r);
 }
@@ -530,20 +530,20 @@ void quatrmul(const double p[4], const double q[4], double r[4]) {
   const double qy = q[2];
   const double qz = q[3];
 
-	/* clang-format off */
+  /* clang-format off */
   const double rprod[4*4] = {
     qw, -qx, -qy, -qz,
     qx, qw, qz, -qy,
     qy, -qz, qw, qx,
     qz, qy, -qx, qw
   };
-	/* clang-format on */
+  /* clang-format on */
 
-	dot(rprod, 4, 4, p, 4, 1, r);
+  dot(rprod, 4, 4, p, 4, 1, r);
 }
 
 void quatmul(const double p[4], const double q[4], double r[4]) {
   assert(p != NULL && q != NULL && r != NULL);
   assert(p != r && q != r);
-	quatlmul(p, q, r);
+  quatlmul(p, q, r);
 }

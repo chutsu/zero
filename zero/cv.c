@@ -108,14 +108,14 @@ void radtan4_point_jacobian(const double k1,
   const double r4 = r2 * r2;
 
   /* Point Jacobian is 2x2 */
-	/* clang-format off */
+  /* clang-format off */
   J_point[0] = k1 * r2 + k2 * r4 + 2 * p1 * y + 6 * p2 * x +
                 x * (2 * k1 * x + 4 * k2 * x * r2) + 1;
   J_point[1] = 2 * p1 * x + 2 * p2 * y + y * (2 * k1 * x + 4 * k2 * x * r2);
   J_point[2] = J_point[1];
   J_point[3] = k1 * r2 + k2 * r4 + 6 * p1 * y + 2 * p2 * x +
                y * (2 * k1 * y + 4 * k2 * y * r2) + 1;
-	/* clang-format on */
+  /* clang-format on */
 }
 
 void radtan4_param_jacobian(const double k1,
@@ -200,7 +200,7 @@ void equi4_point_jacobian(const double k1,
   const double r_x = 1.0 / r * x;
   const double r_y = 1.0 / r * y;
 
-	/* Point Jacobian is 2x2 */
+  /* Point Jacobian is 2x2 */
   J_point[0] = s + x * s_r * r_x;
   J_point[1] = x * s_r * r_y;
   J_point[2] = y * s_r * r_x;
@@ -224,7 +224,7 @@ void equi4_param_jacobian(const double k1,
   const double th7 = th5 * th2;
   const double th9 = th7 * th2;
 
-	/* Param Jacobian is 2x4 */
+  /* Param Jacobian is 2x4 */
   J_param[0] = x * th3 / r;
   J_param[1] = x * th5 / r;
   J_param[2] = x * th7 / r;

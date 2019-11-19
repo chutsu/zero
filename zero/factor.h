@@ -53,8 +53,8 @@ void pose_setup(pose_t *pose,
                 const timestamp_t ts,
                 const size_t id,
                 const double T[16]) {
-	assert(pose != NULL);
-	assert(T != NULL);
+  assert(pose != NULL);
+  assert(T != NULL);
 
   pose->ts = ts;
   pose->id = id;
@@ -75,18 +75,18 @@ void pose_setup(pose_t *pose,
 }
 
 void pose_quat(const pose_t *pose, double q[4]) {
-	assert(pose != NULL);
-	assert(q != NULL);
+  assert(pose != NULL);
+  assert(q != NULL);
 
-	q[0] = pose->param[0];
-	q[1] = pose->param[1];
-	q[2] = pose->param[2];
-	q[3] = pose->param[3];
+  q[0] = pose->param[0];
+  q[1] = pose->param[1];
+  q[2] = pose->param[2];
+  q[3] = pose->param[3];
 }
 
 void pose_rot(const pose_t *pose, double C[9]) {
-	assert(pose != NULL);
-	assert(C != NULL);
+  assert(pose != NULL);
+  assert(C != NULL);
 
   const double q[4] = {pose->param[0],
                        pose->param[1],
@@ -96,10 +96,10 @@ void pose_rot(const pose_t *pose, double C[9]) {
 }
 
 void pose_tf(const pose_t *pose, double T[16]) {
-	assert(pose != NULL);
-	assert(T != NULL);
+  assert(pose != NULL);
+  assert(T != NULL);
 
-	/* Setup */
+  /* Setup */
   const double q[4] = {pose->param[0],
                        pose->param[1],
                        pose->param[2],
@@ -108,37 +108,37 @@ void pose_tf(const pose_t *pose, double T[16]) {
                        pose->param[5],
                        pose->param[6]};
 
-	/* Convert quaternion to rotation matrix */
-	double C[9];
+  /* Convert quaternion to rotation matrix */
+  double C[9];
   quat2rot(q, C);
 
-	/* Form transform matrix */
-	/* clang-format off */
-	T[0] = C[0]; T[1] = C[1]; T[2] = C[2]; T[3] = r[0];
-	T[4] = C[3]; T[5] = C[4]; T[6] = C[5]; T[7] = r[1];
-	T[8] = C[6]; T[9] = C[7]; T[10] = C[8]; T[11] = r[2];
-	T[12] = 0.0; T[13] = 0.0; T[14] = 0.0; T[15] = 1.0;
-	/* clang-format on */
+  /* Form transform matrix */
+  /* clang-format off */
+  T[0] = C[0]; T[1] = C[1]; T[2] = C[2]; T[3] = r[0];
+  T[4] = C[3]; T[5] = C[4]; T[6] = C[5]; T[7] = r[1];
+  T[8] = C[6]; T[9] = C[7]; T[10] = C[8]; T[11] = r[2];
+  T[12] = 0.0; T[13] = 0.0; T[14] = 0.0; T[15] = 1.0;
+  /* clang-format on */
 }
 
 void pose_plus(pose_t *pose, const double dx[6]) {
-	/* Quaternion from pose */
+  /* Quaternion from pose */
   double q[4];
   pose_quat(pose, q);
 
   /* Calculate dq from rotation vector */
   const double rvec[3] = {dx[0], dx[1], dx[2]};
   const double half_norm = 0.5 * vec_norm(rvec, 3);
-	/* clang-format off */
+  /* clang-format off */
   const double dq[4] = {cos(half_norm),
                         sinc(half_norm) * 0.5 * rvec[0],
                         sinc(half_norm) * 0.5 * rvec[1],
                         sinc(half_norm) * 0.5 * rvec[2]};
-	/* clang-format on */
+  /* clang-format on */
 
-	/* Update rotation component */
-	double q_updated[4] = {0};
-	quatmul(q, dq, q_updated);
+  /* Update rotation component */
+  double q_updated[4] = {0};
+  quatmul(q, dq, q_updated);
   pose->param[0] = q_updated[0];
   pose->param[1] = q_updated[1];
   pose->param[2] = q_updated[2];
@@ -210,7 +210,7 @@ void pose_plus(pose_t *pose, const double dx[6]) {
 //
 // // template <typename CM, typename DM>
 // struct cam_factor_t : factor_t {
-// 	// camera_geometry_t<CM, DM> camera;
+//   // camera_geometry_t<CM, DM> camera;
 //   vec2_t z = zeros(2, 1);
 //   landmark_t *p_W = nullptr;
 //   pose_t *T_WS = nullptr;

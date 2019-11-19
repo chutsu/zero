@@ -54,44 +54,44 @@ int check_J_point(const double T_WC[16],
                   const double J_point[2 * 3],
                   const double step_size,
                   const double threshold) {
-	/* Transform point from world to camera frame */
-	double p_C[3] = {0.0, 0.0, 0.0};
-	tf_point(T_WC, p_W, p_C);
+  /* Transform point from world to camera frame */
+  double p_C[3] = {0.0, 0.0, 0.0};
+  tf_point(T_WC, p_W, p_C);
   const double z_hat[3] = {p_C[0] / p_C[2], p_C[1] / p_C[2]};
 
-	/* Calculate reprojection error: e = z - z_hat */
+  /* Calculate reprojection error: e = z - z_hat */
   const double z[2] = {0.0, 0.0};
   double e[2] = {0.0};
-	vec_sub(z, z_hat, e, 2);
+  vec_sub(z, z_hat, e, 2);
 
-	/* Form pertubation matrix */
+  /* Form pertubation matrix */
   double fdiff[6] = {0};
 
   /* Perturb landmark */
   for (int i = 0; i < 3; i++) {
-		/* Create perturbation vector for translation component */
-		double dr[3] = {0.0, 0.0, 0.0};
-		dr[i] = step_size;
+    /* Create perturbation vector for translation component */
+    double dr[3] = {0.0, 0.0, 0.0};
+    dr[i] = step_size;
 
-		/* Perturb point in world frame */
+    /* Perturb point in world frame */
     double p_W_diff[3] = {0.0, 0.0, 0.0};
-		vec_add(p_W, dr, p_W_diff, 3);
+    vec_add(p_W, dr, p_W_diff, 3);
 
-		/* Transform perturbed point to camera frame */
-		double p_C_diff[3] = {0.0, 0.0, 0.0};
-		tf_point(T_WC, p_W_diff, p_C_diff);
+    /* Transform perturbed point to camera frame */
+    double p_C_diff[3] = {0.0, 0.0, 0.0};
+    tf_point(T_WC, p_W_diff, p_C_diff);
 
-		/* Calculate new reprojection error */
+    /* Calculate new reprojection error */
     double e_prime[2] = {0.0};
     const double z_hat[2] = {
-			p_C_diff[0] / p_C_diff[2],
-			p_C_diff[1] / p_C_diff[2]
-		};
-		vec_sub(z, z_hat, e_prime, 2);
+      p_C_diff[0] / p_C_diff[2],
+      p_C_diff[1] / p_C_diff[2]
+    };
+    vec_sub(z, z_hat, e_prime, 2);
 
-		/* Record */
-		mat_set(fdiff, 3, 0, 0, (e_prime[0] - e[0]) / step_size);
-		mat_set(fdiff, 3, 0, 1, (e_prime[0] - e[0]) / step_size);
+    /* Record */
+    mat_set(fdiff, 3, 0, 0, (e_prime[0] - e[0]) / step_size);
+    mat_set(fdiff, 3, 0, 1, (e_prime[0] - e[0]) / step_size);
   }
 
   return check_jacobian("J_point", fdiff, J_point, 2, 3, threshold, 1);
