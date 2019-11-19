@@ -8,10 +8,10 @@
   } while (0)
 
 static float randf(float a, float b) {
-	float random = ((float) rand()) / (float) RAND_MAX;
-	float diff = b - a;
-	float r = random * diff;
-	return a + r;
+  float random = ((float) rand()) / (float) RAND_MAX;
+  float diff = b - a;
+  float r = random * diff;
+  return a + r;
 }
 
 static void mat_set(double *A,

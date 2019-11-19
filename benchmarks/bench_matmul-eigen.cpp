@@ -3,12 +3,12 @@
 #include "benchmark.hpp"
 
 int main() {
-	// Array - Blas
-	for (size_t k = 1; k < 1000; k++) {
-		size_t m = k;
-		double *A = create_random_sq_matrix(m);
-		double *B = create_random_sq_matrix(m);
-		double *C = (double *) malloc(sizeof(double) * m * m);
+  // Array - Blas
+  for (size_t k = 1; k < 1000; k++) {
+    size_t m = k;
+    double *A = create_random_sq_matrix(m);
+    double *B = create_random_sq_matrix(m);
+    double *C = (double *) malloc(sizeof(double) * m * m);
 
     sleep(0.1);
     Eigen::MatrixXd A_;
@@ -31,10 +31,10 @@ int main() {
     C_ = A_ * B_;
     printf("matrix_size: %ld\tdot_cblas(): %fs\n", m, toc(&t));
 
-		free(A);
-		free(B);
-		free(C);
-	}
+    free(A);
+    free(B);
+    free(C);
+  }
 
   return 0;
 }

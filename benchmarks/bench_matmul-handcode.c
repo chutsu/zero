@@ -17,7 +17,7 @@ void dot(const double *A, const size_t A_m, const size_t A_n,
     for (size_t j = 0; j < n; j++) {
       double sum = 0.0;
       for (size_t k = 0; k < A_n; k++) {
-				sum += A[(i * A_n) + j] * B[(i * B_n) + j];
+        sum += A[(i * A_n) + j] * B[(i * B_n) + j];
       }
       C[(i * n) + j] = sum;
     }
@@ -26,12 +26,12 @@ void dot(const double *A, const size_t A_m, const size_t A_n,
 
 
 int main() {
-	// Array - Blas
-	for (size_t k = 1; k < 1000; k++) {
-		size_t m = k;
-		double *A = create_random_sq_matrix(m);
-		double *B = create_random_sq_matrix(m);
-		double *C = (double *) malloc(sizeof(double) * m * m);
+  // Array - Blas
+  for (size_t k = 1; k < 1000; k++) {
+    size_t m = k;
+    double *A = create_random_sq_matrix(m);
+    double *B = create_random_sq_matrix(m);
+    double *C = (double *) malloc(sizeof(double) * m * m);
 
     // Hand coded dot()
     sleep(0.1);
@@ -39,10 +39,10 @@ int main() {
     dot(A, m, m, B, m, m, C);
     printf("matrix_size: %ld\tdot(): %fs\n", m, toc(&t));
 
-		free(A);
-		free(B);
-		free(C);
-	}
+    free(A);
+    free(B);
+    free(C);
+  }
 
   return 0;
 }

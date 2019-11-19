@@ -1,15 +1,15 @@
 #include "mpu6050.hpp"
 
 void mpu6050_setup(mpu6050_t *imu) {
-	// Configure Digital low-pass filter
-	uint8_t dlpf_cfg = 0;
-	mpu6050_set_dplf(dlpf_cfg);
+  // Configure Digital low-pass filter
+  uint8_t dlpf_cfg = 0;
+  mpu6050_set_dplf(dlpf_cfg);
 
   // Set power management register
   i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, 0x00);
 
-	// Configure Gyroscope range
-	const uint8_t gyro_range = 0;
+  // Configure Gyroscope range
+  const uint8_t gyro_range = 0;
   mpu6050_set_gyro_range(gyro_range);
   switch (gyro_range) {
   case 0: imu->gyro_sensitivity = 131.0; break;
@@ -19,7 +19,7 @@ void mpu6050_setup(mpu6050_t *imu) {
   }
 
   // Configure accel range
-	const uint8_t accel_range = 0;
+  const uint8_t accel_range = 0;
   mpu6050_set_accel_range(accel_range);
   switch (accel_range) {
   case 0: imu->accel_sensitivity = 16384.0; break;
@@ -131,7 +131,7 @@ void mpu6050_set_accel_range(const int8_t range) {
 uint8_t mpu6050_get_accel_range() {
   uint8_t data = i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_ACCEL_CONFIG);
   data  = (data >> 3) & 0b00000011;
-	return data;
+  return data;
 }
 
 void mpu6050_get_data(mpu6050_t *imu) {

@@ -31,7 +31,7 @@
 #define BME280_REG_CHIPID 0xD0
 #define BME280_REG_VERSION 0xD1
 #define BME280_REG_SOFTRESET 0xE0
-#define BME280_REG_CAL26 0xE1 	 // R calibration stored in 0xE1-0xF0
+#define BME280_REG_CAL26 0xE1    // R calibration stored in 0xE1-0xF0
 #define BME280_REG_CONTROLHUMID 0xF2
 #define BME280_REG_STATUS 0XF3
 #define BME280_REG_CONTROL 0xF4

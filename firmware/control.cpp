@@ -5,9 +5,9 @@
  *****************************************************************************/
 
 void pid_ctrl_setup(pid_ctrl_t *pid,
-							 		  const float k_p,
-							 		  const float k_i,
-							 		  const float k_d) {
+                    const float k_p,
+                    const float k_i,
+                    const float k_d) {
   pid->error_prev = 0.0;
   pid->error_sum = 0.0;
 
@@ -21,9 +21,9 @@ void pid_ctrl_setup(pid_ctrl_t *pid,
 }
 
 float pid_ctrl_update(pid_ctrl_t *pid,
-								  		const float setpoint,
-								  		const float actual,
-								  		const float dt) {
+                      const float setpoint,
+                      const float actual,
+                      const float dt) {
   // Calculate errors
   const double error = setpoint - actual;
   pid->error_sum += error * dt;
@@ -52,11 +52,11 @@ void pid_ctrl_reset(pid_ctrl_t *pid) {
  *****************************************************************************/
 
 void esc_setup(esc_t *esc, uint8_t pins[4]) {
-	const float freq = 1000.0f;
-	pwm_setup(&esc->m1, pins[0], freq);
-	pwm_setup(&esc->m2, pins[1], freq);
-	pwm_setup(&esc->m3, pins[2], freq);
-	pwm_setup(&esc->m4, pins[3], freq);
+  const float freq = 1000.0f;
+  pwm_setup(&esc->m1, pins[0], freq);
+  pwm_setup(&esc->m2, pins[1], freq);
+  pwm_setup(&esc->m3, pins[2], freq);
+  pwm_setup(&esc->m4, pins[3], freq);
 }
 
 /*****************************************************************************
@@ -64,21 +64,21 @@ void esc_setup(esc_t *esc, uint8_t pins[4]) {
  *****************************************************************************/
 
 void att_ctrl_setup(att_ctrl_t *ctrl) {
-	pid_ctrl_setup(&ctrl->roll, 0.0f, 0.0f, 0.0f);
-	pid_ctrl_setup(&ctrl->pitch, 0.0f, 0.0f, 0.0f);
-	pid_ctrl_setup(&ctrl->yaw, 0.0f, 0.0f, 0.0f);
+  pid_ctrl_setup(&ctrl->roll, 0.0f, 0.0f, 0.0f);
+  pid_ctrl_setup(&ctrl->pitch, 0.0f, 0.0f, 0.0f);
+  pid_ctrl_setup(&ctrl->yaw, 0.0f, 0.0f, 0.0f);
 
-	ctrl->roll_limits[0] = 0.0f;
-	ctrl->roll_limits[1] = 0.0f;
-	ctrl->pitch_limits[0] = 0.0f;
-	ctrl->pitch_limits[1] = 0.0f;
-	ctrl->max_thrust = 0.0f;
+  ctrl->roll_limits[0] = 0.0f;
+  ctrl->roll_limits[1] = 0.0f;
+  ctrl->pitch_limits[0] = 0.0f;
+  ctrl->pitch_limits[1] = 0.0f;
+  ctrl->max_thrust = 0.0f;
 
-	ctrl->outputs[0] = 0.0f;
-	ctrl->outputs[1] = 0.0f;
-	ctrl->outputs[2] = 0.0f;
-	ctrl->outputs[3] = 0.0f;
-	ctrl->dt = 0.0f;
+  ctrl->outputs[0] = 0.0f;
+  ctrl->outputs[1] = 0.0f;
+  ctrl->outputs[2] = 0.0f;
+  ctrl->outputs[3] = 0.0f;
+  ctrl->dt = 0.0f;
 }
 
 void att_ctrl_update(att_ctrl_t *ctrl,
@@ -93,7 +93,7 @@ void att_ctrl_update(att_ctrl_t *ctrl,
 
   // Form actual
   float r_WB[3] = {0};
-	tf_trans(T_WB, r_WB);
+  tf_trans(T_WB, r_WB);
   const float rpy[3] = quat2euler(tf_quat(T_WB));
   const float actual[4] = {rpy[0], rpy[1], rpy[2], z};
 
@@ -132,14 +132,14 @@ void att_ctrl_update(att_ctrl_t *ctrl,
   float outputs[4] = {m1, m2, m3, m4};
 
   // Limit outputs
-	ctrl->outputs[0] = (m1 > ctrl->max_thrust) ? ctrl->max_thrust : m1;
-	ctrl->outputs[0] = (m1 < 0.0) ? 0.0 : m1;
-	ctrl->outputs[1] = (m2 > ctrl->max_thrust) ? ctrl->max_thrust : m2;
-	ctrl->outputs[1] = (m2 < 0.0) ? 0.0 : m2;
-	ctrl->outputs[2] = (m3 > ctrl->max_thrust) ? ctrl->max_thrust : m3;
-	ctrl->outputs[2] = (m3 < 0.0) ? 0.0 : m3;
-	ctrl->outputs[3] = (m4 > ctrl->max_thrust) ? ctrl->max_thrust : m4;
-	ctrl->outputs[3] = (m4 < 0.0) ? 0.0 : m4;
+  ctrl->outputs[0] = (m1 > ctrl->max_thrust) ? ctrl->max_thrust : m1;
+  ctrl->outputs[0] = (m1 < 0.0) ? 0.0 : m1;
+  ctrl->outputs[1] = (m2 > ctrl->max_thrust) ? ctrl->max_thrust : m2;
+  ctrl->outputs[1] = (m2 < 0.0) ? 0.0 : m2;
+  ctrl->outputs[2] = (m3 > ctrl->max_thrust) ? ctrl->max_thrust : m3;
+  ctrl->outputs[2] = (m3 < 0.0) ? 0.0 : m3;
+  ctrl->outputs[3] = (m4 > ctrl->max_thrust) ? ctrl->max_thrust : m4;
+  ctrl->outputs[3] = (m4 < 0.0) ? 0.0 : m4;
 
   ctrl->dt = 0.0;
 }

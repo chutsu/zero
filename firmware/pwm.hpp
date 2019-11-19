@@ -6,10 +6,10 @@
 #include <Arduino.h>
 
 struct pwm_t {
-	HardwareTimer *timer = nullptr;
-	uint8_t pin = 0;
-	uint8_t freq = 0;
-	uint32_t channel = 0;
+  HardwareTimer *timer = nullptr;
+  uint8_t pin = 0;
+  uint8_t freq = 0;
+  uint32_t channel = 0;
 };
 
 void pwm_setup(pwm_t *pwm, const uint8_t pin, const uint8_t freq);

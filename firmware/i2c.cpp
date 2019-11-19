@@ -32,24 +32,24 @@ void i2c_write_byte(const uint8_t dev_addr,
 }
 
 void i2c_read_bytes(const uint8_t dev_addr,
-									  const uint8_t reg_addr,
-										const size_t length,
-										uint8_t *data) {
+                    const uint8_t reg_addr,
+                    const size_t length,
+                    uint8_t *data) {
   Wire.beginTransmission(dev_addr);
   Wire.write(reg_addr);
 
-	Wire.requestFrom(dev_addr, length);
-	for (size_t i = 0; i < length; i++) {
-	  data[i] = Wire.read();
-	}
+  Wire.requestFrom(dev_addr, length);
+  for (size_t i = 0; i < length; i++) {
+    data[i] = Wire.read();
+  }
 
   Wire.endTransmission();
 }
 
 void i2c_write_bytes(const uint8_t dev_addr,
-									   const uint8_t reg_addr,
-										 const uint8_t *data,
-										 const size_t length) {
+                     const uint8_t reg_addr,
+                     const uint8_t *data,
+                     const size_t length) {
   Wire.beginTransmission(dev_addr);
   Wire.write(reg_addr);
   Wire.write(data, length);

@@ -25,14 +25,14 @@ struct pid_ctrl_t {
 };
 
 void pid_ctrl_setup(pid_ctrl_t *pid,
-							 		  const float k_p,
-							 		  const float k_i,
-							 		  const float k_d);
+                    const float k_p,
+                    const float k_i,
+                    const float k_d);
 
 float pid_ctrl_update(pid_ctrl_t *pid,
-								 	  	const float setpoint,
-								 	  	const float actual,
-								 	  	const float dt);
+                      const float setpoint,
+                      const float actual,
+                      const float dt);
 
 void pid_ctrl_reset(pid_ctrl_t *pid);
 
@@ -41,10 +41,10 @@ void pid_ctrl_reset(pid_ctrl_t *pid);
  *****************************************************************************/
 
 struct esc_t {
-	pwm_t m1;
-	pwm_t m2;
-	pwm_t m3;
-	pwm_t m4;
+  pwm_t m1;
+  pwm_t m2;
+  pwm_t m3;
+  pwm_t m4;
 };
 
 void esc_setup(esc_t *esc);
@@ -54,16 +54,16 @@ void esc_setup(esc_t *esc);
  *****************************************************************************/
 
 struct att_ctrl_t {
-	pid_ctrl_t roll;
-	pid_ctrl_t pitch;
-	pid_ctrl_t yaw;
+  pid_ctrl_t roll;
+  pid_ctrl_t pitch;
+  pid_ctrl_t yaw;
 
-	float roll_limits[2];
-	float pitch_limits[2];
-	float max_thrust;
+  float roll_limits[2];
+  float pitch_limits[2];
+  float max_thrust;
 
-	float outputs[4];
-	float dt;
+  float outputs[4];
+  float dt;
 };
 
 void att_ctrl_setup(att_ctrl_t *att_ctrl);
