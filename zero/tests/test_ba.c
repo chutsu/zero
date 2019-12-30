@@ -43,8 +43,9 @@ int test_ba_load_data() {
 int test_ba_residuals() {
   ba_data_t *data = ba_load_data(TEST_DATA);
 
-	double *r = ba_residuals(data);
-	for (int i = 0; i < data->r_size; i++) {
+  int r_size = 0;
+	double *r = ba_residuals(data, &r_size);
+	for (int i = 0; i < r_size; i++) {
 		MU_CHECK(r[i] < 0.01);
 	}
 
@@ -54,12 +55,13 @@ int test_ba_residuals() {
 }
 
 int test_ba_jacobians() {
-  ba_data_t *data = ba_load_data(TEST_DATA);
-
+  /* Test */
   int J_rows = 0;
   int J_cols = 0;
+  ba_data_t *data = ba_load_data(TEST_DATA);
   double *J = ba_jacobian(data, &J_rows, &J_cols);
 
+  /* Write Jacobians to csv file */
   int idx = 0;
   FILE *csv_file = fopen("/tmp/J.csv", "w");
   for (int i = 0; i < J_rows; i++) {
@@ -74,9 +76,40 @@ int test_ba_jacobians() {
   }
   fclose(csv_file);
 
+  /* Clean up */
   free(J);
   ba_data_free(data);
+
 	return 0;
+}
+
+int test_ba_update() {
+  ba_data_t *data = ba_load_data(TEST_DATA);
+
+  int r_size = 0;
+	double *r = ba_residuals(data, &r_size);
+
+  int J_rows = 0;
+  int J_cols = 0;
+  double *J = ba_jacobian(data, &J_rows, &J_cols);
+
+  ba_update(data,
+            r, r_size,
+            J, J_rows, J_cols);
+
+  ba_data_free(data);
+
+  return 0;
+}
+
+int test_ba_cost() {
+  const double e[5] = {1.0, 2.0, 3.0, 4.0, 5.0};
+  const double cost = ba_cost(e, 5);
+
+  printf("Cost: %f\n", cost);
+  MU_CHECK(fltcmp(cost, 27.50) == 0);
+
+  return 0;
 }
 
 void test_suite() {
@@ -85,6 +118,8 @@ void test_suite() {
   MU_ADD_TEST(test_ba_load_data);
   MU_ADD_TEST(test_ba_residuals);
   MU_ADD_TEST(test_ba_jacobians);
+  MU_ADD_TEST(test_ba_update);
+  MU_ADD_TEST(test_ba_cost);
 }
 
 MU_RUN_TESTS(test_suite);

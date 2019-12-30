@@ -122,6 +122,7 @@ void quat2rot(const double q[4], double C[3 * 3]);
 void quatlmul(const double p[4], const double q[4], double r[4]);
 void quatrmul(const double p[4], const double q[4], double r[4]);
 void quatmul(const double p[4], const double q[4], double r[4]);
+void quatdelta(const double dalpha[3], double dq[4]);
 
 /******************************************************************************
  *                                   POSE

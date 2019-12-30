@@ -286,8 +286,6 @@ struct ba_data_t {
 
   double **points;
   int nb_points;
-
-  int r_size;
 } typedef ba_data_t;
 
 ba_data_t *ba_load_data(const char *data_path) {
@@ -301,13 +299,6 @@ ba_data_t *ba_load_data(const char *data_path) {
   data->point_ids = load_point_ids(data_path, &nb_ids);
   data->points = load_points(data_path, &data->nb_points);
 
-  /* Calculate residual size */
-	data->r_size = 0;
-  for (int k = 0; k < data->nb_frames; k++) {
-		data->r_size += data->point_ids[k][0];
-	}
-	data->r_size = data->r_size * 2;
-	/* ^ Scale 2 because each pixel error are size 2 */
 
   return data;
 }
@@ -340,9 +331,22 @@ void ba_data_free(ba_data_t *data) {
   free(data);
 }
 
-double *ba_residuals(ba_data_t *data) {
+int ba_residual_size(ba_data_t *data) {
+  /* Calculate residual size */
+	int r_size = 0;
+  for (int k = 0; k < data->nb_frames; k++) {
+		r_size += data->point_ids[k][0];
+	}
+	r_size = r_size * 2;
+	/* ^ Scale 2 because each pixel error are size 2 */
+
+  return r_size;
+}
+
+double *ba_residuals(ba_data_t *data, int *r_size) {
 	/* Initialize memory for residuals */
-  double *r = calloc(data->r_size, sizeof(double));
+	*r_size = ba_residual_size(data);
+  double *r = calloc(*r_size, sizeof(double));
 
   /* Target pose */
   double T_WT[4 * 4] = {0};
@@ -389,7 +393,7 @@ double *ba_residuals(ba_data_t *data) {
 
 double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
   /* Initialize memory for jacobian */
-	*J_rows = data->r_size;
+	*J_rows = ba_residual_size(data);
   *J_cols = (data->nb_frames * 6) + (data->nb_points * 3);
   double *J = calloc(*J_rows * *J_cols, sizeof(double));
   zeros(J, *J_rows, *J_cols);
@@ -487,42 +491,102 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
   return J;
 }
 
-/* void ba_update(ba_data_t *data, double *e, double *E, double sigma[2]) { */
+void ba_update(ba_data_t *data,
+               double *e, int e_size,
+               double *E, int E_rows, int E_cols) {
+  assert(e_size == E_rows);
   /* Form weight matrix */
   /* W = diag(repmat(sigma, data->nb_measurements, 1)); */
 
   /* Solve Gauss-Newton system [H dx = g]: Solve for dx */
   /* H = (E' * W * E); */
-  /* g = -E' * W * e; */
-  /* dx = pinv(H) * g; */
+  double *E_t = calloc(E_rows * E_cols, sizeof(double));
+  double *H = calloc(E_cols * E_cols, sizeof(double));
+  mat_transpose(E, E_rows, E_cols, E_t);
+  dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
+  free(E_t);
 
-  /* #<{(| Update camera poses |)}># */
-  /* nb_poses = length(data.time); */
-  /* for i = 1:nb_poses */
-  /*   s = ((i - 1) * 6) + 1; */
-  /*   dalpha = dx(s:s+2); */
-  /*   dr_WC = dx(s+3:s+5); */
-  /*  */
-  /*   #<{(| Update camera rotation |)}># */
-  /*   dq = quat_delta(dalpha); */
-  /*   data.q_WC{i} = quat_mul(dq, data.q_WC{i}); */
-  /*  */
-  /*   #<{(| Update camera position |)}># */
-  /*   data.r_WC{i} += dr_WC; */
-  /* endfor */
-  /*  */
-  /* #<{(| Update points |)}># */
-  /* for i = 1:length(data.p_data) */
-  /*   s = (nb_poses * 6) + ((i - 1) * 3) + 1; */
-  /*   dp_W = dx(s:s+2); */
-  /*   data.p_data(1:3, i) += dp_W; */
-  /* endfor */
-/* } */
+  /* g = -E' * W * e; */
+  double *g = calloc(E_cols, sizeof(double));
+  mat_scale(E_t, E_cols, E_rows, -1.0);
+  dot(E_t, E_cols, E_rows, e, e_size, 1, g);
+
+  /* dx = pinv(H) * g; */
+  double *H_inv;
+  double *dx = calloc(E_cols, sizeof(double));
+  dot(H, E_cols, E_cols, g, E_cols, 1, dx);
+  free(H);
+  free(g);
+
+  /* Update camera poses */
+  for (int k = 0; k < data->nb_frames; k++) {
+    const int s = k * 6;
+
+    /* Update camera rotation */
+    /* dq = quatdelta(dalpha) */
+    /* q_WC_k = quatmul(dq, q_WC_k) */
+    const double dalpha[3] = {dx[s], dx[s + 1], dx[s + 2]};
+    double dq[4] = {0};
+    double q_new[4] = {0};
+    quatdelta(dalpha, dq);
+    quatmul(dq, data->cam_poses[k].q, q_new);
+    data->cam_poses[k].q[0] = q_new[0];
+    data->cam_poses[k].q[1] = q_new[1];
+    data->cam_poses[k].q[2] = q_new[2];
+    data->cam_poses[k].q[3] = q_new[3];
+
+    /* Update camera position */
+    /* r_WC_k += dr_WC */
+    const double dr_WC[3] = {dx[s + 3], dx[s + 4], dx[s + 5]};
+    data->cam_poses[k].r[0] += dr_WC[0];
+    data->cam_poses[k].r[1] += dr_WC[1];
+    data->cam_poses[k].r[2] += dr_WC[2];
+  }
+
+  /* Update points */
+  for (int i = 0; i < data->nb_points; i++) {
+    const int s = (data->nb_frames * 6) + (i * 3);
+    const double dp_W[3] = { dx[s], dx[s + 1], dx[s + 2] };
+    data->points[i][0] += dp_W[0];
+    data->points[i][1] += dp_W[1];
+    data->points[i][2] += dp_W[2];
+  }
+}
 
 double ba_cost(const double *e, const int length) {
+  /* cost = 0.5 * e' * e */
   double cost = 0.0;
-  dot(e, length, 1, e, length, 1, &cost);
+  dot(e, 1, length, e, length, 1, &cost);
   return cost * 0.5;
+}
+
+void ba_solve(ba_data_t *data) {
+  int max_iter = 20;
+  double cost_prev = 0.0;
+
+  for (int iter = 0; iter < max_iter; iter++) {
+    /* Residuals */
+    int e_size = 0;
+    double *e = ba_residuals(data, &e_size);
+
+    /* Jacobians */
+    int E_rows = 0;
+    int E_cols = 0;
+    double *E = ba_jacobian(data, &E_rows, &E_cols);
+
+    /* Update and calculate cost */
+    ba_update(data, e, e_size, E, E_rows, E_cols);
+    const double cost = ba_cost(e, e_size);
+    printf("iter: %d\t cost: %.4e\n", iter, cost);
+
+    /* Termination criteria */
+    double cost_diff = fabs(cost - cost_prev);
+    if (cost_diff < 1.0e-6) {
+      printf("Done!\n");
+      break;
+    }
+    cost_prev = cost;
+  }
 }
 
 #endif // BA_H

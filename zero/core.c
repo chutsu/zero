@@ -873,6 +873,18 @@ void quatmul(const double p[4], const double q[4], double r[4]) {
   quatlmul(p, q, r);
 }
 
+void quatdelta(const double dalpha[3], double dq[4]) {
+  const double half_norm = 0.5 * vec_norm(dalpha, 3);
+  const double k = sinc(half_norm) * 0.5;
+  const double vector[3] = {k * dalpha[0], k * dalpha[0], k * dalpha[0]};
+  double scalar = cos(half_norm);
+
+  dq[0] = scalar;
+  dq[1] = vector[0];
+  dq[2] = vector[1];
+  dq[3] = vector[2];
+}
+
 /******************************************************************************
  *                                   POSE
  ******************************************************************************/
