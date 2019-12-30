@@ -5,13 +5,15 @@ DEP_DIR=$(PWD)/dep
 TESTS_DIR=$(PWD)/tests
 
 # COMPILER SETTINGS
-# CC=gcc -Wall -O3 -g -std=c11
-CC=gcc -O3 -s -DNDEBUG \
-	-std=gnu99 \
-	-march=native \
-	-fopenmp \
+CC=gcc -Wall -O3 -g -std=c11 \
 	-D_DEFAULT_SOURCE \
 	-D_POSIX_C_SOURCE=199309L
+# CC=gcc -O3 -s -g -Wall -DNDEBUG \
+# 	-std=gnu99 \
+# 	-march=native \
+# 	-fopenmp \
+# 	-D_DEFAULT_SOURCE \
+# 	-D_POSIX_C_SOURCE=199309L
 CFLAGS=-I$(INC_DIR)
 LIBS=-L$(BLD_DIR) \
 		 -lzero \

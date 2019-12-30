@@ -1,5 +1,5 @@
 #include "zero/munit.h"
-#include "zero/math.h"
+#include "zero/core.h"
 
 int test_eye() {
   double A[25] = {0.0};
@@ -57,9 +57,7 @@ int test_zeros() {
 }
 
 int test_mat_set() {
-  double A[9] = {0.0, 0.0, 0.0,
-                 0.0, 0.0, 0.0,
-                 0.0, 0.0, 0.0};
+  double A[9] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
   mat_set(A, 3, 0, 0, 1.0);
   mat_set(A, 3, 1, 1, 1.0);
@@ -74,9 +72,7 @@ int test_mat_set() {
 }
 
 int test_mat_val() {
-  double A[9] = {1.0, 2.0, 3.0,
-                 4.0, 5.0, 6.0,
-                 7.0, 8.0, 9.0};
+  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
 
   /* print_matrix("A", A, 3, 3); */
   MU_CHECK(fltcmp(mat_val(A, 3, 0, 0), 1.0) == 0);
@@ -88,9 +84,7 @@ int test_mat_val() {
 }
 
 int test_mat_block() {
-  double A[9] = {1.0, 2.0, 3.0,
-                 4.0, 5.0, 6.0,
-                 7.0, 8.0, 9.0};
+  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
   double B[4] = {0.0};
   mat_block(A, 3, 1, 1, 2, 2, B);
 
@@ -104,9 +98,7 @@ int test_mat_block() {
 }
 
 int test_mat_transpose() {
-  double A[9] = {1.0, 2.0, 3.0,
-                 4.0, 5.0, 6.0,
-                 7.0, 8.0, 9.0};
+  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
   double C[9] = {0.0};
   mat_transpose(A, 3, 3, C);
   print_matrix("C", C, 3, 3);
@@ -115,12 +107,8 @@ int test_mat_transpose() {
 }
 
 int test_mat_add() {
-  double A[9] = {1.0, 2.0, 3.0,
-                 4.0, 5.0, 6.0,
-                 7.0, 8.0, 9.0};
-  double B[9] = {9.0, 8.0, 7.0,
-                 6.0, 5.0, 4.0,
-                 3.0, 2.0, 1.0};
+  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  double B[9] = {9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0};
   double C[9] = {0.0};
   mat_add(A, B, C, 3, 3);
   print_matrix("C", C, 3, 3);
@@ -129,12 +117,8 @@ int test_mat_add() {
 }
 
 int test_mat_sub() {
-  double A[9] = {1.0, 2.0, 3.0,
-                 4.0, 5.0, 6.0,
-                 7.0, 8.0, 9.0};
-  double B[9] = {1.0, 2.0, 3.0,
-                 4.0, 5.0, 6.0,
-                 7.0, 8.0, 9.0};
+  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  double B[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
   double C[9] = {0.0};
   mat_sub(A, B, C, 3, 3);
   print_matrix("C", C, 3, 3);
@@ -143,12 +127,8 @@ int test_mat_sub() {
 }
 
 int test_vec_add() {
-  double A[9] = {1.0, 2.0, 3.0,
-                 4.0, 5.0, 6.0,
-                 7.0, 8.0, 9.0};
-  double B[9] = {9.0, 8.0, 7.0,
-                 6.0, 5.0, 4.0,
-                 3.0, 2.0, 1.0};
+  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  double B[9] = {9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0};
   double C[9] = {0.0};
   vec_add(A, B, C, 9);
   print_vector("C", C, 9);
@@ -157,12 +137,8 @@ int test_vec_add() {
 }
 
 int test_vec_sub() {
-  double A[9] = {1.0, 2.0, 3.0,
-                 4.0, 5.0, 6.0,
-                 7.0, 8.0, 9.0};
-  double B[9] = {1.0, 2.0, 3.0,
-                 4.0, 5.0, 6.0,
-                 7.0, 8.0, 9.0};
+  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  double B[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
   double C[9] = {0.0};
   vec_sub(A, B, C, 9);
   print_vector("C", C, 9);
@@ -194,15 +170,39 @@ int test_vec_sub() {
 /* } */
 
 int test_dot() {
-  double A[9] = {1.0, 2.0, 3.0,
-                 4.0, 5.0, 6.0,
-                 7.0, 8.0, 9.0};
+  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
   double B[3] = {1.0, 2.0, 3.0};
   double C[9] = {0.0};
 
   /* Multiply matrix A and B */
   dot(A, 3, 3, B, 3, 1, C);
   print_vector("C", C, 3);
+
+	MU_CHECK(fltcmp(C[0], 14.0) == 0);
+	MU_CHECK(fltcmp(C[1], 32.0) == 0);
+	MU_CHECK(fltcmp(C[2], 50.0) == 0);
+
+  return 0;
+}
+
+int test_skew() {
+  double x[3] = {1.0, 2.0, 3.0};
+  double S[3 * 3] = {0};
+
+  skew(x, S);
+  print_matrix("S", S, 3, 3);
+
+  MU_CHECK(fltcmp(S[0], 0.0) == 0);
+  MU_CHECK(fltcmp(S[1], -3.0) == 0);
+  MU_CHECK(fltcmp(S[2], 2.0) == 0);
+
+  MU_CHECK(fltcmp(S[3], 3.0) == 0);
+  MU_CHECK(fltcmp(S[4], 0.0) == 0);
+  MU_CHECK(fltcmp(S[5], -1.0) == 0);
+
+  MU_CHECK(fltcmp(S[6], -2.0) == 0);
+  MU_CHECK(fltcmp(S[7], 1.0) == 0);
+  MU_CHECK(fltcmp(S[8], 0.0) == 0);
 
   return 0;
 }
@@ -271,10 +271,12 @@ int test_tf_set_trans() {
 }
 
 int test_tf_trans() {
+  /* clang-format off */
   double T[16] = {1.0, 2.0, 3.0, 4.0,
                   5.0, 6.0, 7.0, 8.0,
                   9.0, 10.0, 11.0, 12.0,
                   13.0, 14.0, 15.0, 16.0};
+  /* clang-format on */
   print_matrix("T", T, 4, 4);
 
   /* Get translation vector */
@@ -291,10 +293,12 @@ int test_tf_trans() {
 
 int test_tf_rot() {
   /* Transform */
+  /* clang-format off */
   double T[16] = {1.0, 2.0, 3.0, 4.0,
                   5.0, 6.0, 7.0, 8.0,
                   9.0, 10.0, 11.0, 12.0,
                   13.0, 14.0, 15.0, 16.0};
+  /* clang-format on */
   print_matrix("T", T, 4, 4);
 
   /* Get rotation matrix */
@@ -302,19 +306,29 @@ int test_tf_rot() {
   tf_rot(T, C);
   print_matrix("C", C, 3, 3);
 
-  for (size_t i = 0; i < 9; i++) {
-    MU_CHECK(fltcmp(C[i], i + 1) == 0);
-  }
+  MU_CHECK(fltcmp(C[0], 1.0) == 0);
+  MU_CHECK(fltcmp(C[1], 2.0) == 0);
+  MU_CHECK(fltcmp(C[2], 3.0) == 0);
+
+  MU_CHECK(fltcmp(C[3], 5.0) == 0);
+  MU_CHECK(fltcmp(C[4], 6.0) == 0);
+  MU_CHECK(fltcmp(C[5], 7.0) == 0);
+
+  MU_CHECK(fltcmp(C[6], 9.0) == 0);
+  MU_CHECK(fltcmp(C[7], 10.0) == 0);
+  MU_CHECK(fltcmp(C[8], 11.0) == 0);
 
   return 0;
 }
 
 int test_tf_quat() {
   /* Transform */
+  /* clang-format off */
   double T[16] = {1.0, 0.0, 0.0, 0.0,
                   0.0, 1.0, 0.0, 0.0,
                   0.0, 0.0, 1.0, 0.0,
                   0.0, 0.0, 0.0, 1.0};
+  /* clang-format on */
 
   /* Create rotation matrix */
   const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
@@ -339,10 +353,12 @@ int test_tf_quat() {
 
 int test_tf_inv() {
   /* Create Transform */
+  /* clang-format off */
   double T[16] = {1.0, 0.0, 0.0, 0.0,
                   0.0, 1.0, 0.0, 0.0,
                   0.0, 0.0, 1.0, 0.0,
                   0.0, 0.0, 0.0, 1.0};
+  /* clang-format on */
   /* -- Set rotation component */
   const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
   double C[9] = {0};
@@ -378,10 +394,12 @@ int test_tf_inv() {
 
 int test_tf_point() {
   /* Transform */
-  const double T[16] = {1.0, 0.0, 0.0, 1.0,
-                         0.0, 1.0, 0.0, 2.0,
-                         0.0, 0.0, 1.0, 3.0,
-                         0.0, 0.0, 0.0, 1.0};
+  /* clang-format off */
+  double T[16] = {1.0, 0.0, 0.0, 1.0,
+                  0.0, 1.0, 0.0, 2.0,
+                  0.0, 0.0, 1.0, 3.0,
+                  0.0, 0.0, 0.0, 1.0};
+  /* clang-format on */
   print_matrix("T", T, 4, 4);
 
   /* Point */
@@ -398,10 +416,12 @@ int test_tf_point() {
 
 int test_tf_hpoint() {
   /* Transform */
-  const double T[16] = {1.0, 0.0, 0.0, 1.0,
-                         0.0, 1.0, 0.0, 2.0,
-                         0.0, 0.0, 1.0, 3.0,
-                         0.0, 0.0, 0.0, 1.0};
+  /* clang-format off */
+  double T[16] = {1.0, 0.0, 0.0, 1.0,
+                  0.0, 1.0, 0.0, 2.0,
+                  0.0, 0.0, 1.0, 3.0,
+                  0.0, 0.0, 0.0, 1.0};
+  /* clang-format on */
   print_matrix("T", T, 4, 4);
 
   /* Homogeneous point */
@@ -438,9 +458,7 @@ int test_euler321() {
 
 int test_rot2quat() {
   /* Rotation matrix to quaternion */
-  const double C[9] = {1.0, 0.0, 0.0,
-                       0.0, 1.0, 0.0,
-                       0.0, 0.0, 1.0};
+  const double C[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
   double q[4] = {0.0};
   rot2quat(C, q);
   print_vector("q", q, 4);
@@ -449,9 +467,7 @@ int test_rot2quat() {
 }
 
 int test_quat2euler() {
-  const double C[9] = {1.0, 0.0, 0.0,
-                       0.0, 1.0, 0.0,
-                       0.0, 0.0, 1.0};
+  const double C[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
 
   /* Rotation matrix to quaternion */
   double q[4] = {0.0};
@@ -502,6 +518,7 @@ void test_suite() {
   MU_ADD_TEST(test_vec_add);
   MU_ADD_TEST(test_vec_sub);
   MU_ADD_TEST(test_dot);
+  MU_ADD_TEST(test_skew);
 
   /* Transforms */
   MU_ADD_TEST(test_tf_set_rot);

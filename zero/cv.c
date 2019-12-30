@@ -40,8 +40,11 @@ int pinhole_project(const double K[9], const double p[3], double x[2]) {
   const double cx = K[2];
   const double cy = K[5];
 
-  x[0] = p[0] * fx + cx;
-  x[1] = p[1] * fy + cy;
+  const double px = p[0] / p[2];
+  const double py = p[1] / p[2];
+
+  x[0] = px * fx + cx;
+  x[1] = py * fy + cy;
 
   return 0;
 }
@@ -194,7 +197,8 @@ void equi4_point_jacobian(const double k1,
   const double thd = th * (1.0 + k1 * th2 + k2 * th4 + k3 * th6 + k4 * th8);
 
   const double th_r = 1.0 / (r * r + 1.0);
-  const double thd_th = 1.0 + 3.0 * k1 * th2 + 5.0 * k2 * th4 + 7.0 * k3 * th6 + 9.0 * k4 * th8;
+  const double thd_th =
+      1.0 + 3.0 * k1 * th2 + 5.0 * k2 * th4 + 7.0 * k3 * th6 + 9.0 * k4 * th8;
   const double s = thd / r;
   const double s_r = thd_th * th_r / r - thd / (r * r);
   const double r_x = 1.0 / r * x;

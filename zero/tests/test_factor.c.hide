@@ -83,10 +83,8 @@ int check_J_point(const double T_WC[16],
 
     /* Calculate new reprojection error */
     double e_prime[2] = {0.0};
-    const double z_hat[2] = {
-      p_C_diff[0] / p_C_diff[2],
-      p_C_diff[1] / p_C_diff[2]
-    };
+    const double z_hat[2] = {p_C_diff[0] / p_C_diff[2],
+                             p_C_diff[1] / p_C_diff[2]};
     vec_sub(z, z_hat, e_prime, 2);
 
     /* Record */
@@ -396,7 +394,5 @@ void test_suite() {
   // MU_ADD_TEST(test_graph_update);
   // MU_ADD_TEST(test_graph_solve);
 }
-
-// } // namespace proto
 
 MU_RUN_TESTS(test_suite);

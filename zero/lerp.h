@@ -38,17 +38,17 @@ int lerp_imu_ready(const lerp_imu_t *lerp) {
 }
 
 void lerp_imu_add_accel(lerp_imu_t *lerp, vec3_t *accel) {
-/*     buf_type_.push_back("A"); */
-/*     buf_ts_.push_back(msg.header.stamp.toSec()); */
-/*     buf_data_.emplace_back(msg.vector.x, msg.vector.y, msg.vector.z); */
+  /*     buf_type_.push_back("A"); */
+  /*     buf_ts_.push_back(msg.header.stamp.toSec()); */
+  /*     buf_data_.emplace_back(msg.vector.x, msg.vector.y, msg.vector.z); */
 }
 
 void lerp_imu_add_gyro(lerp_imu_t *lerp, vec3_t *gyro) {
-/*     if (buf_type_.size() && buf_type_.front() == "A") { */
-/*       buf_type_.push_back("G"); */
-/*       buf_ts_.push_back(msg.header.stamp.toSec()); */
-/*       buf_data_.emplace_back(msg.vector.x, msg.vector.y, msg.vector.z); */
-/*     } */
+  /*     if (buf_type_.size() && buf_type_.front() == "A") { */
+  /*       buf_type_.push_back("G"); */
+  /*       buf_ts_.push_back(msg.header.stamp.toSec()); */
+  /*       buf_data_.emplace_back(msg.vector.x, msg.vector.y, msg.vector.z); */
+  /*     } */
 }
 
 void lerp_imu_print(lerp_imu_t *lerp) {
@@ -59,7 +59,8 @@ void lerp_imu_print(lerp_imu_t *lerp) {
   /*   const double x = data(0); */
   /*   const double y = data(1); */
   /*   const double z = data(1); */
-  /*   printf("[%.6f] - [%s] - (%.2f, %.2f, %.2f)\n", ts, dtype.c_str(), x, y, */
+  /*   printf("[%.6f] - [%s] - (%.2f, %.2f, %.2f)\n", ts, dtype.c_str(), x, y,
+   */
   /*           z); */
   /* } */
 }
@@ -132,4 +133,4 @@ void lerp_imu_eval() {
   /* buf_data_.push_back(data); */
 }
 
-#endif  // LERP_H
+#endif // LERP_H

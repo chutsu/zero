@@ -7,6 +7,5 @@ LIBS := -lopenblas -lm
 .PHONY: all
 all: bench_matmul
 
-bench_matmul: bench_matmul.cpp
-	@echo "CXX [$<]"; \
-		$(CXX) $(CFLAGS) $< -o $(BIN_DIR)/$@ $(INCS) $(LIBS)
+bench_matmul: bench_matmul-eigen.cpp
+	@echo "CXX [$<]"; $(CXX) $(CFLAGS) $< -o $(BIN_DIR)/$@ $(INCS) $(LIBS)

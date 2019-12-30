@@ -112,11 +112,14 @@
 //
 //   // // Jacobian w.r.t. fiducial pose T_WF
 //   // if (jacobians[1] != nullptr) {
-//   //   Eigen::Matrix<double, 3, 3> dp_C__dp_W = C_SC.transpose() * C_WS.transpose();
+//   //   Eigen::Matrix<double, 3, 3> dp_C__dp_W = C_SC.transpose() *
+//   C_WS.transpose();
 //   //   Eigen::Matrix<double, 3, 3> dp_W__dr_WF = I(3);
 //   //   Eigen::Matrix<double, 3, 3> dp_W__dtheta = -skew(C_WF * p_F_);
-//   //   Eigen::Matrix<double, 2, 3> dh__dr_WF = -1 * Jh_weighted * dp_C__dp_W * dp_W__dr_WF;
-//   //   Eigen::Matrix<double, 2, 3> dh__dtheta = -1 * Jh_weighted * dp_C__dp_W * dp_W__dtheta;
+//   //   Eigen::Matrix<double, 2, 3> dh__dr_WF = -1 * Jh_weighted * dp_C__dp_W
+//   * dp_W__dr_WF;
+//   //   Eigen::Matrix<double, 2, 3> dh__dtheta = -1 * Jh_weighted * dp_C__dp_W
+//   * dp_W__dtheta;
 //   //
 //   //   map_mat_t<2, 6, row_major_t> J1(jacobians[1]);
 //   //   J1.block(0, 0, 2, 3) = dh__dr_WF;

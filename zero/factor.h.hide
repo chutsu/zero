@@ -1,7 +1,7 @@
 #ifndef FACTOR_H
 #define FACTOR_H
 
-#include "zero/math.h"
+#include "zero/core.h"
 #include "zero/cv.h"
 
 typedef uint64_t timestamp_t;
@@ -104,9 +104,7 @@ void pose_tf(const pose_t *pose, double T[16]) {
                        pose->param[1],
                        pose->param[2],
                        pose->param[3]};
-  const double r[3] = {pose->param[4],
-                       pose->param[5],
-                       pose->param[6]};
+  const double r[3] = {pose->param[4], pose->param[5], pose->param[6]};
 
   /* Convert quaternion to rotation matrix */
   double C[9];
@@ -278,8 +276,8 @@ void pose_plus(pose_t *pose, const double dx[6]) {
 // void graph_free(graph_t &graph);
 // size_t graph_next_variable_id(graph_t &graph);
 // size_t graph_next_factor_id(graph_t &graph);
-// size_t graph_add_pose(graph_t &graph, const timestamp_t &ts, const mat4_t &pose);
-// size_t graph_add_landmark(graph_t &graph, const vec3_t &landmark);
+// size_t graph_add_pose(graph_t &graph, const timestamp_t &ts, const mat4_t
+// &pose); size_t graph_add_landmark(graph_t &graph, const vec3_t &landmark);
 // size_t graph_add_factor(graph_t &graph, factor_t *factor);
 // size_t graph_add_ba_factor(graph_t &graph,
 //                            const timestamp_t &ts,

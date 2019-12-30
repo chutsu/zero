@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "zero/math.h"
+#include "zero/core.h"
 
 /*****************************************************************************
  * IMAGE
@@ -84,4 +84,4 @@ void equi4_param_jacobian(const double k1,
                           const double p[2],
                           double J_param[2 * 4]);
 
-#endif  // CV_H
+#endif // CV_H

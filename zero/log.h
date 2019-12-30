@@ -18,8 +18,8 @@
 #define LOG_INFO(M, ...) fprintf(stderr, "[INFO] " M "\n", ##__VA_ARGS__)
 
 /* FATAL */
-#define FATAL(M, ...) \
-  fprintf(stderr, "[FATAL] " M "\n", ##__VA_ARGS__); \
+#define FATAL(M, ...)                                                          \
+  fprintf(stderr, "[FATAL] " M "\n", ##__VA_ARGS__);                           \
   exit(-1);
 
 /* CHECK */
