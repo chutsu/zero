@@ -12,7 +12,8 @@ make
 # ./build/bin/test_core --target test_zeros
 # ./build/bin/test_core --target test_mat_set
 # ./build/bin/test_core --target test_mat_val
-# ./build/bin/test_core --target test_mat_block
+# ./build/bin/test_core --target test_mat_block_get
+# ./build/bin/test_core --target test_mat_block_set
 # ./build/bin/test_core --target test_mat_transpose
 # ./build/bin/test_core --target test_mat_add
 # ./build/bin/test_core --target test_mat_sub
@@ -29,7 +30,8 @@ make
 # ./build/bin/test_core --target test_tf_point
 # ./build/bin/test_core --target test_tf_hpoint
 # ./build/bin/test_core --target test_quat2rot
-valgrind --leak-check=full ./build/bin/test_ba
+# valgrind --leak-check=full ./build/bin/test_ba --target test_ba_residuals
+valgrind --leak-check=full ./build/bin/test_ba --target test_ba_jacobians
 # ./build/bin/test_template
 
 # cd firmware

@@ -432,13 +432,13 @@ mat_val(const double *A, const size_t stride, const size_t i, const size_t j) {
   return A[(i * stride) + j];
 }
 
-void mat_block(const double *A,
-               const size_t stride,
-               const size_t rs,
-               const size_t cs,
-               const size_t re,
-               const size_t ce,
-               double *block) {
+void mat_block_get(const double *A,
+                   const size_t stride,
+                   const size_t rs,
+                   const size_t cs,
+                   const size_t re,
+                   const size_t ce,
+                   double *block) {
   assert(A != block);
   assert(stride != 0);
 
@@ -446,6 +446,25 @@ void mat_block(const double *A,
   for (size_t i = rs; i <= re; i++) {
     for (size_t j = cs; j <= ce; j++) {
       block[idx] = mat_val(A, stride, i, j);
+      idx++;
+    }
+  }
+}
+
+void mat_block_set(double *A,
+                   const size_t stride,
+                   const size_t rs,
+                   const size_t cs,
+                   const size_t re,
+                   const size_t ce,
+                   const double *block) {
+  assert(A != block);
+  assert(stride != 0);
+
+  size_t idx = 0;
+  for (size_t i = rs; i <= re; i++) {
+    for (size_t j = cs; j <= ce; j++) {
+      mat_set(A, stride, i, j, block[idx]);
       idx++;
     }
   }

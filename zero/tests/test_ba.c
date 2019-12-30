@@ -43,9 +43,8 @@ int test_ba_load_data() {
 int test_ba_residuals() {
   ba_data_t *data = ba_load_data(TEST_DATA);
 
-	int r_size = 0;
-	double *r = ba_residuals(data, &r_size);
-	for (int i = 0; i < r_size; i++) {
+	double *r = ba_residuals(data);
+	for (int i = 0; i < data->r_size; i++) {
 		MU_CHECK(r[i] < 0.01);
 	}
 
@@ -54,11 +53,38 @@ int test_ba_residuals() {
 	return 0;
 }
 
+int test_ba_jacobians() {
+  ba_data_t *data = ba_load_data(TEST_DATA);
+
+  int J_rows = 0;
+  int J_cols = 0;
+  double *J = ba_jacobian(data, &J_rows, &J_cols);
+
+  int idx = 0;
+  FILE *csv_file = fopen("/tmp/J.csv", "w");
+  for (int i = 0; i < J_rows; i++) {
+    for (int j = 0; j < J_cols; j++) {
+      fprintf(csv_file, "%f", J[idx]);
+      idx++;
+      if ((j + 1) != J_cols) {
+        fprintf(csv_file, ",");
+      }
+    }
+    fprintf(csv_file, "\n");
+  }
+  fclose(csv_file);
+
+  free(J);
+  ba_data_free(data);
+	return 0;
+}
+
 void test_suite() {
-  /* MU_ADD_TEST(test_parse_keypoints_line); */
-  /* MU_ADD_TEST(test_load_keypoints); */
-  /* MU_ADD_TEST(test_ba_load_data); */
+  MU_ADD_TEST(test_parse_keypoints_line);
+  MU_ADD_TEST(test_load_keypoints);
+  MU_ADD_TEST(test_ba_load_data);
   MU_ADD_TEST(test_ba_residuals);
+  MU_ADD_TEST(test_ba_jacobians);
 }
 
 MU_RUN_TESTS(test_suite);

@@ -21,16 +21,14 @@ flags = [
     # to use when compiling headers. So it will guess. Badly. So C++ headers
     # will be compiled as C headers. You don't want that so ALWAYS specify the
     # '-x' flag.  # For a C project, you would set this to 'c' instead of 'c++'.
-    '-x',
+    # '-x',
     'c',
     '-isystem', '../BoostParts',
     '-isystem', get_python_inc(),
     '-isystem', '../llvm/include',
     '-isystem', '../llvm/tools/clang/include',
-    '-DSTM32F1', # <- SPECIFIC FOR LIBOPENCM3
     '-I', '.',
     '-I', 'include',
-    '-I', './deps/libopencm3/include',
     '-I', '/usr/local/include',
     '-I', '/usr/include/octave-4.2.2/octave',
     '-I', './ClangCompleter',

@@ -83,12 +83,13 @@ int test_mat_val() {
   return 0;
 }
 
-int test_mat_block() {
+int test_mat_block_get() {
   double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
   double B[4] = {0.0};
-  mat_block(A, 3, 1, 1, 2, 2, B);
+  mat_block_get(A, 3, 1, 1, 2, 2, B);
 
-  /* print_matrix("B", B, 2, 2); */
+  print_matrix("A", A, 3, 3);
+  print_matrix("B", B, 2, 2);
   MU_CHECK(fltcmp(mat_val(B, 2, 0, 0), 5.0) == 0);
   MU_CHECK(fltcmp(mat_val(B, 2, 0, 1), 6.0) == 0);
   MU_CHECK(fltcmp(mat_val(B, 2, 1, 0), 8.0) == 0);
@@ -96,6 +97,22 @@ int test_mat_block() {
 
   return 0;
 }
+
+int test_mat_block_set() {
+  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  double B[4] = {0.0, 0.0, 0.0, 0.0};
+  mat_block_set(A, 3, 1, 1, 2, 2, B);
+
+  print_matrix("B", B, 2, 2);
+  print_matrix("A", A, 3, 3);
+  MU_CHECK(fltcmp(mat_val(A, 3, 1, 1), 0.0) == 0);
+  MU_CHECK(fltcmp(mat_val(A, 3, 1, 2), 0.0) == 0);
+  MU_CHECK(fltcmp(mat_val(A, 3, 2, 1), 0.0) == 0);
+  MU_CHECK(fltcmp(mat_val(A, 3, 2, 2), 0.0) == 0);
+
+  return 0;
+}
+
 
 int test_mat_transpose() {
   double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
@@ -511,7 +528,8 @@ void test_suite() {
   MU_ADD_TEST(test_zeros);
   MU_ADD_TEST(test_mat_set);
   MU_ADD_TEST(test_mat_val);
-  MU_ADD_TEST(test_mat_block);
+  MU_ADD_TEST(test_mat_block_get);
+  MU_ADD_TEST(test_mat_block_set);
   MU_ADD_TEST(test_mat_transpose);
   MU_ADD_TEST(test_mat_add);
   MU_ADD_TEST(test_mat_sub);

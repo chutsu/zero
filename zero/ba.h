@@ -286,6 +286,8 @@ struct ba_data_t {
 
   double **points;
   int nb_points;
+
+  int r_size;
 } typedef ba_data_t;
 
 ba_data_t *ba_load_data(const char *data_path) {
@@ -298,6 +300,14 @@ ba_data_t *ba_load_data(const char *data_path) {
   data->keypoints = load_keypoints(data_path, &data->nb_frames);
   data->point_ids = load_point_ids(data_path, &nb_ids);
   data->points = load_points(data_path, &data->nb_points);
+
+  /* Calculate residual size */
+	data->r_size = 0;
+  for (int k = 0; k < data->nb_frames; k++) {
+		data->r_size += data->point_ids[k][0];
+	}
+	data->r_size = data->r_size * 2;
+	/* ^ Scale 2 because each pixel error are size 2 */
 
   return data;
 }
@@ -330,14 +340,9 @@ void ba_data_free(ba_data_t *data) {
   free(data);
 }
 
-double *ba_residuals(ba_data_t *data, int *r_size) {
+double *ba_residuals(ba_data_t *data) {
 	/* Initialize memory for residuals */
-	*r_size = 0;
-  for (int k = 0; k < data->nb_frames; k++) {
-		*r_size += data->point_ids[k][0];
-	}
-	*r_size = *r_size * 2;  /* Scale 2 because each pixel error are size 2 */
-  double *r = calloc(*r_size, sizeof(double));
+  double *r = calloc(data->r_size, sizeof(double));
 
   /* Target pose */
   double T_WT[4 * 4] = {0};
@@ -350,6 +355,10 @@ double *ba_residuals(ba_data_t *data, int *r_size) {
     double T_WC[4 * 4] = {0};
     pose2tf(&data->cam_poses[k], T_WC);
 
+    /* Invert camera pose T_WC to T_CW */
+		double T_CW[4 * 4] = {0};
+		tf_inv(T_WC, T_CW);
+
     /* Get point ids and measurements at time step k */
     const int nb_ids = data->point_ids[k][0];
     const int *point_ids = &data->point_ids[k][1];
@@ -360,9 +369,7 @@ double *ba_residuals(ba_data_t *data, int *r_size) {
       const double *p_W = data->points[id];
 
       /* Transform point in world frame to camera frame */
-      double T_CW[4 * 4] = {0};
       double p_C[3] = {0};
-      tf_inv(T_WC, T_CW);
       tf_point(T_CW, p_W, p_C);
 
       /* Project point in camera frame down to image plane */
@@ -381,7 +388,8 @@ double *ba_residuals(ba_data_t *data, int *r_size) {
 }
 
 double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
-  *J_rows = data->nb_frames * 2;
+  /* Initialize memory for jacobian */
+	*J_rows = data->r_size;
   *J_cols = (data->nb_frames * 6) + (data->nb_points * 3);
   double *J = calloc(*J_rows * *J_cols, sizeof(double));
   zeros(J, *J_rows, *J_cols);
@@ -390,154 +398,96 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
   int pose_idx = 0;
   int meas_idx = 0;
 
-	/* for (int k = 0; k < data->nb_frames; k++) { */
-  /*   #<{(| Form camera pose |)}># */
-  /*   double T_WC[4 * 4] = {0}; */
-  /*   pose2tf(&data->cam_poses[k], T_WC); */
-  /*  */
-	/* 	#<{(| Invert T_WC to T_CW and decompose |)}># */
-	/* 	double T_CW[4 * 4] = {0}; */
-	/* 	tf_inv(T_WC, T_CW); */
-  /*  */
- 	/* 	#<{(| Get point ids and keypoint measurements at time k |)}># */
-	/* 	const int id = point_ids[i]; */
-	/* 	const double *p_W = data->points[id]; */
-	/* } */
+	for (int k = 0; k < data->nb_frames; k++) {
+    /* Form camera pose */
+    double T_WC[4 * 4] = {0};
+		double q_WC[4] = {0};
+		double r_WC[3] = {0};
+    pose2tf(&data->cam_poses[k], T_WC);
+		tf_quat(T_WC, q_WC);
+		tf_trans(T_WC, r_WC);
 
+		/* Invert T_WC to T_CW */
+		double T_CW[4 * 4] = {0};
+		tf_inv(T_WC, T_CW);
 
-/*     # Get point ids and keypoint measurements at time k */
-/*     p_ids = data.point_ids_data{i}; */
-/*     z_k = data.z_data{i}; */
-/*  */
-/*     % Loop over observations at time k */
-/*     for j = 1:length(z_k) */
-/*       % Transform point from world to camera frame */
-/*       p_W = data.p_data(:, p_ids(j)); */
-/*       p_C = dehomogeneous(T_CW * homogeneous(p_W)); */
-/*  */
-/*       % Fill in camera pose jacobian */
-/*       % -- Setup row start, row end, column start and column end */
-/*       rs = ((meas_idx - 1) * 2) + 1; */
-/*       re = rs + 1; */
-/*       cs = ((pose_idx - 1) * 6) + 1; */
-/*       ce = cs + 5; */
-/*       % -- Form jacobians */
-/*       J_K = intrinsics_point_jacobian(K); */
-/*       J_P = project_jacobian(p_C); */
-/*       J_C = camera_rotation_jacobian(q_WC, r_WC, p_W); */
-/*       J_r = camera_translation_jacobian(q_WC); */
-/*       J_cam_rot = -1 * J_K * J_P * J_C; */
-/*       J_cam_pos = -1 * J_K * J_P * J_r; */
-/*       % -- Fill in the big jacobian */
-/*       J(rs:re, cs:ce) = [J_cam_rot, J_cam_pos]; */
-/*       % J(rs:re, cs:ce) = 255 * ones(2, 6); */
-/*  */
-/*       % Fill in point elements */
-/*       % -- Setup row start, row end, column start and column end */
-/*       cs = (nb_poses * 6) + ((p_ids(j) - 1) * 3) + 1; */
-/*       ce = cs + 2; */
-/*       % -- Fill in the big jacobian */
-/*       J_point = -1 * J_K * J_P * target_point_jacobian(q_WC); */
-/*       J(rs:re, cs:ce) = J_point; */
-/*       % J(rs:re, cs:ce) = 255 * ones(2, 3); */
-/*  */
-/*       % Test jacobians */
-/*       if check_jacobians */
-/*         step_size = 1.0e-8; */
-/*         threshold = 1.0e-4; */
-/*         check_J_cam_rot(K, T_WC, p_W, J_cam_rot, step_size, threshold); */
-/*         check_J_cam_pos(K, T_WC, p_W, J_cam_pos, step_size, threshold); */
-/*         check_J_point(K, T_WC, p_W, J_point, step_size, threshold); */
-/*       endif */
-/*  */
-/*       meas_idx++; */
-/*     endfor */
-/*  */
-/*     pose_idx++; */
+    /* Get point ids and measurements at time step k */
+    const int nb_ids = data->point_ids[k][0];
+    const int *point_ids = &data->point_ids[k][1];
+
+    /* Loop over observations at time k */
+    for (int i = 0; i < nb_ids; i++) {
+      /* Get point in world frame */
+      const int id = point_ids[i];
+      const double *p_W = data->points[id];
+
+      /* Transform point in world frame to camera frame */
+      double p_C[3] = {0};
+      tf_point(T_CW, p_W, p_C);
+
+      /* Camera pose jacobian */
+      /* -- Setup row start, row end, column start and column end */
+      const int rs = meas_idx * 2;
+      const int re = rs + 1;
+      int cs = pose_idx * 6;
+      int ce = cs + 5;
+
+      /* -- Form jacobians */
+      double J_K[2 * 2] = {0};
+      double J_P[2 * 3] = {0};
+      double J_C[3 * 3] = {0};
+      double J_r[3 * 3] = {0};
+      J_intrinsics_point(data->cam_K, J_K);
+      J_project(p_C, J_P);
+      J_camera_rotation(q_WC, r_WC, p_W, J_C);
+      J_camera_translation(q_WC, J_r);
+
+      /* J_cam_rot = -1 * J_K * J_P * J_C; */
+      double J_KP[2 * 3] = {0};
+      double J_cam_rot[2 * 3] = {0};
+      dot(J_K, 2, 2, J_P, 2, 3, J_KP);
+      dot(J_KP, 2, 3, J_C, 3, 3, J_cam_rot);
+      mat_scale(J_cam_rot, 2, 3, -1);
+
+      /* J_cam_pos = -1 * J_K * J_P * J_r; */
+      double J_cam_pos[2 * 3] = {0};
+      dot(J_KP, 2, 3, J_r, 3, 3, J_cam_pos);
+      mat_scale(J_cam_pos, 2, 3, -1);
+
+      /* -- Fill in the big jacobian */
+      mat_block_set(J, *J_cols, rs, cs, re, cs + 3, J_cam_rot);
+      mat_block_set(J, *J_cols, rs, cs + 3, re, ce, J_cam_pos);
+      /* double J_cam_pose_ones[2 * 6] = {0.0}; */
+      /* ones(J_cam_pose_ones, 2, 6); */
+      /* mat_block_set(J, *J_cols, rs, cs, re, ce, J_cam_pose_ones); */
+
+      /* Point jacobian */
+      /* -- Setup row start, row end, column start and column end */
+      cs = (data->nb_frames * 6) + point_ids[i] * 3;
+      ce = cs + 2;
+
+      /* -- Form jacobians */
+      double J_p[3 * 3] = {0};
+      J_target_point(q_WC, J_p);
+
+      /* J_point = -1 * J_K * J_P * J_target_point(q_WC); */
+      double J_point[2 * 3] = {0};
+      dot(J_KP, 2, 3, J_p, 3, 3, J_point);
+
+      /* -- Fill in the big jacobian */
+      mat_block_set(J, *J_cols, rs, cs, re, ce, J_point);
+      /* double J_point_ones[2 * 3] = {1.0}; */
+      /* mat_block_set(J, *J_cols, rs, cs, re, ce, J_point_ones); */
+
+			meas_idx++;
+		}
+    pose_idx++;
+	}
 
   return J;
 }
 
-/* function J = ba_jacobian(data, check_jacobians=false) */
-/*   nb_poses = ba_nb_poses(data); */
-/*   nb_points = data.target.nb_rows * data.target.nb_cols; */
-/*   nb_measurements = ba_nb_measurements(data); */
-/*  */
-/*   % Setup jacobian */
-/*   J_rows = nb_measurements * 2; */
-/*   J_cols = (nb_poses * 6) + (nb_points * 3); */
-/*   J = zeros(J_rows, J_cols); */
-/*  */
-/*   % Camera intrinsics */
-/*   K = data.camera.K; */
-/*  */
-/*   % Loop over camera poses */
-/*   pose_idx = 1; */
-/*   meas_idx = 1; */
-/*   for i = 1:nb_poses */
-/*     % Form camera pose transform T_WC */
-/*     q_WC = data.q_WC{i}; */
-/*     r_WC = data.r_WC{i}; */
-/*     T_WC = tf(q_WC, r_WC); */
-/*  */
-/*     % Invert T_WC to T_CW and decompose */
-/*     T_CW = tf_inv(T_WC); */
-/*     C_CW = tf_rot(T_CW); */
-/*     r_CW = tf_trans(T_CW); */
-/*  */
-/*     # Get point ids and keypoint measurements at time k */
-/*     p_ids = data.point_ids_data{i}; */
-/*     z_k = data.z_data{i}; */
-/*  */
-/*     % Loop over observations at time k */
-/*     for j = 1:length(z_k) */
-/*       % Transform point from world to camera frame */
-/*       p_W = data.p_data(:, p_ids(j)); */
-/*       p_C = dehomogeneous(T_CW * homogeneous(p_W)); */
-/*  */
-/*       % Fill in camera pose jacobian */
-/*       % -- Setup row start, row end, column start and column end */
-/*       rs = ((meas_idx - 1) * 2) + 1; */
-/*       re = rs + 1; */
-/*       cs = ((pose_idx - 1) * 6) + 1; */
-/*       ce = cs + 5; */
-/*       % -- Form jacobians */
-/*       J_K = intrinsics_point_jacobian(K); */
-/*       J_P = project_jacobian(p_C); */
-/*       J_C = camera_rotation_jacobian(q_WC, r_WC, p_W); */
-/*       J_r = camera_translation_jacobian(q_WC); */
-/*       J_cam_rot = -1 * J_K * J_P * J_C; */
-/*       J_cam_pos = -1 * J_K * J_P * J_r; */
-/*       % -- Fill in the big jacobian */
-/*       J(rs:re, cs:ce) = [J_cam_rot, J_cam_pos]; */
-/*       % J(rs:re, cs:ce) = 255 * ones(2, 6); */
-/*  */
-/*       % Fill in point elements */
-/*       % -- Setup row start, row end, column start and column end */
-/*       cs = (nb_poses * 6) + ((p_ids(j) - 1) * 3) + 1; */
-/*       ce = cs + 2; */
-/*       % -- Fill in the big jacobian */
-/*       J_point = -1 * J_K * J_P * target_point_jacobian(q_WC); */
-/*       J(rs:re, cs:ce) = J_point; */
-/*       % J(rs:re, cs:ce) = 255 * ones(2, 3); */
-/*  */
-/*       % Test jacobians */
-/*       if check_jacobians */
-/*         step_size = 1.0e-8; */
-/*         threshold = 1.0e-4; */
-/*         check_J_cam_rot(K, T_WC, p_W, J_cam_rot, step_size, threshold); */
-/*         check_J_cam_pos(K, T_WC, p_W, J_cam_pos, step_size, threshold); */
-/*         check_J_point(K, T_WC, p_W, J_point, step_size, threshold); */
-/*       endif */
-/*  */
-/*       meas_idx++; */
-/*     endfor */
-/*  */
-/*     pose_idx++; */
-/*   endfor */
-/* endfunction */
-
-void ba_update(ba_data_t *data, double *e, double *E, double sigma[2]) {
+/* void ba_update(ba_data_t *data, double *e, double *E, double sigma[2]) { */
   /* Form weight matrix */
   /* W = diag(repmat(sigma, data->nb_measurements, 1)); */
 
@@ -567,7 +517,7 @@ void ba_update(ba_data_t *data, double *e, double *E, double sigma[2]) {
   /*   dp_W = dx(s:s+2); */
   /*   data.p_data(1:3, i) += dp_W; */
   /* endfor */
-}
+/* } */
 
 double ba_cost(const double *e, const int length) {
   double cost = 0.0;

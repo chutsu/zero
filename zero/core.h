@@ -69,13 +69,20 @@ void mat_set(double *A,
              const double val);
 double
 mat_val(const double *A, const size_t stride, const size_t i, const size_t j);
-void mat_block(const double *A,
-               const size_t stride,
-               const size_t rs,
-               const size_t cs,
-               const size_t re,
-               const size_t ce,
-               double *block);
+void mat_block_get(const double *A,
+                   const size_t stride,
+                   const size_t rs,
+                   const size_t cs,
+                   const size_t re,
+                   const size_t ce,
+                   double *block);
+void mat_block_set(double *A,
+                   const size_t stride,
+                   const size_t rs,
+                   const size_t cs,
+                   const size_t re,
+                   const size_t ce,
+                   const double *block);
 void mat_transpose(const double *A, size_t m, size_t n, double *A_t);
 void mat_add(const double *A, const double *B, double *C, size_t m, size_t n);
 void mat_sub(const double *A, const double *B, double *C, size_t m, size_t n);
