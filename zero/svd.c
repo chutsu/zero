@@ -30,7 +30,7 @@ static double PYTHAG(double a, double b) {
   return (result);
 }
 
-int svd(double *A, int m, int n, double *w, double **V) {
+int svd(double *A, int m, int n, double *w, double *V) {
   int flag, i, its, j, jj, k, l, nm;
   double c, f, h, s, x, y, z;
   double anorm = 0.0, g = 0.0, scale = 0.0;
@@ -112,20 +112,20 @@ int svd(double *A, int m, int n, double *w, double **V) {
     if (i < n - 1) {
       if (g) {
         for (j = l; j < n; j++)
-          V[j][i] =
+          V[(j * n) + i] =
               (float) (((double) A[(i * n) + j] / (double) A[(i * n) + l]) / g);
         /* double division to avoid underflow */
         for (j = l; j < n; j++) {
           for (s = 0.0, k = l; k < n; k++)
-            s += ((double) A[(i * n) + k] * (double) V[k][j]);
+            s += ((double) A[(i * n) + k] * (double) V[(k * n) + j]);
           for (k = l; k < n; k++)
-            V[k][j] += (float) (s * (double) V[k][i]);
+            V[(k * n) + j] += (float) (s * (double) V[(k * n) + i]);
         }
       }
       for (j = l; j < n; j++)
-        V[i][j] = V[j][i] = 0.0;
+        V[(i * n) + j] = V[(j * n) + i] = 0.0;
     }
-    V[i][i] = 1.0;
+    V[(i * n) + i] = 1.0;
     g = rv1[i];
     l = i;
   }
@@ -196,7 +196,7 @@ int svd(double *A, int m, int n, double *w, double **V) {
         if (z < 0.0) { /* make singular value nonnegative */
           w[k] = (float) (-z);
           for (j = 0; j < n; j++)
-            V[j][k] = (-V[j][k]);
+            V[(j * n) + k] = (-V[(j * n) + k]);
         }
         break;
       }
@@ -233,10 +233,10 @@ int svd(double *A, int m, int n, double *w, double **V) {
         h = y * s;
         y = y * c;
         for (jj = 0; jj < n; jj++) {
-          x = (double) V[jj][j];
-          z = (double) V[jj][i];
-          V[jj][j] = (float) (x * c + z * s);
-          V[jj][i] = (float) (z * c - x * s);
+          x = (double) V[(jj * n) + j];
+          z = (double) V[(jj * n) + i];
+          V[(jj * n) + j] = (float) (x * c + z * s);
+          V[(jj * n) + i] = (float) (z * c - x * s);
         }
         z = PYTHAG(f, h);
         w[j] = (float) z;
