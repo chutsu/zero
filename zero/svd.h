@@ -62,6 +62,6 @@ typedef struct hist_rec {
   int pos;
 } hist_rec;
 
-int svd(double **a, int m, int n, double *w, double **v);
+int svd(double *A, int m, int n, double *w, double **V);
 
 #endif /* SVD_H */

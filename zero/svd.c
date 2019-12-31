@@ -30,7 +30,7 @@ static double PYTHAG(double a, double b) {
   return (result);
 }
 
-int svd(double **A, int m, int n, double *w, double **V) {
+int svd(double *A, int m, int n, double *w, double **V) {
   int flag, i, its, j, jj, k, l, nm;
   double c, f, h, s, x, y, z;
   double anorm = 0.0, g = 0.0, scale = 0.0;
@@ -51,27 +51,27 @@ int svd(double **A, int m, int n, double *w, double **V) {
     g = s = scale = 0.0;
     if (i < m) {
       for (k = i; k < m; k++)
-        scale += fabs((double) A[k][i]);
+        scale += fabs((double) A[(k * n) + i]);
       if (scale) {
         for (k = i; k < m; k++) {
-          A[k][i] = (float) ((double) A[k][i] / scale);
-          s += ((double) A[k][i] * (double) A[k][i]);
+          A[(k * n) + i] = (float) ((double) A[(k * n) + i] / scale);
+          s += ((double) A[(k * n) + i] * (double) A[(k * n) + i]);
         }
-        f = (double) A[i][i];
+        f = (double) A[(i * n) + i];
         g = -SIGN(sqrt(s), f);
         h = f * g - s;
-        A[i][i] = (float) (f - g);
+        A[(i * n) + i] = (float) (f - g);
         if (i != n - 1) {
           for (j = l; j < n; j++) {
             for (s = 0.0, k = i; k < m; k++)
-              s += ((double) A[k][i] * (double) A[k][j]);
+              s += ((double) A[(k * n) + i] * (double) A[(k * n) + j]);
             f = s / h;
             for (k = i; k < m; k++)
-              A[k][j] += (float) (f * (double) A[k][i]);
+              A[(k * n) + j] += (float) (f * (double) A[(k * n) + i]);
           }
         }
         for (k = i; k < m; k++)
-          A[k][i] = (float) ((double) A[k][i] * scale);
+          A[(k * n) + i] = (float) ((double) A[(k * n) + i] * scale);
       }
     }
     w[i] = (float) (scale * g);
@@ -80,28 +80,28 @@ int svd(double **A, int m, int n, double *w, double **V) {
     g = s = scale = 0.0;
     if (i < m && i != n - 1) {
       for (k = l; k < n; k++)
-        scale += fabs((double) A[i][k]);
+        scale += fabs((double) A[(i * n) + k]);
       if (scale) {
         for (k = l; k < n; k++) {
-          A[i][k] = (float) ((double) A[i][k] / scale);
-          s += ((double) A[i][k] * (double) A[i][k]);
+          A[(i * n) + k] = (float) ((double) A[(i * n) + k] / scale);
+          s += ((double) A[(i * n) + k] * (double) A[(i * n) + k]);
         }
-        f = (double) A[i][l];
+        f = (double) A[(i * n) + l];
         g = -SIGN(sqrt(s), f);
         h = f * g - s;
-        A[i][l] = (float) (f - g);
+        A[(i * n) + l] = (float) (f - g);
         for (k = l; k < n; k++)
-          rv1[k] = (double) A[i][k] / h;
+          rv1[k] = (double) A[(i * n) + k] / h;
         if (i != m - 1) {
           for (j = l; j < m; j++) {
             for (s = 0.0, k = l; k < n; k++)
-              s += ((double) A[j][k] * (double) A[i][k]);
+              s += ((double) A[(j * n) + k] * (double) A[(i * n) + k]);
             for (k = l; k < n; k++)
-              A[j][k] += (float) (s * rv1[k]);
+              A[(j * n) + k] += (float) (s * rv1[k]);
           }
         }
         for (k = l; k < n; k++)
-          A[i][k] = (float) ((double) A[i][k] * scale);
+          A[(i * n) + k] = (float) ((double) A[(i * n) + k] * scale);
       }
     }
     anorm = MAX(anorm, (fabs((double) w[i]) + fabs(rv1[i])));
@@ -112,11 +112,12 @@ int svd(double **A, int m, int n, double *w, double **V) {
     if (i < n - 1) {
       if (g) {
         for (j = l; j < n; j++)
-          V[j][i] = (float) (((double) A[i][j] / (double) A[i][l]) / g);
+          V[j][i] =
+              (float) (((double) A[(i * n) + j] / (double) A[(i * n) + l]) / g);
         /* double division to avoid underflow */
         for (j = l; j < n; j++) {
           for (s = 0.0, k = l; k < n; k++)
-            s += ((double) A[i][k] * (double) V[k][j]);
+            s += ((double) A[(i * n) + k] * (double) V[k][j]);
           for (k = l; k < n; k++)
             V[k][j] += (float) (s * (double) V[k][i]);
         }
@@ -135,25 +136,25 @@ int svd(double **A, int m, int n, double *w, double **V) {
     g = (double) w[i];
     if (i < n - 1)
       for (j = l; j < n; j++)
-        A[i][j] = 0.0;
+        A[(i * n) + j] = 0.0;
     if (g) {
       g = 1.0 / g;
       if (i != n - 1) {
         for (j = l; j < n; j++) {
           for (s = 0.0, k = l; k < m; k++)
-            s += ((double) A[k][i] * (double) A[k][j]);
-          f = (s / (double) A[i][i]) * g;
+            s += ((double) A[(k * n) + i] * (double) A[(k * n) + j]);
+          f = (s / (double) A[(i * n) + i]) * g;
           for (k = i; k < m; k++)
-            A[k][j] += (float) (f * (double) A[k][i]);
+            A[(k * n) + j] += (float) (f * (double) A[(k * n) + i]);
         }
       }
       for (j = i; j < m; j++)
-        A[j][i] = (float) ((double) A[j][i] * g);
+        A[(j * n) + i] = (float) ((double) A[(j * n) + i] * g);
     } else {
       for (j = i; j < m; j++)
-        A[j][i] = 0.0;
+        A[(j * n) + i] = 0.0;
     }
-    ++A[i][i];
+    ++A[(i * n) + i];
   }
 
   /* diagonalize the bidiagonal form */
@@ -182,10 +183,10 @@ int svd(double **A, int m, int n, double *w, double **V) {
             c = g * h;
             s = (-f * h);
             for (j = 0; j < m; j++) {
-              y = (double) A[j][nm];
-              z = (double) A[j][i];
-              A[j][nm] = (float) (y * c + z * s);
-              A[j][i] = (float) (z * c - y * s);
+              y = (double) A[(j * n) + nm];
+              z = (double) A[(j * n) + i];
+              A[(j * n) + nm] = (float) (y * c + z * s);
+              A[(j * n) + i] = (float) (z * c - y * s);
             }
           }
         }
@@ -247,10 +248,10 @@ int svd(double **A, int m, int n, double *w, double **V) {
         f = (c * g) + (s * y);
         x = (c * y) - (s * g);
         for (jj = 0; jj < m; jj++) {
-          y = (double) A[jj][j];
-          z = (double) A[jj][i];
-          A[jj][j] = (float) (y * c + z * s);
-          A[jj][i] = (float) (z * c - y * s);
+          y = (double) A[(jj * n) + j];
+          z = (double) A[(jj * n) + i];
+          A[(jj * n) + j] = (float) (y * c + z * s);
+          A[(jj * n) + i] = (float) (z * c - y * s);
         }
       }
       rv1[l] = 0.0;

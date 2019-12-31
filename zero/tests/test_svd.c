@@ -3,14 +3,11 @@
 #include "zero/svd.h"
 
 int test_dsvd() {
-  double **A = malloc(sizeof(double *) * 3);
-  A[0] = malloc(sizeof(double) * 2);
-  A[1] = malloc(sizeof(double) * 2);
-  A[2] = malloc(sizeof(double) * 2);
+  double *A = malloc(sizeof(double) * 6);
   /* clang-format off */
-  A[0][0] = 0.41676; A[0][1] = 0.72068;
-  A[1][0] = 0.28617; A[1][1] = 0.34818;
-  A[2][0] = 0.49262; A[2][1] = 0.68185;
+  A[0] = 0.41676; A[1] = 0.72068;
+  A[2] = 0.28617; A[3] = 0.34818;
+  A[4] = 0.49262; A[5] = 0.68185;
   /* clang-format on */
 
   int m = 3;
@@ -26,9 +23,11 @@ int test_dsvd() {
   /* printf("%fs\n", toc(&t)); */
 
   printf("A:\n");
+  int index = 0;
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 2; j++) {
-      printf("%f ", A[i][j]);
+      printf("%f ", A[index]);
+      index++;
     }
     printf("\n");
   }
@@ -47,9 +46,6 @@ int test_dsvd() {
   }
   printf("\n");
 
-  free(A[0]);
-  free(A[1]);
-  free(A[2]);
   free(A);
 
   free(v[0]);
