@@ -122,9 +122,9 @@ double **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
   /* Obtain number of rows and columns in csv data */
   *nb_rows = csv_rows(fp);
   *nb_cols = csv_cols(fp);
-	if (*nb_rows == -1 || *nb_cols == -1) {
-		return NULL;
-	}
+  if (*nb_rows == -1 || *nb_cols == -1) {
+    return NULL;
+  }
 
   /* Initialize memory for csv data */
   double **data = malloc(sizeof(double *) * *nb_rows);
@@ -564,7 +564,7 @@ void dot(const double *A,
     for (size_t j = 0; j < n; j++) {
       double sum = 0.0;
       for (size_t k = 0; k < A_n; k++) {
-				sum += A[(i * A_n) + k] * B[(k * B_n) + j];
+        sum += A[(i * A_n) + k] * B[(k * B_n) + j];
       }
       C[(i * n) + j] = sum;
     }
@@ -673,8 +673,8 @@ void tf_inv(const double T[4 * 4], double T_inv[4 * 4]) {
   dot(C_inv, 3, 3, r, 3, 1, r_inv);
   tf_set_trans(T_inv, r_inv);
 
-	/* Make sure the last element is 1 */
-	T_inv[15] = 1.0;
+  /* Make sure the last element is 1 */
+  T_inv[15] = 1.0;
 }
 
 void tf_point(const double T[4 * 4], const double p[3], double retval[3]) {
@@ -890,8 +890,8 @@ void quatdelta(const double dalpha[3], double dq[4]) {
  ******************************************************************************/
 
 void pose_set_quat(pose_t *pose, const double q[4]) {
-	assert(pose != NULL);
-	assert(q != NULL);
+  assert(pose != NULL);
+  assert(q != NULL);
 
   pose->q[0] = q[0];
   pose->q[1] = q[1];
@@ -900,8 +900,8 @@ void pose_set_quat(pose_t *pose, const double q[4]) {
 }
 
 void pose_set_trans(pose_t *pose, const double r[3]) {
-	assert(pose != NULL);
-	assert(r != NULL);
+  assert(pose != NULL);
+  assert(r != NULL);
 
   pose->r[0] = r[0];
   pose->r[1] = r[1];
@@ -909,8 +909,8 @@ void pose_set_trans(pose_t *pose, const double r[3]) {
 }
 
 void pose_print(const char *prefix, const pose_t *pose) {
-	assert(prefix != NULL);
-	assert(pose != NULL);
+  assert(prefix != NULL);
+  assert(pose != NULL);
 
   if (prefix) {
     printf("[%s] ", prefix);
@@ -921,8 +921,8 @@ void pose_print(const char *prefix, const pose_t *pose) {
 }
 
 void pose2tf(const pose_t *pose, double T[4 * 4]) {
-	assert(pose != NULL);
-	assert(T != NULL);
+  assert(pose != NULL);
+  assert(T != NULL);
 
   double C[3 * 3] = {0};
   quat2rot(pose->q, C);
@@ -933,8 +933,8 @@ void pose2tf(const pose_t *pose, double T[4 * 4]) {
 }
 
 pose_t *load_poses(const char *csv_path, int *nb_poses) {
-	assert(csv_path != NULL);
-	assert(nb_poses != NULL);
+  assert(csv_path != NULL);
+  assert(nb_poses != NULL);
 
   FILE *csv_file = fopen(csv_path, "r");
   char line[1024] = {0};

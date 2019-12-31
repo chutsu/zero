@@ -3,7 +3,7 @@ set -e
 
 # node js/zero.js
 
-# make format_code
+make format_code
 # make clean
 make
 # ./build/bin/test_core
@@ -34,6 +34,8 @@ make
 # valgrind --leak-check=full ./build/bin/test_ba --target test_ba_jacobians
 # valgrind --leak-check=full ./build/bin/test_ba --target test_ba_update
 # valgrind --leak-check=full ./build/bin/test_ba --target test_ba_cost
+# valgrind --leak-check=full ./build/bin/test_svd
+./build/bin/test_svd
 # ./build/bin/test_template
 
 # cd firmware

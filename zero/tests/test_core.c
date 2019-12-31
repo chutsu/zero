@@ -113,7 +113,6 @@ int test_mat_block_set() {
   return 0;
 }
 
-
 int test_mat_transpose() {
   double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
   double C[9] = {0.0};
@@ -195,9 +194,9 @@ int test_dot() {
   dot(A, 3, 3, B, 3, 1, C);
   print_vector("C", C, 3);
 
-	MU_CHECK(fltcmp(C[0], 14.0) == 0);
-	MU_CHECK(fltcmp(C[1], 32.0) == 0);
-	MU_CHECK(fltcmp(C[2], 50.0) == 0);
+  MU_CHECK(fltcmp(C[0], 14.0) == 0);
+  MU_CHECK(fltcmp(C[1], 32.0) == 0);
+  MU_CHECK(fltcmp(C[2], 50.0) == 0);
 
   return 0;
 }
