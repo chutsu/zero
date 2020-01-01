@@ -4,8 +4,7 @@ obj
 tags
 build
 
-deps/libopencm3
-deps/stlink
+deps/OpenBLAS
 
 *.bin
 *.elf
