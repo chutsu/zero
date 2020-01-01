@@ -12,18 +12,12 @@
 int test_svd() {
   int m = M;
   int n = N;
-  int lda = n;
-  int ldu = m;
-  int ldvt = n;
-  double superb[n - 1];
-  char jobu = 'A';
-  char jobvt = 'A';
   double s[n];
-  double u[ldu * m];
-  double vt[ldvt * n];
+  double U[m * m];
+  double V_t[n * n];
 
   /* clang-format off */
-  double a[LDA * N] = {
+  double A[LDA * N] = {
 		0.914396, 0.363861, 0.776292, 0.189401, 0.444104,
 		0.593250, 0.616198, 0.437685, 0.722506, 0.444178,
 		0.121810, 0.365621, 0.385872, 0.152660, 0.977475,
@@ -34,33 +28,21 @@ int test_svd() {
   /* clang-format on */
 
   struct timespec t = tic();
-  lapack_int retval = LAPACKE_dgesvd(LAPACK_ROW_MAJOR,
-                                     jobu,
-                                     jobvt,
-                                     m,
-                                     n,
-                                     a,
-                                     lda,
-                                     s,
-                                     u,
-                                     ldu,
-                                     vt,
-                                     ldvt,
-                                     superb);
+  int retval = svd(A, m, n, U, s, V_t);
   printf("time taken: %fs\n", toc(&t));
-
   if (retval > 0) {
     printf("The algorithm computing SVD failed to converge.\n");
     exit(1);
   }
 
+  printf("\n");
   print_matrix("s", s, 1, n);
   printf("\n");
 
-  print_matrix("U", u, m, n);
+  print_matrix("U", U, m, n);
   printf("\n");
 
-  print_matrix("V_t", vt, n, n);
+  print_matrix("V_t", V_t, n, n);
   printf("\n");
 
   return 0;
