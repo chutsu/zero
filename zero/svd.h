@@ -1,21 +1,3 @@
-/************************************************************
- *                                                          *
- *  Permission is hereby granted  to  any  individual   or  *
- *  institution   for  use,  copying, or redistribution of  *
- *  this code and associated documentation,  provided       *
- *  that   such  code  and documentation are not sold  for  *
- *  profit and the  following copyright notice is retained  *
- *  in the code and documentation:                          *
- *     Copyright (c) held by Dianne Cook                    *
- *  All Rights Reserved.                                    *
- *                                                          *
- *  Questions and comments are welcome, and I request       *
- *  that you share any modifications with me.               *
- *                                                          *
- *                Dianne Cook                               *
- *             dicook@iastate.edu                           *
- *                                                          *
- ************************************************************/
 #ifndef SVD_H
 #define SVD_H
 
@@ -23,45 +5,71 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define PRECISION1 32768
-#define PRECISION2 16384
-/*#define PI 3.1415926535897932*/
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-#define SIGN(a, b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
-#define MAXINT 2147483647
-#define ASCII_TEXT_BORDER_WIDTH 4
-#define MAXHIST 100
-#define STEP0 0.01
-#define FORWARD 1
-#define BACKWARD -1
-#define PROJ_DIM 5
-#define True 1
-#define False 0
+#include <lapacke.h>
 
-typedef struct {
-  float x, y, z;
-} fcoords;
+int svd(double *A, int m, int n, double *U, double *s, double *V_t) {
+  const int lda = n;
+  const int ldu = m;
+  const int ldvt = n;
+  double superb[n - 1];
+  char jobu = 'A';
+  char jobvt = 'A';
 
-typedef struct {
-  long x, y, z;
-} lcoords;
+  lapack_int retval = LAPACKE_dgesvd(LAPACK_ROW_MAJOR,
+                                     jobu,
+                                     jobvt,
+                                     m,
+                                     n,
+                                     A,
+                                     lda,
+                                     s,
+                                     U,
+                                     ldu,
+                                     V_t,
+                                     ldvt,
+                                     superb);
+  if (retval > 0) {
+    return -1;
+  }
 
-typedef struct {
-  int x, y, z;
-} icoords;
+  return 0;
+}
 
-typedef struct {
-  float min, max;
-} lims;
-
-/* grand tour history */
-typedef struct hist_rec {
-  struct hist_rec *prev, *next;
-  float *basis[3];
-  int pos;
-} hist_rec;
-
-int svd(double *A, int m, int n, double *w, double *V);
+/* int pinv(double *A, const int m, const int n) { */
+/*   #<{(| Pseudo invert A with SVD |)}># */
+/*  */
+/*   #<{(| -- Decompose H with SVD |)}># */
+/*   double *w = malloc(sizeof(double) * n); */
+/*   double *V = malloc(sizeof(double) * n * n); */
+/*   if (svd(A, n, n, w, V) != 0) { */
+/*     return -1; */
+/*   } */
+/*  */
+/*   #<{(| -- Form reciprocal singular matrix S_inv from singular vector w |)}>#
+ */
+/*   double *S_inv = malloc(sizeof(double) * n * n); */
+/*   zeros(S_inv, n, n); */
+/*   int index = 0; */
+/*   for (int i = 0; i < n; i++) { */
+/*     for (int j = 0; j < n; j++) { */
+/*       if (i == j) { */
+/*         S_inv[index] = 1.0 / w[index]; */
+/*       } */
+/*     } */
+/*   } */
+/*  */
+/*   #<{(| -- pinv(H) = U S^-1 V' |)}># */
+/*   double *US = malloc(sizeof(double) * n * n); */
+/*   dot(A, n, n, S_inv, n, n, US); */
+/*   dot(US, n, n, V, n, n, A); */
+/*  */
+/*   #<{(| -- Clean up |)}># */
+/*   free(w); */
+/*   free(V); */
+/*   free(S_inv); */
+/*   free(US); */
+/*  */
+/*   return 0; */
+/* } */
 
 #endif /* SVD_H */
