@@ -5,23 +5,21 @@ DEP_DIR=$(PWD)/dep
 TESTS_DIR=$(PWD)/tests
 
 # COMPILER SETTINGS
-CC=gcc -Wall -O2 -g -std=c11 \
+CC=gcc \
+	-Wall \
+	-O3 \
+	-DNDEBUG \
 	-march=native \
+	-fopenmp \
 	-D_DEFAULT_SOURCE \
 	-D_POSIX_C_SOURCE=199309L
-# CC=gcc -O3 -s -g -Wall -DNDEBUG \
-# 	-std=gnu99 \
-# 	-march=native \
-# 	-fopenmp \
-# 	-D_DEFAULT_SOURCE \
-# 	-D_POSIX_C_SOURCE=199309L
-CFLAGS=-I$(INC_DIR) -I/usr/include/x86_64-linux-gnu
-LIBS=-L$(BLD_DIR) \
-		 -lzero \
-		 -L./deps/OpenBLAS/lapack/ -llapack \
-		 -L./deps/OpenBLAS/lapack/ -llapacke \
-		 -L./deps/OpenBLAS/ -lopenblas \
-		 -lm
+CFLAGS=-I$(INC_DIR)
+LIBS=-L./deps/OpenBLAS/build/lib -L$(BLD_DIR) \
+	-lzero \
+	-lopenblas \
+	-llapacke \
+	-lpthread \
+	-lm
 
 # ARCHIVER SETTTINGS
 AR = ar

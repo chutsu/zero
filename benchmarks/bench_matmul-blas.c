@@ -32,7 +32,7 @@ void dot_cblas(const double *A, const size_t A_m, const size_t A_n,
 
 int main() {
   // Array - Blas
-  for (size_t k = 1; k < 1000; k++) {
+  for (size_t k = 10; k < 1000; k+=10) {
     size_t m = k;
     double *A = create_random_sq_matrix(m);
     double *B = create_random_sq_matrix(m);

@@ -432,6 +432,12 @@ mat_val(const double *A, const size_t stride, const size_t i, const size_t j) {
   return A[(i * stride) + j];
 }
 
+void mat_copy(const double *src, const int m, const int n, double *dest) {
+  for (int i = 0; i < (m * n); i++) {
+    dest[i] = src[i];
+  }
+}
+
 void mat_block_get(const double *A,
                    const size_t stride,
                    const size_t rs,
@@ -470,6 +476,38 @@ void mat_block_set(double *A,
   }
 }
 
+void mat_diag_set(double *A, const int m, const int n, const double *d) {
+  int mat_index = 0;
+  int vec_index = 0;
+
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < n; j++) {
+      if (i == j) {
+        A[mat_index] = d[vec_index];
+        vec_index++;
+      } else {
+        A[mat_index] = 0.0;
+      }
+      mat_index++;
+    }
+  }
+}
+
+void mat_diag_get(const double *A, const int m, const int n, double *d) {
+  int mat_index = 0;
+  int vec_index = 0;
+
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < n; j++) {
+      if (i == j) {
+        d[vec_index] = A[mat_index];
+        vec_index++;
+      }
+      mat_index++;
+    }
+  }
+}
+
 void mat_transpose(const double *A, size_t m, size_t n, double *A_t) {
   assert(A != NULL && A != A_t);
   assert(m > 0 && n > 0);
@@ -479,6 +517,17 @@ void mat_transpose(const double *A, size_t m, size_t n, double *A_t) {
       mat_set(A_t, m, j, i, mat_val(A, n, i, j));
     }
   }
+}
+
+int mat_equal(const double *A, const double *B, const int m, const int n) {
+  for (int i = 0; i < (m * n); i++) {
+    if (fltcmp(A[i], B[i]) != 0) {
+      /* printf("A[%d]: %f\tB[%d]: %f\n", i, A[i], i, B[i]); */
+      return -1;
+    }
+  }
+
+  return 0;
 }
 
 void mat_add(const double *A, const double *B, double *C, size_t m, size_t n) {

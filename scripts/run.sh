@@ -3,8 +3,8 @@ set -e
 
 # node js/zero.js
 
-make format_code
-# make clean
+# make format_code
+make clean
 make
 # ./build/bin/test_core
 # ./build/bin/test_core --target test_eye

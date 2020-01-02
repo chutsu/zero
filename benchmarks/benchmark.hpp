@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <assert.h>
 #include <time.h>
+
 
 #define UNUSED(expr)                                                           \
   do {                                                                         \
@@ -13,6 +15,23 @@ static float randf(float a, float b) {
   float diff = b - a;
   float r = random * diff;
   return a + r;
+}
+
+struct timespec tic() {
+  struct timespec time_start;
+  clock_gettime(CLOCK_MONOTONIC, &time_start);
+  return time_start;
+}
+
+float toc(struct timespec *tic) {
+  struct timespec toc;
+  float time_elasped;
+
+  clock_gettime(CLOCK_MONOTONIC, &toc);
+  time_elasped = (toc.tv_sec - tic->tv_sec);
+  time_elasped += (toc.tv_nsec - tic->tv_nsec) / 1000000000.0;
+
+  return time_elasped;
 }
 
 static void mat_set(double *A,

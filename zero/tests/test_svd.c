@@ -3,47 +3,81 @@
 #include "zero/svd.h"
 
 /* Parameters */
-#define M 6
-#define N 5
+#define M 2
+#define N 2
 #define LDA M
 #define LDU M
 #define LDVT N
 
 int test_svd() {
-  int m = M;
-  int n = N;
-  double s[n];
-  double U[m * m];
-  double V_t[n * n];
-
-  /* clang-format off */
-  double A[LDA * N] = {
-		0.914396, 0.363861, 0.776292, 0.189401, 0.444104,
-		0.593250, 0.616198, 0.437685, 0.722506, 0.444178,
-		0.121810, 0.365621, 0.385872, 0.152660, 0.977475,
-		0.939700, 0.457225, 0.863963, 0.040427, 0.540278,
-		0.216404, 0.414613, 0.327000, 0.915100, 0.568208,
-		0.102671, 0.427741, 0.143185, 0.538898, 0.163511
-	};
-  /* clang-format on */
+  double A[M * N];
+  double A_orig[M * N];
+  for (int i = 0; i < (M * N); i++) {
+    A[i] = randf(0.0, 1.0);
+    A_orig[i] = A[i];
+  }
 
   struct timespec t = tic();
-  int retval = svd(A, m, n, U, s, V_t);
+  double U[M * M];
+  double d[N];
+  double V_t[N * N];
+  int retval = svd(A, M, N, U, d, V_t);
   printf("time taken: %fs\n", toc(&t));
-  if (retval > 0) {
+  if (retval != 0) {
     printf("The algorithm computing SVD failed to converge.\n");
     exit(1);
   }
 
-  printf("\n");
-  print_matrix("s", s, 1, n);
-  printf("\n");
+  /* A = U * S * V_t */
+  double S[N * N];
+  mat_diag_set(S, N, N, d);
 
-  print_matrix("U", U, m, n);
-  printf("\n");
+  double US[M * N];
+  double USV[M * M];
+  dot(U, M, N, S, N, N, US);
+  dot(US, M, N, V_t, N, N, USV);
 
-  print_matrix("V_t", V_t, n, n);
+  print_matrix("A", A_orig, M, N);
   printf("\n");
+  print_matrix("USV'", USV, M, N);
+  MU_CHECK(mat_equal(A_orig, USV, M, N) == 0);
+
+  return 0;
+}
+
+int test_svdcmp() {
+  double A[M * N];
+  double A_orig[M * N];
+  for (int i = 0; i < (M * N); i++) {
+    A[i] = randf(0.0, 1.0);
+    A_orig[i] = A[i];
+  }
+
+  double d[N];
+  double V[N * N];
+  struct timespec t = tic();
+  int retval = svdcmp(A, M, N, d, V);
+  printf("time taken: %fs\n", toc(&t));
+  if (retval != 0) {
+    printf("The algorithm computing SVD failed to converge.\n");
+    exit(1);
+  }
+
+  /* A = U * S * V_t */
+  double S[N * N];
+  mat_diag_set(S, N, N, d);
+
+  double US[M * N];
+  double USV[M * M];
+  double V_t[N * N];
+  mat_transpose(V, N, N, V_t);
+  dot(A, M, N, S, N, N, US);
+  dot(US, M, N, V_t, N, N, USV);
+
+  print_matrix("A", A_orig, M, N);
+  printf("\n");
+  print_matrix("USV", USV, M, N);
+  MU_CHECK(mat_equal(A_orig, USV, M, N) == 0);
 
   return 0;
 }
@@ -52,7 +86,8 @@ int test_pinv() { return 0; }
 
 void test_suite() {
   MU_ADD_TEST(test_svd);
-  MU_ADD_TEST(test_pinv);
+  MU_ADD_TEST(test_svdcmp);
+  /* MU_ADD_TEST(test_pinv); */
 }
 
 MU_RUN_TESTS(test_suite);
