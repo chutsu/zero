@@ -32,10 +32,12 @@ make
 # ./build/bin/test_core --target test_quat2rot
 # valgrind --leak-check=full ./build/bin/test_ba --target test_ba_residuals
 # valgrind --leak-check=full ./build/bin/test_ba --target test_ba_jacobians
-# valgrind --leak-check=full ./build/bin/test_ba --target test_ba_update
+valgrind --leak-check=full ./build/bin/test_ba --target test_ba_update
 # valgrind --leak-check=full ./build/bin/test_ba --target test_ba_cost
-# valgrind --leak-check=full ./build/bin/test_svd
-./build/bin/test_svd
+# valgrind ./build/bin/test_svd
+# ./build/bin/test_svd --target test_svd
+# ./build/bin/test_svd --target test_svdcomp
+# ./build/bin/test_svd --target test_pinv
 # ./build/bin/test_template
 
 # cd firmware

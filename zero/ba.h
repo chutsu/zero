@@ -510,42 +510,12 @@ void ba_update(
   mat_scale(E_t, E_cols, E_rows, -1.0);
   dot(E_t, E_cols, E_rows, e, e_size, 1, g);
 
-  /* #<{(| Pseudo invert H with SVD |)}># */
-  /* #<{(| -- Decompose H with SVD |)}># */
-  /* double *w = malloc(sizeof(double) * E_cols); */
-  /* double *V = malloc(sizeof(double) * E_cols * E_cols); */
-  /* if (svd(H, E_cols, E_cols, w, V) != 0) { */
-  /*   FATAL("Failed to invert H matrix!"); */
-  /* } */
-  /* #<{(| -- Form reciprocal singular matrix S_inv from singular vector w |)}>#
-   */
-  /* double *S_inv = malloc(sizeof(double) * E_cols * E_cols); */
-  /* zeros(S_inv, E_cols, E_cols); */
-  /* int index = 0; */
-  /* for (int i = 0; i < E_cols; i++) { */
-  /*   for (int j = 0; j < E_cols; j++) { */
-  /*     if (i == j) { */
-  /*       S_inv[index] = 1.0 / w[index]; */
-  /*     } */
-  /*   } */
-  /* } */
-  /* #<{(| -- pinv(H) = U S^-1 V' |)}># */
-  /* double *US = malloc(sizeof(double) * E_cols * E_cols); */
-  /* double *H_inv = malloc(sizeof(double) * E_cols * E_cols); */
-  /* dot(H, E_cols, E_cols, S_inv, E_cols, E_cols, US); */
-  /* dot(US, E_cols, E_cols, V, E_cols, E_cols, H_inv); */
-  /* #<{(| -- Clean up |)}># */
-  /* free(H); */
-  /* free(w); */
-  /* free(V); */
-  /* free(S_inv); */
-  /* free(US); */
-
   /* dx = pinv(H) * g; */
-  double *H_inv;
+  double *H_inv = calloc(E_cols * E_cols, sizeof(double));
   double *dx = calloc(E_cols, sizeof(double));
+  pinv(H, E_cols, E_cols, H_inv);
   dot(H_inv, E_cols, E_cols, g, E_cols, 1, dx);
-  /* free(H_inv); */
+  free(H_inv);
   free(g);
 
   /* Update camera poses */

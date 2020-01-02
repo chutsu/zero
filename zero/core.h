@@ -91,7 +91,7 @@ void mat_block_set(double *A,
 void mat_diag_set(double *A, const int m, const int n, const double *d);
 void mat_diag_get(const double *A, const int m, const int n, double *d);
 void mat_transpose(const double *A, size_t m, size_t n, double *A_t);
-int mat_equal(const double *A, const double *B, const int m, const int n);
+int mat_equals(const double *A, const double *B, const int m, const int n);
 void mat_add(const double *A, const double *B, double *C, size_t m, size_t n);
 void mat_sub(const double *A, const double *B, double *C, size_t m, size_t n);
 void mat_scale(double *A, const size_t m, const size_t n, const double scale);

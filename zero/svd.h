@@ -75,7 +75,7 @@ static double pythag(double a, double b) {
  *   w = returns the vector of singular values of a
  *   V = returns the right orthogonal transformation matrix
  */
-int svdcmp(double *A, int m, int n, double *w, double *V) {
+int svdcomp(double *A, int m, int n, double *w, double *V) {
   assert(m < n);
   int flag, i, its, j, jj, k, l, nm;
   double c, f, h, s, x, y, z;
@@ -303,41 +303,51 @@ int svdcmp(double *A, int m, int n, double *w, double *V) {
   return 0;
 }
 
-/* int pinv(double *A, const int m, const int n) { */
-/*   #<{(| Pseudo invert A with SVD |)}># */
-/*  */
-/*   #<{(| -- Decompose H with SVD |)}># */
-/*   double *w = malloc(sizeof(double) * n); */
-/*   double *V = malloc(sizeof(double) * n * n); */
-/*   if (svd(A, n, n, w, V) != 0) { */
-/*     return -1; */
-/*   } */
-/*  */
-/*   #<{(| -- Form reciprocal singular matrix S_inv from singular vector w |)}>#
- */
-/*   double *S_inv = malloc(sizeof(double) * n * n); */
-/*   zeros(S_inv, n, n); */
-/*   int index = 0; */
-/*   for (int i = 0; i < n; i++) { */
-/*     for (int j = 0; j < n; j++) { */
-/*       if (i == j) { */
-/*         S_inv[index] = 1.0 / w[index]; */
-/*       } */
-/*     } */
-/*   } */
-/*  */
-/*   #<{(| -- pinv(H) = U S^-1 V' |)}># */
-/*   double *US = malloc(sizeof(double) * n * n); */
-/*   dot(A, n, n, S_inv, n, n, US); */
-/*   dot(US, n, n, V, n, n, A); */
-/*  */
-/*   #<{(| -- Clean up |)}># */
-/*   free(w); */
-/*   free(V); */
-/*   free(S_inv); */
-/*   free(US); */
-/*  */
-/*   return 0; */
-/* } */
+int pinv(double *A, const int m, const int n, double *A_inv) {
+  /* Decompose A with SVD */
+  double *U = malloc(sizeof(double) * m * n);
+  double *d = malloc(sizeof(double) * n);
+  double *V_t = malloc(sizeof(double) * n * n);
+  if (svd(A, m, n, U, d, V_t) != 0) {
+    return -1;
+  }
+
+  /* Form reciprocal singular matrix S_inv from singular vector d */
+  double *S_inv = malloc(sizeof(double) * n * n);
+  zeros(S_inv, n, n);
+  int mat_index = 0;
+  int vec_index = 0;
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      if (i == j) {
+        S_inv[mat_index] = 1.0 / d[vec_index];
+        vec_index++;
+      }
+      mat_index++;
+    }
+  }
+
+  /* pinv(H) = V S^-1 U' */
+  double *V = malloc(sizeof(double) * n * n);
+  mat_transpose(V_t, n, n, V);
+
+  double *U_t = malloc(sizeof(double) * n * n);
+  mat_transpose(U, n, n, U_t);
+
+  double *VSi = malloc(sizeof(double) * n * n);
+  dot(V, n, n, S_inv, n, n, VSi);
+  dot(VSi, n, n, U_t, n, n, A_inv);
+
+  /* Clean up */
+  free(U);
+  free(U_t);
+  free(d);
+  free(S_inv);
+  free(V);
+  free(V_t);
+  free(VSi);
+
+  return 0;
+}
 
 #endif /* SVD_H */

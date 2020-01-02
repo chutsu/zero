@@ -2,12 +2,9 @@
 #include "zero/core.h"
 #include "zero/svd.h"
 
-/* Parameters */
-#define M 2
-#define N 2
-#define LDA M
-#define LDU M
-#define LDVT N
+/* TEST PARAMS */
+#define M 10
+#define N 10
 
 int test_svd() {
   double A[M * N];
@@ -40,12 +37,12 @@ int test_svd() {
   print_matrix("A", A_orig, M, N);
   printf("\n");
   print_matrix("USV'", USV, M, N);
-  MU_CHECK(mat_equal(A_orig, USV, M, N) == 0);
+  MU_CHECK(mat_equals(A_orig, USV, M, N) == 0);
 
   return 0;
 }
 
-int test_svdcmp() {
+int test_svdcomp() {
   double A[M * N];
   double A_orig[M * N];
   for (int i = 0; i < (M * N); i++) {
@@ -56,7 +53,7 @@ int test_svdcmp() {
   double d[N];
   double V[N * N];
   struct timespec t = tic();
-  int retval = svdcmp(A, M, N, d, V);
+  int retval = svdcomp(A, M, N, d, V);
   printf("time taken: %fs\n", toc(&t));
   if (retval != 0) {
     printf("The algorithm computing SVD failed to converge.\n");
@@ -77,17 +74,39 @@ int test_svdcmp() {
   print_matrix("A", A_orig, M, N);
   printf("\n");
   print_matrix("USV", USV, M, N);
-  MU_CHECK(mat_equal(A_orig, USV, M, N) == 0);
+  MU_CHECK(mat_equals(A_orig, USV, M, N) == 0);
 
   return 0;
 }
 
-int test_pinv() { return 0; }
+int test_pinv() {
+  double A[M * N];
+  double A_orig[M * N];
+  for (int i = 0; i < (M * N); i++) {
+    A[i] = randf(0.0, 1.0);
+    A_orig[i] = A[i];
+  }
+
+  struct timespec t = tic();
+  double A_inv[M * N];
+  int retval = pinv(A, M, N, A_inv);
+  printf("time taken: %fs\n", toc(&t));
+  MU_CHECK(retval == 0);
+
+  double AiA[M * N];
+  dot(A_inv, M, N, A_orig, M, N, AiA);
+
+  double Imn[M * N];
+  eye(Imn, M, N);
+  MU_CHECK(mat_equals(AiA, Imn, M, N) == 0);
+
+  return 0;
+}
 
 void test_suite() {
   MU_ADD_TEST(test_svd);
-  MU_ADD_TEST(test_svdcmp);
-  /* MU_ADD_TEST(test_pinv); */
+  MU_ADD_TEST(test_svdcomp);
+  MU_ADD_TEST(test_pinv);
 }
 
 MU_RUN_TESTS(test_suite);

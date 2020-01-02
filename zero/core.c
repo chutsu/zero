@@ -519,7 +519,7 @@ void mat_transpose(const double *A, size_t m, size_t n, double *A_t) {
   }
 }
 
-int mat_equal(const double *A, const double *B, const int m, const int n) {
+int mat_equals(const double *A, const double *B, const int m, const int n) {
   for (int i = 0; i < (m * n); i++) {
     if (fltcmp(A[i], B[i]) != 0) {
       /* printf("A[%d]: %f\tB[%d]: %f\n", i, A[i], i, B[i]); */
