@@ -86,15 +86,44 @@ int test_ba_jacobians() {
 int test_ba_update() {
   ba_data_t *data = ba_load_data(TEST_DATA);
 
-  int r_size = 0;
-  double *r = ba_residuals(data, &r_size);
+  int e_size = 0;
+  double *e = ba_residuals(data, &e_size);
 
-  int J_rows = 0;
-  int J_cols = 0;
-  double *J = ba_jacobian(data, &J_rows, &J_cols);
+  int E_rows = 0;
+  int E_cols = 0;
+  double *E = ba_jacobian(data, &E_rows, &E_cols);
 
-  ba_update(data, r, r_size, J, J_rows, J_cols);
+  /* H = (E' * W * E); */
+  double *E_t = mat_new(E_cols, E_rows);
+  double *H = mat_new(E_cols, E_cols);
+  mat_transpose(E, E_rows, E_cols, E_t);
+  dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
 
+  /* g = -E' * W * e; */
+  double *g = vec_new(E_cols);
+  mat_scale(E_t, E_cols, E_rows, -1.0);
+  dot(E_t, E_cols, E_rows, e, e_size, 1, g);
+
+  /* dx = pinv(H) * g; */
+  double *H_inv = mat_new(E_cols, E_cols);
+  double *dx = vec_new(E_cols);
+  pinv(H, E_cols, E_cols, H_inv);
+  dot(H_inv, E_cols, E_cols, g, E_cols, 1, dx);
+
+  mat_save("/tmp/E.csv", E, E_rows, E_cols);
+  mat_save("/tmp/E_t.csv", E_t, E_cols, E_rows);
+  mat_save("/tmp/H.csv", H, E_cols, E_cols);
+  mat_save("/tmp/g.csv", g, E_cols, 1);
+  mat_save("/tmp/dx.csv", dx, E_cols, 1);
+
+  ba_update(data, e, e_size, E, E_rows, E_cols);
+
+  free(e);
+  free(E);
+  free(E_t);
+  free(H);
+  free(H_inv);
+  free(g);
   ba_data_free(data);
 
   return 0;
@@ -110,6 +139,14 @@ int test_ba_cost() {
   return 0;
 }
 
+int test_ba_solve() {
+  ba_data_t *data = ba_load_data(TEST_DATA);
+  ba_solve(data);
+  ba_data_free(data);
+
+  return 0;
+}
+
 void test_suite() {
   MU_ADD_TEST(test_parse_keypoints_line);
   MU_ADD_TEST(test_load_keypoints);
@@ -118,6 +155,7 @@ void test_suite() {
   MU_ADD_TEST(test_ba_jacobians);
   MU_ADD_TEST(test_ba_update);
   MU_ADD_TEST(test_ba_cost);
+  MU_ADD_TEST(test_ba_solve);
 }
 
 MU_RUN_TESTS(test_suite);

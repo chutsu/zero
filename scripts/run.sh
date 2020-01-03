@@ -4,7 +4,7 @@ set -e
 # node js/zero.js
 
 # make format_code
-make clean
+# make clean
 make
 # ./build/bin/test_core
 # ./build/bin/test_core --target test_eye
@@ -30,10 +30,11 @@ make
 # ./build/bin/test_core --target test_tf_point
 # ./build/bin/test_core --target test_tf_hpoint
 # ./build/bin/test_core --target test_quat2rot
-# valgrind --leak-check=full ./build/bin/test_ba --target test_ba_residuals
-# valgrind --leak-check=full ./build/bin/test_ba --target test_ba_jacobians
-valgrind --leak-check=full ./build/bin/test_ba --target test_ba_update
-# valgrind --leak-check=full ./build/bin/test_ba --target test_ba_cost
+# ./build/bin/test_ba --target test_ba_residuals
+# ./build/bin/test_ba --target test_ba_jacobians
+./build/bin/test_ba --target test_ba_update
+# ./build/bin/test_ba --target test_ba_cost
+# ./build/bin/test_ba --target test_ba_solve
 # valgrind ./build/bin/test_svd
 # ./build/bin/test_svd --target test_svd
 # ./build/bin/test_svd --target test_svdcomp

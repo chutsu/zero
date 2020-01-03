@@ -5,7 +5,6 @@
 
 #include "zero/core.h"
 #include "zero/cv.h"
-#include "zero/log.h"
 #include "zero/svd.h"
 
 static void load_camera(const char *data_path, double K[3 * 3]) {
@@ -499,24 +498,33 @@ void ba_update(
 
   /* Solve Gauss-Newton system [H dx = g]: Solve for dx */
   /* H = (E' * W * E); */
-  double *E_t = calloc(E_rows * E_cols, sizeof(double));
-  double *H = calloc(E_cols * E_cols, sizeof(double));
+  double *E_t = mat_new(E_cols, E_rows);
+  double *H = mat_new(E_cols, E_cols);
   mat_transpose(E, E_rows, E_cols, E_t);
   dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
-  free(E_t);
 
   /* g = -E' * W * e; */
-  double *g = calloc(E_cols, sizeof(double));
+  double *g = vec_new(E_cols);
   mat_scale(E_t, E_cols, E_rows, -1.0);
   dot(E_t, E_cols, E_rows, e, e_size, 1, g);
+  free(E_t);
 
   /* dx = pinv(H) * g; */
-  double *H_inv = calloc(E_cols * E_cols, sizeof(double));
-  double *dx = calloc(E_cols, sizeof(double));
+  double *H_inv = mat_new(E_cols, E_cols);
+  double *dx = vec_new(E_cols);
   pinv(H, E_cols, E_cols, H_inv);
   dot(H_inv, E_cols, E_cols, g, E_cols, 1, dx);
+  free(H);
   free(H_inv);
   free(g);
+
+  printf("H_rows: %d\n", E_cols);
+  printf("H_cols: %d\n", E_cols);
+  /* for (int i = 0; i < E_cols; i++) { */
+  /*   printf("%f\n", dx[i]); */
+  /* } */
+  printf("nb_frames: %d\n", data->nb_frames);
+  printf("nb_points: %d\n", data->nb_points);
 
   /* Update camera poses */
   for (int k = 0; k < data->nb_frames; k++) {
@@ -581,6 +589,8 @@ void ba_solve(ba_data_t *data) {
     ba_update(data, e, e_size, E, E_rows, E_cols);
     const double cost = ba_cost(e, e_size);
     printf("iter: %d\t cost: %.4e\n", iter, cost);
+    free(e);
+    free(E);
 
     /* Termination criteria */
     double cost_diff = fabs(cost - cost_prev);

@@ -13,18 +13,35 @@ extern "C" {
 #include <time.h>
 #include <assert.h>
 
-#ifndef M_PI
-#define M_PI (3.14159265358979323846)
+/******************************************************************************
+ *                                LOGGING
+ ******************************************************************************/
+
+/* DEBUG */
+#ifdef NDEBUG
+#define DEBUG(M, ...)
+#else
+#define DEBUG(M, ...)                                                          \
+  fprintf(stderr, "[DEBUG] %s:%d: " M "\n", __func__, __LINE__, ##__VA_ARGS__)
 #endif
 
-#define UNUSED(expr)                                                           \
-  do {                                                                         \
-    (void) (expr);                                                             \
-  } while (0)
+/* LOG */
+#define LOG_ERROR(M, ...)                                                      \
+  fprintf(stderr, "[ERROR] [%s] " M "\n", __func__, ##__VA_ARGS__)
+#define LOG_WARN(M, ...) fprintf(stderr, "[WARN] " M "\n", ##__VA_ARGS__)
+#define LOG_INFO(M, ...) fprintf(stderr, "[INFO] " M "\n", ##__VA_ARGS__)
 
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-#define SIGN(a, b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
+/* FATAL */
+#define FATAL(M, ...)                                                          \
+  fprintf(stderr, "[FATAL] " M "\n", ##__VA_ARGS__);                           \
+  exit(-1);
+
+/* CHECK */
+#define CHECK(A, M, ...)                                                       \
+  if (!(A)) {                                                                  \
+    log_err(M, ##__VA_ARGS__);                                                 \
+    goto error;                                                                \
+  }
 
 /******************************************************************************
  *                                   DATA
@@ -41,6 +58,19 @@ double **load_darrays(const char *csv_path, int *nb_arrays);
 /******************************************************************************
  *                                 GENERAL
  ******************************************************************************/
+
+#define UNUSED(expr)                                                           \
+  do {                                                                         \
+    (void) (expr);                                                             \
+  } while (0)
+
+#ifndef M_PI
+#define M_PI (3.14159265358979323846)
+#endif
+
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+#define SIGN(a, b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
 
 float randf(float a, float b);
 struct timespec tic();
@@ -66,6 +96,8 @@ void eye(double *A, const size_t m, const size_t n);
 void ones(double *A, const size_t m, const size_t n);
 void zeros(double *A, const size_t m, const size_t n);
 
+double *mat_new(const int m, const int n);
+int mat_save(const char *save_path, const double *A, const int m, const int n);
 void mat_set(double *A,
              const size_t stride,
              const size_t i,
@@ -96,6 +128,7 @@ void mat_add(const double *A, const double *B, double *C, size_t m, size_t n);
 void mat_sub(const double *A, const double *B, double *C, size_t m, size_t n);
 void mat_scale(double *A, const size_t m, const size_t n, const double scale);
 
+double *vec_new(const size_t length);
 void vec_add(const double *x, const double *y, double *z, size_t length);
 void vec_sub(const double *x, const double *y, double *z, size_t length);
 void vec_scale(double *x, const size_t length, const double scale);

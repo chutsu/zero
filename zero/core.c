@@ -414,6 +414,32 @@ void zeros(double *A, const size_t m, const size_t n) {
   }
 }
 
+double *mat_new(const int m, const int n) {
+  return calloc(m * n, sizeof(double));
+}
+
+int mat_save(const char *save_path, const double *A, const int m, const int n) {
+  FILE *csv_file = fopen(save_path, "w");
+  if (csv_file == NULL) {
+    return -1;
+  }
+
+  int idx = 0;
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < n; j++) {
+      fprintf(csv_file, "%f", A[idx]);
+      idx++;
+      if ((j + 1) != n) {
+        fprintf(csv_file, ",");
+      }
+    }
+    fprintf(csv_file, "\n");
+  }
+  fclose(csv_file);
+
+  return 0;
+}
+
 void mat_set(double *A,
              const size_t stride,
              const size_t i,
@@ -561,6 +587,10 @@ void mat_scale(double *A, const size_t m, const size_t n, const double scale) {
       mat_set(A, n, i, j, mat_val(A, n, i, j) * scale);
     }
   }
+}
+
+double *vec_new(const size_t length) {
+  return calloc(length, sizeof(double));
 }
 
 void vec_add(const double *x, const double *y, double *z, size_t length) {

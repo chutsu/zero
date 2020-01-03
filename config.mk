@@ -8,6 +8,7 @@ TESTS_DIR=$(PWD)/tests
 CC=gcc \
 	-Wall \
 	-O3 \
+	-g \
 	-DNDEBUG \
 	-march=native \
 	-fopenmp \
