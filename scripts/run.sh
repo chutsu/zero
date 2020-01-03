@@ -1,11 +1,11 @@
 #!/bin/sh
 set -e
 
-# node js/zero.js
+node js/zero.js
 
 # make format_code
 # make clean
-make
+# make
 # ./build/bin/test_core
 # ./build/bin/test_core --target test_eye
 # ./build/bin/test_core --target test_ones
@@ -32,7 +32,7 @@ make
 # ./build/bin/test_core --target test_quat2rot
 # ./build/bin/test_ba --target test_ba_residuals
 # ./build/bin/test_ba --target test_ba_jacobians
-./build/bin/test_ba --target test_ba_update
+# ./build/bin/test_ba --target test_ba_update
 # ./build/bin/test_ba --target test_ba_cost
 # ./build/bin/test_ba --target test_ba_solve
 # valgrind ./build/bin/test_svd
