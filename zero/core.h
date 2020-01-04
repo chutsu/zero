@@ -141,8 +141,17 @@ void dot(const double *A,
          const size_t B_m,
          const size_t B_n,
          double *C);
-
 void skew(const double x[3], double A[3 * 3]);
+void fwdsubs(const double *L,
+             const size_t L_n,
+             const double *b,
+             const size_t b_length,
+             double *y);
+/* void bwdsubs(const double *U, */
+/*              const size_t U_n, */
+/*              const double *y, */
+/*              const size_t y_length, */
+/*              double *x); */
 
 /******************************************************************************
  *                              TRANSFORMS

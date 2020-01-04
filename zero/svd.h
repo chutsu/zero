@@ -40,6 +40,9 @@ int svd(double *A, int m, int n, double *U, double *s, double *V_t) {
 
   /* Clean up */
   free(superb);
+#else
+  fprintf(stderr, "Not Supported!");
+  exit(-1);
 #endif
 
   return 0;
@@ -90,60 +93,60 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
     g = s = scale = 0.0;
     if (i < m) {
       for (k = i; k < m; k++)
-        scale += fabs((double) A[(k * n) + i]);
+        scale += fabs(A[k * n + i]);
       if (scale) {
         for (k = i; k < m; k++) {
-          A[(k * n) + i] = (float) ((double) A[(k * n) + i] / scale);
-          s += ((double) A[(k * n) + i] * (double) A[(k * n) + i]);
+          A[k * n + i] = (A[k * n + i] / scale);
+          s += (A[k * n + i] * A[k * n + i]);
         }
-        f = (double) A[(i * n) + i];
+        f = A[i * n + i];
         g = -SIGN(sqrt(s), f);
         h = f * g - s;
-        A[(i * n) + i] = (float) (f - g);
+        A[i * n + i] = (f - g);
         if (i != n - 1) {
           for (j = l; j < n; j++) {
             for (s = 0.0, k = i; k < m; k++)
-              s += ((double) A[(k * n) + i] * (double) A[(k * n) + j]);
+              s += (A[k * n + i] * A[k * n + j]);
             f = s / h;
             for (k = i; k < m; k++)
-              A[(k * n) + j] += (float) (f * (double) A[(k * n) + i]);
+              A[k * n + j] += (f * A[k * n + i]);
           }
         }
         for (k = i; k < m; k++)
-          A[(k * n) + i] = (float) ((double) A[(k * n) + i] * scale);
+          A[k * n + i] = (A[k * n + i] * scale);
       }
     }
-    w[i] = (float) (scale * g);
+    w[i] = (scale * g);
 
     /* right-hand reduction */
     g = s = scale = 0.0;
     if (i < m && i != n - 1) {
       for (k = l; k < n; k++)
-        scale += fabs((double) A[(i * n) + k]);
+        scale += fabs(A[i * n + k]);
       if (scale) {
         for (k = l; k < n; k++) {
-          A[(i * n) + k] = (float) ((double) A[(i * n) + k] / scale);
-          s += ((double) A[(i * n) + k] * (double) A[(i * n) + k]);
+          A[i * n + k] = (A[i * n + k] / scale);
+          s += (A[i * n + k] * A[i * n + k]);
         }
-        f = (double) A[(i * n) + l];
+        f = A[i * n + l];
         g = -SIGN(sqrt(s), f);
         h = f * g - s;
-        A[(i * n) + l] = (float) (f - g);
+        A[i * n + l] = (f - g);
         for (k = l; k < n; k++)
-          rv1[k] = (double) A[(i * n) + k] / h;
+          rv1[k] = A[i * n + k] / h;
         if (i != m - 1) {
           for (j = l; j < m; j++) {
             for (s = 0.0, k = l; k < n; k++)
-              s += ((double) A[(j * n) + k] * (double) A[(i * n) + k]);
+              s += (A[j * n + k] * A[i * n + k]);
             for (k = l; k < n; k++)
-              A[(j * n) + k] += (float) (s * rv1[k]);
+              A[j * n + k] += (s * rv1[k]);
           }
         }
         for (k = l; k < n; k++)
-          A[(i * n) + k] = (float) ((double) A[(i * n) + k] * scale);
+          A[i * n + k] = (A[i * n + k] * scale);
       }
     }
-    anorm = MAX(anorm, (fabs((double) w[i]) + fabs(rv1[i])));
+    anorm = MAX(anorm, (fabs(w[i]) + fabs(rv1[i])));
   }
 
   /* accumulate the right-hand transformation */
@@ -151,20 +154,19 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
     if (i < n - 1) {
       if (g) {
         for (j = l; j < n; j++)
-          V[(j * n) + i] =
-              (float) (((double) A[(i * n) + j] / (double) A[(i * n) + l]) / g);
+          V[j * n + i] = ((A[i * n + j] / A[i * n + l]) / g);
         /* double division to avoid underflow */
         for (j = l; j < n; j++) {
           for (s = 0.0, k = l; k < n; k++)
-            s += ((double) A[(i * n) + k] * (double) V[(k * n) + j]);
+            s += (A[i * n + k] * V[k * n + j]);
           for (k = l; k < n; k++)
-            V[(k * n) + j] += (float) (s * (double) V[(k * n) + i]);
+            V[k * n + j] += (s * V[k * n + i]);
         }
       }
       for (j = l; j < n; j++)
-        V[(i * n) + j] = V[(j * n) + i] = 0.0;
+        V[i * n + j] = V[j * n + i] = 0.0;
     }
-    V[(i * n) + i] = 1.0;
+    V[i * n + i] = 1.0;
     g = rv1[i];
     l = i;
   }
@@ -172,28 +174,28 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
   /* accumulate the left-hand transformation */
   for (i = n - 1; i >= 0; i--) {
     l = i + 1;
-    g = (double) w[i];
+    g = w[i];
     if (i < n - 1)
       for (j = l; j < n; j++)
-        A[(i * n) + j] = 0.0;
+        A[i * n + j] = 0.0;
     if (g) {
       g = 1.0 / g;
       if (i != n - 1) {
         for (j = l; j < n; j++) {
           for (s = 0.0, k = l; k < m; k++)
-            s += ((double) A[(k * n) + i] * (double) A[(k * n) + j]);
-          f = (s / (double) A[(i * n) + i]) * g;
+            s += (A[k * n + i] * A[k * n + j]);
+          f = (s / A[i * n + i]) * g;
           for (k = i; k < m; k++)
-            A[(k * n) + j] += (float) (f * (double) A[(k * n) + i]);
+            A[k * n + j] += (f * A[k * n + i]);
         }
       }
       for (j = i; j < m; j++)
-        A[(j * n) + i] = (float) ((double) A[(j * n) + i] * g);
+        A[j * n + i] = (A[j * n + i] * g);
     } else {
       for (j = i; j < m; j++)
-        A[(j * n) + i] = 0.0;
+        A[j * n + i] = 0.0;
     }
-    ++A[(i * n) + i];
+    ++A[i * n + i];
   }
 
   /* diagonalize the bidiagonal form */
@@ -206,7 +208,7 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
           flag = 0;
           break;
         }
-        if (fabs((double) w[nm]) + anorm == anorm)
+        if (fabs(w[nm]) + anorm == anorm)
           break;
       }
       if (flag) {
@@ -215,27 +217,27 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
         for (i = l; i <= k; i++) {
           f = s * rv1[i];
           if (fabs(f) + anorm != anorm) {
-            g = (double) w[i];
+            g = w[i];
             h = pythag(f, g);
-            w[i] = (float) h;
+            w[i] = h;
             h = 1.0 / h;
             c = g * h;
             s = (-f * h);
             for (j = 0; j < m; j++) {
-              y = (double) A[(j * n) + nm];
-              z = (double) A[(j * n) + i];
-              A[(j * n) + nm] = (float) (y * c + z * s);
-              A[(j * n) + i] = (float) (z * c - y * s);
+              y = A[j * n + nm];
+              z = A[j * n + i];
+              A[j * n + nm] = y * c + z * s;
+              A[j * n + i] = z * c - y * s;
             }
           }
         }
       }
-      z = (double) w[k];
+      z = w[k];
       if (l == k) {    /* convergence */
         if (z < 0.0) { /* make singular value nonnegative */
-          w[k] = (float) (-z);
+          w[k] = (-z);
           for (j = 0; j < n; j++)
-            V[(j * n) + k] = (-V[(j * n) + k]);
+            V[j * n + k] = (-V[j * n + k]);
         }
         break;
       }
@@ -246,9 +248,9 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
       }
 
       /* shift from bottom 2 x 2 minor */
-      x = (double) w[l];
+      x = w[l];
       nm = k - 1;
-      y = (double) w[nm];
+      y = w[nm];
       g = rv1[nm];
       h = rv1[k];
       f = ((y - z) * (y + z) + (g - h) * (g + h)) / (2.0 * h * y);
@@ -260,7 +262,7 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
       for (j = l; j <= nm; j++) {
         i = j + 1;
         g = rv1[i];
-        y = (double) w[i];
+        y = w[i];
         h = s * g;
         g = c * g;
         z = pythag(f, h);
@@ -272,13 +274,13 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
         h = y * s;
         y = y * c;
         for (jj = 0; jj < n; jj++) {
-          x = (double) V[(jj * n) + j];
-          z = (double) V[(jj * n) + i];
-          V[(jj * n) + j] = (float) (x * c + z * s);
-          V[(jj * n) + i] = (float) (z * c - x * s);
+          x = V[(jj * n) + j];
+          z = V[(jj * n) + i];
+          V[jj * n + j] = x * c + z * s;
+          V[jj * n + i] = z * c - x * s;
         }
         z = pythag(f, h);
-        w[j] = (float) z;
+        w[j] = z;
         if (z) {
           z = 1.0 / z;
           c = f * z;
@@ -287,15 +289,15 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
         f = (c * g) + (s * y);
         x = (c * y) - (s * g);
         for (jj = 0; jj < m; jj++) {
-          y = (double) A[(jj * n) + j];
-          z = (double) A[(jj * n) + i];
-          A[(jj * n) + j] = (float) (y * c + z * s);
-          A[(jj * n) + i] = (float) (z * c - y * s);
+          y = A[jj * n + j];
+          z = A[jj * n + i];
+          A[jj * n + j] = (y * c + z * s);
+          A[jj * n + i] = (z * c - y * s);
         }
       }
       rv1[l] = 0.0;
       rv1[k] = f;
-      w[k] = (float) x;
+      w[k] = x;
     }
   }
 

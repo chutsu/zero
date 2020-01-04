@@ -1,11 +1,11 @@
 #!/bin/sh
 set -e
 
-node js/zero.js
+# node js/zero.js
 
-# make format_code
+make format_code
 # make clean
-# make
+make
 # ./build/bin/test_core
 # ./build/bin/test_core --target test_eye
 # ./build/bin/test_core --target test_ones
@@ -30,16 +30,18 @@ node js/zero.js
 # ./build/bin/test_core --target test_tf_point
 # ./build/bin/test_core --target test_tf_hpoint
 # ./build/bin/test_core --target test_quat2rot
+# ./build/bin/test_ba
 # ./build/bin/test_ba --target test_ba_residuals
 # ./build/bin/test_ba --target test_ba_jacobians
 # ./build/bin/test_ba --target test_ba_update
 # ./build/bin/test_ba --target test_ba_cost
 # ./build/bin/test_ba --target test_ba_solve
-# valgrind ./build/bin/test_svd
+# ./build/bin/test_svd
 # ./build/bin/test_svd --target test_svd
 # ./build/bin/test_svd --target test_svdcomp
 # ./build/bin/test_svd --target test_pinv
 # ./build/bin/test_template
+./build/bin/test_chol
 
 # cd firmware
 # arduino --upload firmware6050.ino --port /dev/ttyUSB0

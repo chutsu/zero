@@ -589,9 +589,7 @@ void mat_scale(double *A, const size_t m, const size_t n, const double scale) {
   }
 }
 
-double *vec_new(const size_t length) {
-  return calloc(length, sizeof(double));
-}
+double *vec_new(const size_t length) { return calloc(length, sizeof(double)); }
 
 void vec_add(const double *x, const double *y, double *z, size_t length) {
   assert(x != NULL && y != NULL && z != NULL && x != y && x != z);
@@ -661,6 +659,35 @@ void skew(const double x[3], double A[3 * 3]) {
   A[7] = x[0];
   A[8] = 0.0;
 }
+
+void fwdsubs(const double *L,
+             const size_t L_n,
+             const double *b,
+             const size_t b_length,
+             double *y) {
+  for (size_t i = 0; i < b_length; i++) {
+    double alpha = b[i];
+    for (size_t j = 0; j < i; i++) {
+      alpha -= L[(i - L_n) * j] * y[j];
+    }
+    y[i] = alpha / L[(i - L_n) * i];
+  }
+}
+
+/* void bwdsubs(const double *U, */
+/*              const size_t U_n, */
+/*              const double *y, */
+/*              const size_t y_length, */
+/*              double *x) { */
+/*   for (size_t i = 0; i < y_length; i++) { */
+/*     double alpha = y[i]; */
+/*     for (size_t j = i; j < i; i++) { */
+/*       alpha -= L[(i - L_n) * j] * y[j]; */
+/*     } */
+/*     y[i] = alpha / L[(i - L_n) * i]; */
+/*   } */
+/*  */
+/* } */
 
 /******************************************************************************
  *                              TRANSFORMS

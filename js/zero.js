@@ -46,7 +46,7 @@ function sinc(x) {
  *                              LINEAR ALGEBRA
  ******************************************************************************/
 
-class Zarray {
+class ZArray {
   constructor(m, n, data) {
     this.rows = m;
     this.cols = n;
@@ -71,7 +71,7 @@ class Zarray {
     console.assert(re > rs);
     console.assert(ce > cs);
 
-    let sub_block = new Zarray(re - rs + 1, ce - cs + 1);
+    let sub_block = new ZArray(re - rs + 1, ce - cs + 1);
     let idx = 0;
     for (let i = rs; i <= re; i++) {
       for (let j = cs; j <= ce; j++) {
@@ -83,7 +83,7 @@ class Zarray {
   }
 
   transpose() {
-    let A_t = new Zarray(this.cols, this.rows);
+    let A_t = new ZArray(this.cols, this.rows);
 
     for (let i = 0; i < this.rows; i++) {
       for (let j = 0; j < this.cols; j++) {
@@ -126,7 +126,7 @@ class Zarray {
   }
 
   dot(B) {
-    let C = new Zarray(this.rows, B.cols);
+    let C = new ZArray(this.rows, B.cols);
 
     let A_m = this.rows;
     let A_n = this.cols;
@@ -176,7 +176,7 @@ function eye(m, n) {
   console.assert(n != 0);
 
   let idx = 0.0;
-  let A = new Zarray(m, n);
+  let A = new ZArray(m, n);
   for (let i = 0; i < m; i++) {
     for (let j = 0; j < n; j++) {
       A.data[idx] = (i == j) ? 1.0 : 0.0;
@@ -191,7 +191,7 @@ function ones(m, n) {
   console.assert(n != 0);
 
   let idx = 0.0;
-  let A = new Zarray(m, n);
+  let A = new ZArray(m, n);
   for (let i = 0; i < m; i++) {
     for (let j = 0; j < n; j++) {
       A.data[idx] = 1.0;
@@ -206,12 +206,9 @@ function zeros(m, n) {
   console.assert(n != 0);
 
   let idx = 0.0;
-  let A = new Zarray(m, n);
-  for (let i = 0; i < m; i++) {
-    for (let j = 0; j < n; j++) {
-      A.data[idx] = 0.0;
-      idx++;
-    }
+  let A = new ZArray(m, n);
+  for (let i = 0; i < (m * n); i++) {
+    A.data[i] = 0.0;
   }
   return A;
 }
@@ -222,10 +219,10 @@ function zeros(m, n) {
 
 class Quaternion {
   constructor(qw, qx, qy, qz) {
-    this.w = qw;
-    this.x = qx;
-    this.y = qy;
-    this.z = qz;
+    this.w = (qw !== undefined) ? qw : 1.0;
+    this.x = (qx !== undefined) ? qx : 0.0;
+    this.y = (qy !== undefined) ? qy : 0.0;
+    this.z = (qz !== undefined) ? qz : 0.0;
   }
 
   data() {
@@ -247,7 +244,7 @@ class Quaternion {
     let t2 = asin(2 * (qy * qw - qx * qz));
     let t3 = atan2(2 * (qx * qy + qz * qw), (qw2 + qx2 - qy2 - qz2));
 
-    return new Zarray(3, 1, [t1, t2, t3]);
+    return new ZArray(3, 1, [t1, t2, t3]);
   }
 
   to_rot() {
@@ -276,7 +273,7 @@ class Quaternion {
     C[7] = 2 * (qy * qz + qw * qx);
     C[8] = qw2 - qx2 - qy2 + qz2;
 
-    return new Zarray(3, 3, C);
+    return new ZArray(3, 3, C);
   }
 
   lmul(q) {
@@ -285,13 +282,13 @@ class Quaternion {
     let py = this.y;
     let pz = this.z;
 
-    lprod = new Zarray(4, 4, [
+    lprod = new ZArray(4, 4, [
       pw, -px, -py, -pz,
       px, pw, -pz, py,
       py, pz, pw, -px,
       pz, -py, px, pw
     ]);
-    qm = new Zarray(4, 1, [q.w, q.x, q.y, q.z]);
+    qm = new ZArray(4, 1, [q.w, q.x, q.y, q.z]);
     return lprod.dot(qm);
   }
 
@@ -301,13 +298,13 @@ class Quaternion {
     let qy = q.y;
     let qz = q.z;
 
-    rprod = new Zarray(4, 4, [
+    rprod = new ZArray(4, 4, [
       qw, -qx, -qy, -qz,
       qx, qw, qz, -qy,
       qy, -qz, qw, qx,
       qz, qy, -qx, qw
     ]);
-    pm = new Zarray(4, 1, [this.w, this.x, this.y, this.z]);
+    pm = new ZArray(4, 1, [this.w, this.x, this.y, this.z]);
     return rprod.dot(pm);
   }
 
@@ -321,7 +318,7 @@ function euler321(euler) {
   let theta = euler[1];
   let psi = euler[2];
 
-  let C = new Zarray(3, 3);
+  let C = new ZArray(3, 3);
   /* 1st row */
   C.data[0] = cos(psi) * cos(theta);
   C.data[1] = cos(psi) * sin(theta) * sin(phi) - sin(psi) * cos(phi);
@@ -411,15 +408,15 @@ class TF {
 
   inv() {
     let T_inv = new TF();
-    let C = new Zarray(3, 3, this.C.data);
-    let r = new Zarray(3, 1, this.r.data);
+    let C = new ZArray(3, 3, this.C.data);
+    let r = new ZArray(3, 1, this.r.data);
     T_inv.C = C_inv = C.transpose();
     T_inv.r = C_inv.scale(-1).dot(r)
   }
 
   tf_point(p) {
     T = data();
-    hp = new Zarray(4, 1, [p.data[0], p.data[1], p.data[2]]);
+    hp = new ZArray(4, 1, [p.data[0], p.data[1], p.data[2]]);
     return T.dot(hp);
   }
 
@@ -430,18 +427,31 @@ class TF {
 }
 
 /******************************************************************************
+ *                                 MAV
+ ******************************************************************************/
+
+function mav_new() {
+  return {
+    q_WB: new Quaternion(),
+    r_WB: new ZArray(3, 1),
+    v_WB: new ZArray(3, 1),
+    w_WB: new ZArray(3, 1)
+  };
+}
+
+/******************************************************************************
  *                              UNIT-TESTS
  ******************************************************************************/
 
 function test_zarray_new() {
-  let A = new Zarray(2, 2, [1, 2, 3, 4]);
+  let A = new ZArray(2, 2, [1, 2, 3, 4]);
   // console.log(A);
   console.assert(A.rows == 2);
   console.assert(A.cols == 2);
 }
 
 function test_zarray_set() {
-  let A = new Zarray(2, 2, [1, 2, 3, 4]);
+  let A = new ZArray(2, 2, [1, 2, 3, 4]);
   A.set(0, 0, 0.0);
   A.set(1, 1, 0.0);
 
@@ -452,7 +462,7 @@ function test_zarray_set() {
 }
 
 function test_zarray_val() {
-  let A = new Zarray(2, 2, [1, 2, 3, 4]);
+  let A = new ZArray(2, 2, [1, 2, 3, 4]);
   console.assert(A.val(0, 0) == 1.0);
   console.assert(A.val(0, 1) == 2.0);
   console.assert(A.val(1, 0) == 3.0);
@@ -460,7 +470,7 @@ function test_zarray_val() {
 }
 
 function test_zarray_block() {
-  let A = new Zarray(3, 3, [1, 2, 3,
+  let A = new ZArray(3, 3, [1, 2, 3,
                             4, 5, 6,
                             7, 8, 9]);
 
@@ -472,7 +482,7 @@ function test_zarray_block() {
 }
 
 function test_zarray_transpose() {
-  let A = new Zarray(2, 2, [1, 2, 3, 4]);
+  let A = new ZArray(2, 2, [1, 2, 3, 4]);
   A.transpose();
 
   console.assert(A.val(0, 0) == 1.0);
@@ -482,8 +492,8 @@ function test_zarray_transpose() {
 }
 
 function test_zarray_add() {
-  let A = new Zarray(2, 2, [1, 2, 3, 4]);
-  let B = new Zarray(2, 2, [1, 2, 3, 4]);
+  let A = new ZArray(2, 2, [1, 2, 3, 4]);
+  let B = new ZArray(2, 2, [1, 2, 3, 4]);
   A.add(B);
 
   console.assert(A.val(0, 0) == 2.0);
@@ -493,8 +503,8 @@ function test_zarray_add() {
 }
 
 function test_zarray_sub() {
-  let A = new Zarray(2, 2, [1, 2, 3, 4]);
-  let B = new Zarray(2, 2, [1, 2, 3, 4]);
+  let A = new ZArray(2, 2, [1, 2, 3, 4]);
+  let B = new ZArray(2, 2, [1, 2, 3, 4]);
   A.sub(B);
 
   console.assert(A.val(0, 0) == 0.0);
@@ -504,7 +514,7 @@ function test_zarray_sub() {
 }
 
 function test_zarray_scale() {
-  let A = new Zarray(2, 2, [1, 2, 3, 4]);
+  let A = new ZArray(2, 2, [1, 2, 3, 4]);
 
   A.scale(-1);
   console.assert(A.val(0, 0) == -1.0);
@@ -514,13 +524,13 @@ function test_zarray_scale() {
 }
 
 function test_zarray_dot() {
-  A = new Zarray(2, 2, [1,2,3,4]);
-  B = new Zarray(2, 2, [5,6,7,8]);
+  A = new ZArray(2, 2, [1,2,3,4]);
+  B = new ZArray(2, 2, [5,6,7,8]);
   // console.log(A.dot(B));
 }
 
 function test_zarray_print() {
-  A = new Zarray(2, 2, [1,2,3,4]);
+  A = new ZArray(2, 2, [1,2,3,4]);
   // A.print();
 }
 

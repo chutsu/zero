@@ -149,7 +149,7 @@ static keypoints_t **load_keypoints(const char *data_path, int *nb_frames) {
   return keypoints;
 }
 
-double **load_points(const char *data_path, int *nb_points) {
+static double **load_points(const char *data_path, int *nb_points) {
   char points_csv[1000] = {0};
   strcat(points_csv, data_path);
   strcat(points_csv, "/points.csv");
@@ -205,7 +205,7 @@ double **load_points(const char *data_path, int *nb_points) {
   return points;
 }
 
-int **load_point_ids(const char *data_path, int *nb_points) {
+static int **load_point_ids(const char *data_path, int *nb_points) {
   char csv_path[1000] = {0};
   strcat(csv_path, data_path);
   strcat(csv_path, "/point_ids.csv");
@@ -518,13 +518,13 @@ void ba_update(
   free(H_inv);
   free(g);
 
-  printf("H_rows: %d\n", E_cols);
-  printf("H_cols: %d\n", E_cols);
+  /* printf("H_rows: %d\n", E_cols); */
+  /* printf("H_cols: %d\n", E_cols); */
   /* for (int i = 0; i < E_cols; i++) { */
   /*   printf("%f\n", dx[i]); */
   /* } */
-  printf("nb_frames: %d\n", data->nb_frames);
-  printf("nb_points: %d\n", data->nb_points);
+  /* printf("nb_frames: %d\n", data->nb_frames); */
+  /* printf("nb_points: %d\n", data->nb_points); */
 
   /* Update camera poses */
   for (int k = 0; k < data->nb_frames; k++) {
