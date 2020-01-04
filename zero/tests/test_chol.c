@@ -39,6 +39,32 @@ int test_cholesky() {
   return 0;
 }
 
-void test_suite() { MU_ADD_TEST(test_cholesky); }
+int test_chol_lls_solve() {
+  /* clang-format off */
+  const int n = 3;
+  double A[9] = {
+    2.0, -1.0, 0.0,
+    -1.0, 2.0, -1.0,
+    0.0, -1.0, 1.0
+  };
+  double b[3] = {1.0, 0.0, 0.0};
+  double x[3] = {0.0, 0.0, 0.0};
+  /* clang-format on */
+
+  struct timespec t = tic();
+  chol_lls_solve(A, b, x, n);
+  printf("time taken: [%fs]\n", toc(&t));
+
+  MU_CHECK(fltcmp(x[0], 1.0) == 0);
+  MU_CHECK(fltcmp(x[1], 1.0) == 0);
+  MU_CHECK(fltcmp(x[2], 1.0) == 0);
+
+  return 0;
+}
+
+void test_suite() {
+  MU_ADD_TEST(test_cholesky);
+  MU_ADD_TEST(test_chol_lls_solve);
+}
 
 MU_RUN_TESTS(test_suite);

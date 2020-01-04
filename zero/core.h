@@ -123,12 +123,13 @@ void mat_block_set(double *A,
 void mat_diag_set(double *A, const int m, const int n, const double *d);
 void mat_diag_get(const double *A, const int m, const int n, double *d);
 void mat_transpose(const double *A, size_t m, size_t n, double *A_t);
-int mat_equals(const double *A, const double *B, const int m, const int n);
+int mat_equals(const double *A, const double *B, const int m, const size_t n);
 void mat_add(const double *A, const double *B, double *C, size_t m, size_t n);
 void mat_sub(const double *A, const double *B, double *C, size_t m, size_t n);
 void mat_scale(double *A, const size_t m, const size_t n, const double scale);
 
 double *vec_new(const size_t length);
+int vec_equals(const double *a, const double *b, const size_t length);
 void vec_add(const double *x, const double *y, double *z, size_t length);
 void vec_sub(const double *x, const double *y, double *z, size_t length);
 void vec_scale(double *x, const size_t length, const double scale);
@@ -142,16 +143,8 @@ void dot(const double *A,
          const size_t B_n,
          double *C);
 void skew(const double x[3], double A[3 * 3]);
-void fwdsubs(const double *L,
-             const size_t L_n,
-             const double *b,
-             const size_t b_length,
-             double *y);
-/* void bwdsubs(const double *U, */
-/*              const size_t U_n, */
-/*              const double *y, */
-/*              const size_t y_length, */
-/*              double *x); */
+void fwdsubs(const double *L, const double *b, double *y, const size_t n);
+void bwdsubs(const double *U, const double *y, double *x, const size_t n);
 
 /******************************************************************************
  *                              TRANSFORMS

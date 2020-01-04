@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "zero/core.h"
 
 double *cholesky(const double *A, const size_t n) {
   assert(A != NULL);
@@ -31,6 +32,44 @@ double *cholesky(const double *A, const size_t n) {
   }
 
   return L;
+}
+
+void chol_lls_solve(const double *A,
+                    const double *b,
+                    double *x,
+                    const size_t n) {
+  /* Allocate memory */
+  double *Lt = calloc(n * n, sizeof(double));
+  double *y = calloc(n, sizeof(double));
+
+  /* Cholesky decomposition */
+  double *L = cholesky(A, n);
+  mat_transpose(L, n, n, Lt);
+
+  /* Forward substitution */
+  /* Ax = b -> LLt x = b. */
+  /* Let y = Lt x, L y = b (Solve for y) */
+  for (int i = 0; i < (int) n; i++) {
+    double alpha = b[i];
+    for (int j = 0; j < i; j++) {
+      alpha -= L[i * n + j] * y[j];
+    }
+    y[i] = alpha / L[i * n + i];
+  }
+
+  /* Backward substitution */
+  /* Now we have y, we can go back to (Lt x = y) and solve for x */
+  for (int i = n - 1; i >= 0; i--) {
+    double alpha = y[i];
+    for (int j = i; j < (int) n; j++) {
+      alpha -= Lt[i * n + j] * x[j];
+    }
+    x[i] = alpha / Lt[i * n + i];
+  }
+
+  /* Clean up */
+  free(L);
+  free(Lt);
 }
 
 #endif /* CHOL_H */

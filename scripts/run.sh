@@ -41,7 +41,9 @@ make
 # ./build/bin/test_svd --target test_svdcomp
 # ./build/bin/test_svd --target test_pinv
 # ./build/bin/test_template
-./build/bin/test_chol
+# ./build/bin/test_chol
+# ./build/bin/test_chol --target test_cholesky
+./build/bin/test_chol --target test_chol_lls_solve
 
 # cd firmware
 # arduino --upload firmware6050.ino --port /dev/ttyUSB0
