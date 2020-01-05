@@ -534,6 +534,22 @@ void mat_diag_get(const double *A, const int m, const int n, double *d) {
   }
 }
 
+void mat_triu(double *A, const size_t n, double *U) {
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < n; j++) {
+      U[i * n + j] = (j >= i) ? A[i * n + j] : 0.0;
+    }
+  }
+}
+
+void mat_tril(double *A, const size_t n, double *L) {
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < n; j++) {
+      L[i * n + j] = (j <= i) ? A[i * n + j] : 0.0;
+    }
+  }
+}
+
 void mat_transpose(const double *A, size_t m, size_t n, double *A_t) {
   assert(A != NULL && A != A_t);
   assert(m > 0 && n > 0);

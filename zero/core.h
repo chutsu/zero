@@ -122,6 +122,8 @@ void mat_block_set(double *A,
                    const double *block);
 void mat_diag_set(double *A, const int m, const int n, const double *d);
 void mat_diag_get(const double *A, const int m, const int n, double *d);
+void mat_triu(double *A, const size_t n, double *U);
+void mat_tril(double *A, const size_t n, double *L);
 void mat_transpose(const double *A, size_t m, size_t n, double *A_t);
 int mat_equals(const double *A, const double *B, const int m, const size_t n);
 void mat_add(const double *A, const double *B, double *C, size_t m, size_t n);

@@ -6,6 +6,7 @@
 #include "zero/core.h"
 #include "zero/cv.h"
 #include "zero/svd.h"
+#include "zero/chol.h"
 
 static void load_camera(const char *data_path, double K[3 * 3]) {
   /* Setup csv path */
@@ -510,13 +511,24 @@ void ba_update(
   free(E_t);
 
   /* dx = pinv(H) * g; */
-  double *H_inv = mat_new(E_cols, E_cols);
-  double *dx = vec_new(E_cols);
-  pinv(H, E_cols, E_cols, H_inv);
-  dot(H_inv, E_cols, E_cols, g, E_cols, 1, dx);
-  free(H);
-  free(H_inv);
-  free(g);
+  /* double *H_inv = mat_new(E_cols, E_cols); */
+  /* double *dx = vec_new(E_cols); */
+  /* pinv(H, E_cols, E_cols, H_inv); */
+  /* dot(H_inv, E_cols, E_cols, g, E_cols, 1, dx); */
+  /* free(H); */
+  /* free(H_inv); */
+  /* free(g); */
+
+  /* #<{(| Use Cholesky on [H dx = g] to solve for dx |)}># */
+  /* double *dx = vec_new(E_cols); */
+  /* chol_lls_solve(H, g, dx, E_cols); */
+
+  /* int retval = LAPACKE_dptsv(LAPACK_ROW_MAJOR, E_cols, 1, H, dx, g, 1); */
+  /* if (retval != 0) { */
+  /*   printf("info: %d\n", retval); */
+  /*   printf("Failed!\n"); */
+  /* } */
+  /* exit(0); */
 
   /* printf("H_rows: %d\n", E_cols); */
   /* printf("H_cols: %d\n", E_cols); */
@@ -526,42 +538,42 @@ void ba_update(
   /* printf("nb_frames: %d\n", data->nb_frames); */
   /* printf("nb_points: %d\n", data->nb_points); */
 
-  /* Update camera poses */
-  for (int k = 0; k < data->nb_frames; k++) {
-    const int s = k * 6;
-
-    /* Update camera rotation */
-    /* dq = quatdelta(dalpha) */
-    /* q_WC_k = quatmul(dq, q_WC_k) */
-    const double dalpha[3] = {dx[s], dx[s + 1], dx[s + 2]};
-    double dq[4] = {0};
-    double q_new[4] = {0};
-    quatdelta(dalpha, dq);
-    quatmul(dq, data->cam_poses[k].q, q_new);
-    data->cam_poses[k].q[0] = q_new[0];
-    data->cam_poses[k].q[1] = q_new[1];
-    data->cam_poses[k].q[2] = q_new[2];
-    data->cam_poses[k].q[3] = q_new[3];
-
-    /* Update camera position */
-    /* r_WC_k += dr_WC */
-    const double dr_WC[3] = {dx[s + 3], dx[s + 4], dx[s + 5]};
-    data->cam_poses[k].r[0] += dr_WC[0];
-    data->cam_poses[k].r[1] += dr_WC[1];
-    data->cam_poses[k].r[2] += dr_WC[2];
-  }
-
-  /* Update points */
-  for (int i = 0; i < data->nb_points; i++) {
-    const int s = (data->nb_frames * 6) + (i * 3);
-    const double dp_W[3] = {dx[s], dx[s + 1], dx[s + 2]};
-    data->points[i][0] += dp_W[0];
-    data->points[i][1] += dp_W[1];
-    data->points[i][2] += dp_W[2];
-  }
-
-  /* Clean up */
-  free(dx);
+  /* #<{(| Update camera poses |)}># */
+  /* for (int k = 0; k < data->nb_frames; k++) { */
+  /*   const int s = k * 6; */
+  /*  */
+  /*   #<{(| Update camera rotation |)}># */
+  /*   #<{(| dq = quatdelta(dalpha) |)}># */
+  /*   #<{(| q_WC_k = quatmul(dq, q_WC_k) |)}># */
+  /*   const double dalpha[3] = {dx[s], dx[s + 1], dx[s + 2]}; */
+  /*   double dq[4] = {0}; */
+  /*   double q_new[4] = {0}; */
+  /*   quatdelta(dalpha, dq); */
+  /*   quatmul(dq, data->cam_poses[k].q, q_new); */
+  /*   data->cam_poses[k].q[0] = q_new[0]; */
+  /*   data->cam_poses[k].q[1] = q_new[1]; */
+  /*   data->cam_poses[k].q[2] = q_new[2]; */
+  /*   data->cam_poses[k].q[3] = q_new[3]; */
+  /*  */
+  /*   #<{(| Update camera position |)}># */
+  /*   #<{(| r_WC_k += dr_WC |)}># */
+  /*   const double dr_WC[3] = {dx[s + 3], dx[s + 4], dx[s + 5]}; */
+  /*   data->cam_poses[k].r[0] += dr_WC[0]; */
+  /*   data->cam_poses[k].r[1] += dr_WC[1]; */
+  /*   data->cam_poses[k].r[2] += dr_WC[2]; */
+  /* } */
+  /*  */
+  /* #<{(| Update points |)}># */
+  /* for (int i = 0; i < data->nb_points; i++) { */
+  /*   const int s = (data->nb_frames * 6) + (i * 3); */
+  /*   const double dp_W[3] = {dx[s], dx[s + 1], dx[s + 2]}; */
+  /*   data->points[i][0] += dp_W[0]; */
+  /*   data->points[i][1] += dp_W[1]; */
+  /*   data->points[i][2] += dp_W[2]; */
+  /* } */
+  /*  */
+  /* #<{(| Clean up |)}># */
+  /* free(dx); */
 }
 
 double ba_cost(const double *e, const int length) {
@@ -572,7 +584,7 @@ double ba_cost(const double *e, const int length) {
 }
 
 void ba_solve(ba_data_t *data) {
-  int max_iter = 20;
+  int max_iter = 2;
   double cost_prev = 0.0;
 
   for (int iter = 0; iter < max_iter; iter++) {

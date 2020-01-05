@@ -113,6 +113,34 @@ int test_mat_block_set() {
   return 0;
 }
 
+int test_mat_triu() {
+  /* clang-format off */
+  double A[16] = {1.0, 2.0, 3.0, 4.0,
+                  5.0, 6.0, 7.0, 8.0,
+                  9.0, 10.0, 11.0, 12.0,
+                  13.0, 14.0, 15.0, 16.0};
+  double U[16] = {0};
+  /* clang-format on */
+  mat_triu(A, 4, U);
+  print_matrix("U", U, 4, 4);
+
+  return 0;
+}
+
+int test_mat_tril() {
+  /* clang-format off */
+  double A[16] = {1.0, 2.0, 3.0, 4.0,
+                  5.0, 6.0, 7.0, 8.0,
+                  9.0, 10.0, 11.0, 12.0,
+                  13.0, 14.0, 15.0, 16.0};
+  double L[16] = {0};
+  /* clang-format on */
+  mat_tril(A, 4, L);
+  print_matrix("L", L, 4, 4);
+
+  return 0;
+}
+
 int test_mat_transpose() {
   double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
   double C[9] = {0.0};
@@ -529,6 +557,8 @@ void test_suite() {
   MU_ADD_TEST(test_mat_val);
   MU_ADD_TEST(test_mat_block_get);
   MU_ADD_TEST(test_mat_block_set);
+  MU_ADD_TEST(test_mat_triu);
+  MU_ADD_TEST(test_mat_tril);
   MU_ADD_TEST(test_mat_transpose);
   MU_ADD_TEST(test_mat_add);
   MU_ADD_TEST(test_mat_sub);

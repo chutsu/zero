@@ -14,6 +14,8 @@ make
 # ./build/bin/test_core --target test_mat_val
 # ./build/bin/test_core --target test_mat_block_get
 # ./build/bin/test_core --target test_mat_block_set
+# ./build/bin/test_core --target test_mat_triu
+# ./build/bin/test_core --target test_mat_tril
 # ./build/bin/test_core --target test_mat_transpose
 # ./build/bin/test_core --target test_mat_add
 # ./build/bin/test_core --target test_mat_sub
@@ -43,7 +45,8 @@ make
 # ./build/bin/test_template
 # ./build/bin/test_chol
 # ./build/bin/test_chol --target test_cholesky
-./build/bin/test_chol --target test_chol_lls_solve
+# ./build/bin/test_chol --target test_chol_lls_solve
+# ./build/bin/test_chol --target test_chol_lls_solve2
 
 # cd firmware
 # arduino --upload firmware6050.ino --port /dev/ttyUSB0
