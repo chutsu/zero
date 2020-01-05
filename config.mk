@@ -16,8 +16,10 @@ CC=gcc \
 	-D_POSIX_C_SOURCE=199309L
 CFLAGS=-I$(INC_DIR)
 LIBS=-L$(BLD_DIR) \
-	$(PWD)/deps/OpenBLAS/build/lib/libopenblas.a \
 	-lzero \
+	-lblas \
+	-llapack \
+	-llapacke \
 	-lpthread \
 	-lgfortran \
 	-lm

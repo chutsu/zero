@@ -534,7 +534,7 @@ void mat_diag_get(const double *A, const int m, const int n, double *d) {
   }
 }
 
-void mat_triu(double *A, const size_t n, double *U) {
+void mat_triu(const double *A, const size_t n, double *U) {
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < n; j++) {
       U[i * n + j] = (j >= i) ? A[i * n + j] : 0.0;
@@ -542,7 +542,7 @@ void mat_triu(double *A, const size_t n, double *U) {
   }
 }
 
-void mat_tril(double *A, const size_t n, double *L) {
+void mat_tril(const double *A, const size_t n, double *L) {
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < n; j++) {
       L[i * n + j] = (j <= i) ? A[i * n + j] : 0.0;
@@ -606,9 +606,15 @@ void mat_scale(double *A, const size_t m, const size_t n, const double scale) {
 
 double *vec_new(const size_t length) { return calloc(length, sizeof(double)); }
 
-int vec_equals(const double *a, const double *b, const size_t length) {
+void vec_copy(const double *src, const size_t length, double *dest) {
   for (size_t i = 0; i < length; i++) {
-    if (fltcmp(a[i], b[i]) != 0) {
+    dest[i] = src[i];
+  }
+}
+
+int vec_equals(const double *x, const double *y, const size_t length) {
+  for (size_t i = 0; i < length; i++) {
+    if (fltcmp(x[i], y[i]) != 0) {
       return -1;
     }
   }

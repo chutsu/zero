@@ -122,8 +122,8 @@ void mat_block_set(double *A,
                    const double *block);
 void mat_diag_set(double *A, const int m, const int n, const double *d);
 void mat_diag_get(const double *A, const int m, const int n, double *d);
-void mat_triu(double *A, const size_t n, double *U);
-void mat_tril(double *A, const size_t n, double *L);
+void mat_triu(const double *A, const size_t n, double *U);
+void mat_tril(const double *A, const size_t n, double *L);
 void mat_transpose(const double *A, size_t m, size_t n, double *A_t);
 int mat_equals(const double *A, const double *B, const int m, const size_t n);
 void mat_add(const double *A, const double *B, double *C, size_t m, size_t n);
@@ -131,7 +131,8 @@ void mat_sub(const double *A, const double *B, double *C, size_t m, size_t n);
 void mat_scale(double *A, const size_t m, const size_t n, const double scale);
 
 double *vec_new(const size_t length);
-int vec_equals(const double *a, const double *b, const size_t length);
+void vec_copy(const double *src, const size_t length, double *dest);
+int vec_equals(const double *x, const double *y, const size_t length);
 void vec_add(const double *x, const double *y, double *z, size_t length);
 void vec_sub(const double *x, const double *y, double *z, size_t length);
 void vec_scale(double *x, const size_t length, const double scale);

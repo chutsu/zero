@@ -510,7 +510,7 @@ void ba_update(
   dot(E_t, E_cols, E_rows, e, e_size, 1, g);
   free(E_t);
 
-  /* dx = pinv(H) * g; */
+  /* #<{(| dx = pinv(H) * g; |)}># */
   /* double *H_inv = mat_new(E_cols, E_cols); */
   /* double *dx = vec_new(E_cols); */
   /* pinv(H, E_cols, E_cols, H_inv); */
@@ -519,24 +519,16 @@ void ba_update(
   /* free(H_inv); */
   /* free(g); */
 
-  /* #<{(| Use Cholesky on [H dx = g] to solve for dx |)}># */
-  /* double *dx = vec_new(E_cols); */
-  /* chol_lls_solve(H, g, dx, E_cols); */
-
-  /* int retval = LAPACKE_dptsv(LAPACK_ROW_MAJOR, E_cols, 1, H, dx, g, 1); */
-  /* if (retval != 0) { */
-  /*   printf("info: %d\n", retval); */
-  /*   printf("Failed!\n"); */
-  /* } */
-  /* exit(0); */
-
-  /* printf("H_rows: %d\n", E_cols); */
-  /* printf("H_cols: %d\n", E_cols); */
-  /* for (int i = 0; i < E_cols; i++) { */
-  /*   printf("%f\n", dx[i]); */
-  /* } */
-  /* printf("nb_frames: %d\n", data->nb_frames); */
-  /* printf("nb_points: %d\n", data->nb_points); */
+  /* Use Cholesky on [H dx = g] to solve for dx */
+  double *dx = vec_new(E_cols);
+  /* print_matrix("H", H, E_cols, E_cols); */
+  /* print_matrix("g", g, E_cols, 1); */
+  mat_save("/tmp/E.csv", E, E_rows, E_cols);
+  mat_save("/tmp/H.csv", H, E_cols, E_cols);
+  mat_save("/tmp/g.csv", g, E_cols, 1);
+  /* chol_lls_solve2(H, g, dx, E_cols); */
+  free(H);
+  free(g);
 
   /* #<{(| Update camera poses |)}># */
   /* for (int k = 0; k < data->nb_frames; k++) { */
@@ -571,9 +563,9 @@ void ba_update(
   /*   data->points[i][1] += dp_W[1]; */
   /*   data->points[i][2] += dp_W[2]; */
   /* } */
-  /*  */
-  /* #<{(| Clean up |)}># */
-  /* free(dx); */
+
+  /* Clean up */
+  free(dx);
 }
 
 double ba_cost(const double *e, const int length) {

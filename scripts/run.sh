@@ -35,7 +35,7 @@ make
 # ./build/bin/test_ba
 # ./build/bin/test_ba --target test_ba_residuals
 # ./build/bin/test_ba --target test_ba_jacobians
-# ./build/bin/test_ba --target test_ba_update
+./build/bin/test_ba --target test_ba_update
 # ./build/bin/test_ba --target test_ba_cost
 # ./build/bin/test_ba --target test_ba_solve
 # ./build/bin/test_svd
