@@ -312,6 +312,20 @@ int fltcmp(const double x, const double y) {
   return -1;
 }
 
+double pythag(const double a, const double b) {
+  double at = fabs(a), bt = fabs(b), ct, result;
+
+  if (at > bt) {
+    ct = bt / at;
+    result = at * sqrt(1.0 + ct * ct);
+  } else if (bt > 0.0) {
+    ct = at / bt;
+    result = bt * sqrt(1.0 + ct * ct);
+  } else
+    result = 0.0;
+  return (result);
+}
+
 double lerpd(const double a, const double b, const double t) {
   return a * (1.0 - t) + b * t;
 }
@@ -502,6 +516,21 @@ void mat_block_set(double *A,
   }
 }
 
+void mat_diag_get(const double *A, const int m, const int n, double *d) {
+  int mat_index = 0;
+  int vec_index = 0;
+
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < n; j++) {
+      if (i == j) {
+        d[vec_index] = A[mat_index];
+        vec_index++;
+      }
+      mat_index++;
+    }
+  }
+}
+
 void mat_diag_set(double *A, const int m, const int n, const double *d) {
   int mat_index = 0;
   int vec_index = 0;
@@ -513,21 +542,6 @@ void mat_diag_set(double *A, const int m, const int n, const double *d) {
         vec_index++;
       } else {
         A[mat_index] = 0.0;
-      }
-      mat_index++;
-    }
-  }
-}
-
-void mat_diag_get(const double *A, const int m, const int n, double *d) {
-  int mat_index = 0;
-  int vec_index = 0;
-
-  for (int i = 0; i < m; i++) {
-    for (int j = 0; j < n; j++) {
-      if (i == j) {
-        d[vec_index] = A[mat_index];
-        vec_index++;
       }
       mat_index++;
     }
@@ -548,6 +562,16 @@ void mat_tril(const double *A, const size_t n, double *L) {
       L[i * n + j] = (j <= i) ? A[i * n + j] : 0.0;
     }
   }
+}
+
+double mat_trace(const double *A, const size_t m, const size_t n) {
+  double tr = 0.0;
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < n; j++) {
+      tr += (i == j) ? A[i * n + j] : 0.0;
+    }
+  }
+  return tr;
 }
 
 void mat_transpose(const double *A, size_t m, size_t n, double *A_t) {
@@ -711,7 +735,501 @@ void bwdsubs(const double *U, const double *y, double *x, const size_t n) {
 }
 
 /******************************************************************************
- *                              TRANSFORMS
+ *                                  SVD
+ ******************************************************************************/
+
+int svd(double *A, int m, int n, double *U, double *s, double *V_t) {
+  const int lda = n;
+  const int ldu = m;
+  const int ldvt = n;
+  const char jobu = 'A';
+  const char jobvt = 'A';
+  const int superb_size = (m < n) ? m : n;
+  double *superb = malloc(sizeof(double) * (superb_size - 1));
+  int retval = LAPACKE_dgesvd(LAPACK_ROW_MAJOR,
+                              jobu,
+                              jobvt,
+                              m,
+                              n,
+                              A,
+                              lda,
+                              s,
+                              U,
+                              ldu,
+                              V_t,
+                              ldvt,
+                              superb);
+  if (retval > 0) {
+    return -1;
+  }
+
+  /* Clean up */
+  free(superb);
+
+  return 0;
+}
+
+/**
+ * svdcomp - SVD decomposition routine.
+ * Takes an mxn matrix a and decomposes it into udv, where u,v are
+ * left and right orthogonal transformation matrices, and d is a
+ * diagonal matrix of singular values.
+ *
+ * This routine is adapted from svdecomp.c in XLISP-STAT 2.1 which is
+ * code from Numerical Recipes adapted by Luke Tierney and David Betz.
+ *
+ * Input to dsvd is as follows:
+ *   A = mxn matrix to be decomposed, gets overwritten with U
+ *   m = row dimension of a
+ *   n = column dimension of a
+ *   w = returns the vector of singular values of a
+ *   V = returns the right orthogonal transformation matrix
+ */
+int svdcomp(double *A, int m, int n, double *w, double *V) {
+  assert(m < n);
+  int flag, i, its, j, jj, k, l, nm;
+  double c, f, h, s, x, y, z;
+  double anorm = 0.0, g = 0.0, scale = 0.0;
+
+  /* Householder reduction to bidiagonal form */
+  double *rv1 = malloc(sizeof(double) * n);
+  for (i = 0; i < n; i++) {
+    /* left-hand reduction */
+    l = i + 1;
+    rv1[i] = scale * g;
+    g = s = scale = 0.0;
+    if (i < m) {
+      for (k = i; k < m; k++)
+        scale += fabs(A[k * n + i]);
+      if (scale) {
+        for (k = i; k < m; k++) {
+          A[k * n + i] = (A[k * n + i] / scale);
+          s += (A[k * n + i] * A[k * n + i]);
+        }
+        f = A[i * n + i];
+        g = -SIGN(sqrt(s), f);
+        h = f * g - s;
+        A[i * n + i] = (f - g);
+        if (i != n - 1) {
+          for (j = l; j < n; j++) {
+            for (s = 0.0, k = i; k < m; k++)
+              s += (A[k * n + i] * A[k * n + j]);
+            f = s / h;
+            for (k = i; k < m; k++)
+              A[k * n + j] += (f * A[k * n + i]);
+          }
+        }
+        for (k = i; k < m; k++)
+          A[k * n + i] = (A[k * n + i] * scale);
+      }
+    }
+    w[i] = (scale * g);
+
+    /* right-hand reduction */
+    g = s = scale = 0.0;
+    if (i < m && i != n - 1) {
+      for (k = l; k < n; k++)
+        scale += fabs(A[i * n + k]);
+      if (scale) {
+        for (k = l; k < n; k++) {
+          A[i * n + k] = (A[i * n + k] / scale);
+          s += (A[i * n + k] * A[i * n + k]);
+        }
+        f = A[i * n + l];
+        g = -SIGN(sqrt(s), f);
+        h = f * g - s;
+        A[i * n + l] = (f - g);
+        for (k = l; k < n; k++)
+          rv1[k] = A[i * n + k] / h;
+        if (i != m - 1) {
+          for (j = l; j < m; j++) {
+            for (s = 0.0, k = l; k < n; k++)
+              s += (A[j * n + k] * A[i * n + k]);
+            for (k = l; k < n; k++)
+              A[j * n + k] += (s * rv1[k]);
+          }
+        }
+        for (k = l; k < n; k++)
+          A[i * n + k] = (A[i * n + k] * scale);
+      }
+    }
+    anorm = MAX(anorm, (fabs(w[i]) + fabs(rv1[i])));
+  }
+
+  /* accumulate the right-hand transformation */
+  for (i = n - 1; i >= 0; i--) {
+    if (i < n - 1) {
+      if (g) {
+        for (j = l; j < n; j++)
+          V[j * n + i] = ((A[i * n + j] / A[i * n + l]) / g);
+        /* double division to avoid underflow */
+        for (j = l; j < n; j++) {
+          for (s = 0.0, k = l; k < n; k++)
+            s += (A[i * n + k] * V[k * n + j]);
+          for (k = l; k < n; k++)
+            V[k * n + j] += (s * V[k * n + i]);
+        }
+      }
+      for (j = l; j < n; j++)
+        V[i * n + j] = V[j * n + i] = 0.0;
+    }
+    V[i * n + i] = 1.0;
+    g = rv1[i];
+    l = i;
+  }
+
+  /* accumulate the left-hand transformation */
+  for (i = n - 1; i >= 0; i--) {
+    l = i + 1;
+    g = w[i];
+    if (i < n - 1)
+      for (j = l; j < n; j++)
+        A[i * n + j] = 0.0;
+    if (g) {
+      g = 1.0 / g;
+      if (i != n - 1) {
+        for (j = l; j < n; j++) {
+          for (s = 0.0, k = l; k < m; k++)
+            s += (A[k * n + i] * A[k * n + j]);
+          f = (s / A[i * n + i]) * g;
+          for (k = i; k < m; k++)
+            A[k * n + j] += (f * A[k * n + i]);
+        }
+      }
+      for (j = i; j < m; j++)
+        A[j * n + i] = (A[j * n + i] * g);
+    } else {
+      for (j = i; j < m; j++)
+        A[j * n + i] = 0.0;
+    }
+    ++A[i * n + i];
+  }
+
+  /* diagonalize the bidiagonal form */
+  for (k = n - 1; k >= 0; k--) {     /* loop over singular values */
+    for (its = 0; its < 30; its++) { /* loop over allowed iterations */
+      flag = 1;
+      for (l = k; l >= 0; l--) { /* test for splitting */
+        nm = l - 1;
+        if (fabs(rv1[l]) + anorm == anorm) {
+          flag = 0;
+          break;
+        }
+        if (fabs(w[nm]) + anorm == anorm)
+          break;
+      }
+      if (flag) {
+        c = 0.0;
+        s = 1.0;
+        for (i = l; i <= k; i++) {
+          f = s * rv1[i];
+          if (fabs(f) + anorm != anorm) {
+            g = w[i];
+            h = pythag(f, g);
+            w[i] = h;
+            h = 1.0 / h;
+            c = g * h;
+            s = (-f * h);
+            for (j = 0; j < m; j++) {
+              y = A[j * n + nm];
+              z = A[j * n + i];
+              A[j * n + nm] = y * c + z * s;
+              A[j * n + i] = z * c - y * s;
+            }
+          }
+        }
+      }
+      z = w[k];
+      if (l == k) {    /* convergence */
+        if (z < 0.0) { /* make singular value nonnegative */
+          w[k] = (-z);
+          for (j = 0; j < n; j++)
+            V[j * n + k] = (-V[j * n + k]);
+        }
+        break;
+      }
+      if (its >= 30) {
+        free((void *) rv1);
+        fprintf(stderr, "No convergence after 30,000! iterations \n");
+        return (0);
+      }
+
+      /* shift from bottom 2 x 2 minor */
+      x = w[l];
+      nm = k - 1;
+      y = w[nm];
+      g = rv1[nm];
+      h = rv1[k];
+      f = ((y - z) * (y + z) + (g - h) * (g + h)) / (2.0 * h * y);
+      g = pythag(f, 1.0);
+      f = ((x - z) * (x + z) + h * ((y / (f + SIGN(g, f))) - h)) / x;
+
+      /* next QR transformation */
+      c = s = 1.0;
+      for (j = l; j <= nm; j++) {
+        i = j + 1;
+        g = rv1[i];
+        y = w[i];
+        h = s * g;
+        g = c * g;
+        z = pythag(f, h);
+        rv1[j] = z;
+        c = f / z;
+        s = h / z;
+        f = x * c + g * s;
+        g = g * c - x * s;
+        h = y * s;
+        y = y * c;
+        for (jj = 0; jj < n; jj++) {
+          x = V[(jj * n) + j];
+          z = V[(jj * n) + i];
+          V[jj * n + j] = x * c + z * s;
+          V[jj * n + i] = z * c - x * s;
+        }
+        z = pythag(f, h);
+        w[j] = z;
+        if (z) {
+          z = 1.0 / z;
+          c = f * z;
+          s = h * z;
+        }
+        f = (c * g) + (s * y);
+        x = (c * y) - (s * g);
+        for (jj = 0; jj < m; jj++) {
+          y = A[jj * n + j];
+          z = A[jj * n + i];
+          A[jj * n + j] = (y * c + z * s);
+          A[jj * n + i] = (z * c - y * s);
+        }
+      }
+      rv1[l] = 0.0;
+      rv1[k] = f;
+      w[k] = x;
+    }
+  }
+
+  free(rv1);
+  return 0;
+}
+
+int pinv(double *A, const int m, const int n, double *A_inv) {
+  /* Decompose A with SVD */
+  double *U = malloc(sizeof(double) * m * n);
+  double *d = malloc(sizeof(double) * n);
+  double *V_t = malloc(sizeof(double) * n * n);
+  if (svd(A, m, n, U, d, V_t) != 0) {
+    return -1;
+  }
+
+  /* Form reciprocal singular matrix S_inv from singular vector d */
+  double *S_inv = malloc(sizeof(double) * n * n);
+  zeros(S_inv, n, n);
+  int mat_index = 0;
+  int vec_index = 0;
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      if (i == j) {
+        S_inv[mat_index] = 1.0 / d[vec_index];
+        vec_index++;
+      }
+      mat_index++;
+    }
+  }
+
+  /* pinv(H) = V S^-1 U' */
+  double *V = malloc(sizeof(double) * n * n);
+  mat_transpose(V_t, n, n, V);
+
+  double *U_t = malloc(sizeof(double) * n * n);
+  mat_transpose(U, n, n, U_t);
+
+  double *VSi = malloc(sizeof(double) * n * n);
+  dot(V, n, n, S_inv, n, n, VSi);
+  dot(VSi, n, n, U_t, n, n, A_inv);
+
+  /* Clean up */
+  free(U);
+  free(U_t);
+  free(d);
+  free(S_inv);
+  free(V);
+  free(V_t);
+  free(VSi);
+
+  return 0;
+}
+
+/******************************************************************************
+ *                                  CHOL
+ ******************************************************************************/
+
+double *cholesky(const double *A, const size_t n) {
+  assert(A != NULL);
+  assert(n > 0);
+  double *L = calloc(n * n, sizeof(double));
+
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < (i + 1); j++) {
+
+      if (i == j) {
+        double s = 0.0;
+        for (size_t k = 0; k < j; k++) {
+          s += L[j * n + k] * L[j * n + k];
+        }
+        L[i * n + j] = sqrt(A[i * n + i] - s);
+
+      } else {
+        double s = 0.0;
+        for (size_t k = 0; k < j; k++) {
+          s += L[i * n + k] * L[j * n + k];
+        }
+        L[i * n + j] = (1.0 / L[j * n + j] * (A[i * n + j] - s));
+      }
+    }
+  }
+
+  return L;
+}
+
+void chol_lls_solve(const double *A,
+                    const double *b,
+                    double *x,
+                    const size_t n) {
+  /* Allocate memory */
+  double *Lt = calloc(n * n, sizeof(double));
+  double *y = calloc(n, sizeof(double));
+
+  /* Cholesky decomposition */
+  double *L = cholesky(A, n);
+  mat_transpose(L, n, n, Lt);
+
+  /* Forward substitution */
+  /* Ax = b -> LLt x = b. */
+  /* Let y = Lt x, L y = b (Solve for y) */
+  for (int i = 0; i < (int) n; i++) {
+    double alpha = b[i];
+
+    if (fltcmp(L[i * n + i], 0.0) == 0) {
+      y[i] = 0.0;
+
+    } else {
+      for (int j = 0; j < i; j++) {
+        alpha -= L[i * n + j] * y[j];
+      }
+      y[i] = alpha / L[i * n + i];
+    }
+  }
+
+  /* Backward substitution */
+  /* Now we have y, we can go back to (Lt x = y) and solve for x */
+  for (int i = n - 1; i >= 0; i--) {
+    double alpha = y[i];
+
+    if (fltcmp(Lt[i * n + i], 0.0) == 0) {
+      x[i] = 0.0;
+
+    } else {
+      for (int j = i; j < (int) n; j++) {
+        alpha -= Lt[i * n + j] * x[j];
+      }
+      x[i] = alpha / Lt[i * n + i];
+    }
+  }
+
+  /* Clean up */
+  free(L);
+  free(Lt);
+}
+
+void chol_lls_solve2(const double *A,
+                     const double *b,
+                     double *x,
+                     const size_t n) {
+  /* Cholesky Decomposition */
+  const char uplo = 'U';
+  double *a = mat_new(n, n);
+  mat_triu(A, n, a);
+
+  int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, uplo, n, a, n);
+  if (retval != 0) {
+    fprintf(stderr, "Failed to decompose A using Cholesky Decomposition!\n");
+  }
+
+  /* Solve Ax = b using Cholesky decomposed A from above */
+  vec_copy(b, n, x);
+  retval = LAPACKE_dpotrs(LAPACK_ROW_MAJOR, uplo, n, n, a, n, x, n);
+  if (retval != 0) {
+    fprintf(stderr, "Failed to solve Ax = b!\n");
+  }
+
+  free(a);
+}
+
+/******************************************************************************
+ *                               NEAREST SPD
+ ******************************************************************************/
+
+void nearest_spd(const double *A, const size_t n, double *A_hat) {
+  /* Symmetrize A into B */
+  /* B = (A + A') / 2.0 */
+  double *B = mat_new(n, n);
+  double *A_t = mat_new(n, n);
+  mat_transpose(A, n, n, A_t);
+  mat_add(A, A_t, B, n, n);
+  mat_scale(B, n, n, 0.5);
+
+  /* svd(B) */
+  double *U = mat_new(n, n);
+  double *s = vec_new(n);
+  double *V_t = mat_new(n, n);
+  svd(B, n, n, U, s, V_t);
+
+  /* H = V * S * V' */
+  double *S = mat_new(n, n);
+  double *V = mat_new(n, n);
+  double *VS = mat_new(n, n);
+  double *H = mat_new(n, n);
+  mat_transpose(V_t, n, n, V);
+  mat_diag_set(S, n, n, s);
+  dot(V, n, n, S, n, n, VS);
+  dot(VS, n, n, V_t, n, n, H);
+
+  /* Calculate A_hat */
+  /* A_hat = 0.5 * (B + H) */
+  mat_add(B, H, A_hat, n, n);
+  mat_scale(A_hat, n, n, 0.5);
+
+  /* Ensure symmetry */
+  double *A_hat_t = mat_new(n, n);
+  mat_transpose(A_hat, n, n, A_hat_t);
+  mat_add(A_hat, A_hat_t, A_hat, n, n);
+  mat_scale(A_hat, n, n, 0.5);
+
+  /* Cholesky Decomposition */
+  int retry_counter = 0;
+tweak : {
+  const char uplo = 'L';
+  double *a = mat_new(n, n);
+  mat_tril(A_hat, n, a);
+  int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, uplo, n, a, n);
+  if (retval != 0) {
+    retry_counter++;
+    double *I_ = mat_new(n, n);
+    eye(I_, n, n);
+    mat_scale(I_, n, n, 0.1);
+    mat_add(A_hat, I_, A_hat, n, n);
+
+    if (retry_counter == 10) {
+      fprintf(stderr, "Failed to tweak matrix!\n");
+      return;
+    }
+    goto tweak;
+  }
+}
+}
+
+/******************************************************************************
+ *                               TRANSFORMS
  ******************************************************************************/
 
 void tf_set_rot(double T[4 * 4], const double C[3 * 3]) {
@@ -1106,4 +1624,254 @@ pose_t *load_poses(const char *csv_path, int *nb_poses) {
   fclose(csv_file);
 
   return poses;
+}
+
+/*****************************************************************************
+ *                                  IMAGE
+ *****************************************************************************/
+
+void image_init(image_t *img, uint8_t *data, int width, int height) {
+  img->data = data;
+  img->width = width;
+  img->height = height;
+}
+
+/*****************************************************************************
+ *                                  PINHOLE
+ *****************************************************************************/
+
+void pinhole_K(const double fx,
+               const double fy,
+               const double cx,
+               const double cy,
+               double K[9]) {
+  K[0] = fx;
+  K[1] = 0.0;
+  K[2] = cx;
+  K[3] = 0.0;
+  K[4] = fy;
+  K[5] = cy;
+  K[6] = 0.0;
+  K[7] = 0.0;
+  K[8] = 1.0;
+}
+
+double pinhole_focal_length(const int image_width, const double fov) {
+  return ((image_width / 2.0) / tan(deg2rad(fov) / 2.0));
+}
+
+int pinhole_project(const double K[9], const double p[3], double x[2]) {
+  const double fx = K[0];
+  const double fy = K[4];
+  const double cx = K[2];
+  const double cy = K[5];
+
+  const double px = p[0] / p[2];
+  const double py = p[1] / p[2];
+
+  x[0] = px * fx + cx;
+  x[1] = py * fy + cy;
+
+  return 0;
+}
+
+void pinhole_calc_K(const double image_width,
+                    const double image_height,
+                    const double lens_hfov,
+                    const double lens_vfov,
+                    double K[9]) {
+  const double fx = pinhole_focal_length(image_width, lens_hfov);
+  const double fy = pinhole_focal_length(image_height, lens_vfov);
+  const double cx = image_width / 2.0;
+  const double cy = image_height / 2.0;
+  return pinhole_K(fx, fy, cx, cy, K);
+}
+
+/*****************************************************************************
+ *                                 RADTAN
+ *****************************************************************************/
+
+void radtan4_distort(const double k1,
+                     const double k2,
+                     const double p1,
+                     const double p2,
+                     const double p[2],
+                     double p_d[2]) {
+  /* Point */
+  const double x = p[0];
+  const double y = p[1];
+
+  /* Apply radial distortion */
+  const double x2 = x * x;
+  const double y2 = y * y;
+  const double r2 = x2 + y2;
+  const double r4 = r2 * r2;
+  const double radial_factor = 1.0 + (k1 * r2) + (k2 * r4);
+  const double x_dash = x * radial_factor;
+  const double y_dash = y * radial_factor;
+
+  /* Apply tangential distortion */
+  const double xy = x * y;
+  const double x_ddash = x_dash + (2.0 * p1 * xy + p2 * (r2 + 2.0 * x2));
+  const double y_ddash = y_dash + (p1 * (r2 + 2.0 * y2) + 2.0 * p2 * xy);
+
+  /* Distorted point */
+  p_d[0] = x_ddash;
+  p_d[1] = y_ddash;
+}
+
+void radtan4_point_jacobian(const double k1,
+                            const double k2,
+                            const double p1,
+                            const double p2,
+                            const double p[2],
+                            double J_point[2 * 2]) {
+  /* Point */
+  const double x = p[0];
+  const double y = p[1];
+
+  /* Apply radial distortion */
+  const double x2 = x * x;
+  const double y2 = y * y;
+  const double r2 = x2 + y2;
+  const double r4 = r2 * r2;
+
+  /* Point Jacobian is 2x2 */
+  /* clang-format off */
+  J_point[0] = k1 * r2 + k2 * r4 + 2 * p1 * y + 6 * p2 * x +
+                x * (2 * k1 * x + 4 * k2 * x * r2) + 1;
+  J_point[1] = 2 * p1 * x + 2 * p2 * y + y * (2 * k1 * x + 4 * k2 * x * r2);
+  J_point[2] = J_point[1];
+  J_point[3] = k1 * r2 + k2 * r4 + 6 * p1 * y + 2 * p2 * x +
+               y * (2 * k1 * y + 4 * k2 * y * r2) + 1;
+  /* clang-format on */
+}
+
+void radtan4_param_jacobian(const double k1,
+                            const double k2,
+                            const double p1,
+                            const double p2,
+                            const double p[2],
+                            double J_param[2 * 4]) {
+  UNUSED(k1);
+  UNUSED(k2);
+  UNUSED(p1);
+  UNUSED(p2);
+
+  /* Point */
+  const double x = p[0];
+  const double y = p[1];
+
+  /* Setup */
+  const double x2 = x * x;
+  const double y2 = y * y;
+  const double xy = x * y;
+  const double r2 = x2 + y2;
+  const double r4 = r2 * r2;
+
+  /* Param Jacobian is 2x4 */
+  J_param[0] = x * r2;
+  J_param[1] = x * r4;
+  J_param[2] = 2 * xy;
+  J_param[3] = 3 * x2 + y2;
+
+  J_param[4] = y * r2;
+  J_param[5] = y * r4;
+  J_param[6] = x2 + 3 * y2;
+  J_param[7] = 2 * xy;
+}
+
+/*****************************************************************************
+ *                                  EQUI
+ *****************************************************************************/
+
+void equi4_distort(const double k1,
+                   const double k2,
+                   const double k3,
+                   const double k4,
+                   const double p[2],
+                   double p_d[2]) {
+  const double x = p[0];
+  const double y = p[1];
+  const double r = sqrt(x * x + y * y);
+
+  const double th = atan(r);
+  const double th2 = th * th;
+  const double th4 = th2 * th2;
+  const double th6 = th4 * th2;
+  const double th8 = th4 * th4;
+  const double thd = th * (1.0 + k1 * th2 + k2 * th4 + k3 * th6 + k4 * th8);
+  const double s = thd / r;
+
+  const double x_dash = s * x;
+  const double y_dash = s * y;
+
+  p_d[0] = x_dash;
+  p_d[1] = y_dash;
+}
+
+void equi4_point_jacobian(const double k1,
+                          const double k2,
+                          const double k3,
+                          const double k4,
+                          const double p[2],
+                          double J_point[2 * 2]) {
+  const double x = p[0];
+  const double y = p[1];
+  const double r = sqrt(x * x + y * y);
+
+  const double th = atan(r);
+  const double th2 = th * th;
+  const double th4 = th2 * th2;
+  const double th6 = th4 * th2;
+  const double th8 = th4 * th4;
+  const double thd = th * (1.0 + k1 * th2 + k2 * th4 + k3 * th6 + k4 * th8);
+
+  const double th_r = 1.0 / (r * r + 1.0);
+  const double thd_th =
+      1.0 + 3.0 * k1 * th2 + 5.0 * k2 * th4 + 7.0 * k3 * th6 + 9.0 * k4 * th8;
+  const double s = thd / r;
+  const double s_r = thd_th * th_r / r - thd / (r * r);
+  const double r_x = 1.0 / r * x;
+  const double r_y = 1.0 / r * y;
+
+  /* Point Jacobian is 2x2 */
+  J_point[0] = s + x * s_r * r_x;
+  J_point[1] = x * s_r * r_y;
+  J_point[2] = y * s_r * r_x;
+  J_point[3] = s + y * s_r * r_y;
+}
+
+void equi4_param_jacobian(const double k1,
+                          const double k2,
+                          const double k3,
+                          const double k4,
+                          const double p[2],
+                          double J_param[2 * 4]) {
+  UNUSED(k1);
+  UNUSED(k2);
+  UNUSED(k3);
+  UNUSED(k4);
+
+  const double x = p[0];
+  const double y = p[1];
+  const double r = sqrt(x * x + y * y);
+
+  const double th = atan(r);
+  const double th2 = th * th;
+  const double th3 = th2 * th;
+  const double th5 = th3 * th2;
+  const double th7 = th5 * th2;
+  const double th9 = th7 * th2;
+
+  /* Param Jacobian is 2x4 */
+  J_param[0] = x * th3 / r;
+  J_param[1] = x * th5 / r;
+  J_param[2] = x * th7 / r;
+  J_param[3] = x * th9 / r;
+
+  J_param[4] = y * th3 / r;
+  J_param[5] = y * th5 / r;
+  J_param[6] = y * th7 / r;
+  J_param[7] = y * th9 / r;
 }

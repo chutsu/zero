@@ -13,6 +13,8 @@ flags = [
     '-Wno-long-long',
     '-Wno-variadic-macros',
     '-fexceptions',
+    '-D_DEFAULT_SOURCE',
+    '-D_POSIX_C_SOURCE=199309L',
     # '-DNDEBUG',
     # You 100% do NOT need -DUSE_CLANG_COMPLETER in your flags; only the YCM
     # source code needs it.

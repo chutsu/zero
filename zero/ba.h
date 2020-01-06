@@ -4,9 +4,6 @@
 #include <string.h>
 
 #include "zero/core.h"
-#include "zero/cv.h"
-#include "zero/svd.h"
-#include "zero/chol.h"
 
 static void load_camera(const char *data_path, double K[3 * 3]) {
   /* Setup csv path */
@@ -521,13 +518,16 @@ void ba_update(
 
   /* Use Cholesky on [H dx = g] to solve for dx */
   double *dx = vec_new(E_cols);
+  double *H_hat = mat_new(E_cols, E_cols);
   /* print_matrix("H", H, E_cols, E_cols); */
   /* print_matrix("g", g, E_cols, 1); */
   mat_save("/tmp/E.csv", E, E_rows, E_cols);
   mat_save("/tmp/H.csv", H, E_cols, E_cols);
   mat_save("/tmp/g.csv", g, E_cols, 1);
-  /* chol_lls_solve2(H, g, dx, E_cols); */
+  nearest_spd(H, E_cols, H_hat);
+  /* chol_lls_solve2(H_hat, g, dx, E_cols); */
   free(H);
+  free(H_hat);
   free(g);
 
   /* #<{(| Update camera poses |)}># */

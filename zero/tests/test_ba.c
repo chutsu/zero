@@ -1,7 +1,8 @@
 #include "zero/munit.h"
 #include "zero/ba.h"
 
-#define TEST_DATA "zero/tests/test_data/ba_data"
+/* #define TEST_DATA "zero/tests/test_data/ba_data" */
+#define TEST_DATA "/tmp/ba_data"
 
 int test_parse_keypoints_line() {
   keypoints_t *keypoints = parse_keypoints_line("4,1,2,3,4\n");
@@ -48,6 +49,9 @@ int test_ba_residuals() {
   for (int i = 0; i < r_size; i++) {
     MU_CHECK(r[i] < 0.01);
   }
+
+  const double cost = ba_cost(r, r_size);
+  printf("Cost: %f\n", cost);
 
   ba_data_free(data);
   free(r);

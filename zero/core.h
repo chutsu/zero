@@ -13,6 +13,8 @@ extern "C" {
 #include <time.h>
 #include <assert.h>
 
+#include <lapacke.h>
+
 /******************************************************************************
  *                                LOGGING
  ******************************************************************************/
@@ -78,6 +80,7 @@ float toc(struct timespec *tic);
 double deg2rad(const double d);
 double rad2deg(const double r);
 int fltcmp(const double x, const double y);
+double pythag(const double a, const double b);
 double lerpd(const double a, const double b, const double t);
 float lerpf(const float a, const float b, const float t);
 double sinc(const double x);
@@ -120,10 +123,11 @@ void mat_block_set(double *A,
                    const size_t re,
                    const size_t ce,
                    const double *block);
-void mat_diag_set(double *A, const int m, const int n, const double *d);
 void mat_diag_get(const double *A, const int m, const int n, double *d);
+void mat_diag_set(double *A, const int m, const int n, const double *d);
 void mat_triu(const double *A, const size_t n, double *U);
 void mat_tril(const double *A, const size_t n, double *L);
+double mat_trace(const double *A, const size_t m, const size_t n);
 void mat_transpose(const double *A, size_t m, size_t n, double *A_t);
 int mat_equals(const double *A, const double *B, const int m, const size_t n);
 void mat_add(const double *A, const double *B, double *C, size_t m, size_t n);
@@ -150,7 +154,35 @@ void fwdsubs(const double *L, const double *b, double *y, const size_t n);
 void bwdsubs(const double *U, const double *y, double *x, const size_t n);
 
 /******************************************************************************
- *                              TRANSFORMS
+ *                                   SVD
+ ******************************************************************************/
+
+int svd(double *A, int m, int n, double *U, double *s, double *V_t);
+int svdcomp(double *A, int m, int n, double *w, double *V);
+int pinv(double *A, const int m, const int n, double *A_inv);
+
+/******************************************************************************
+ *                                  CHOL
+ ******************************************************************************/
+
+double *cholesky(const double *A, const size_t n);
+void chol_lls_solve(const double *A,
+                    const double *b,
+                    double *x,
+                    const size_t n);
+void chol_lls_solve2(const double *A,
+                     const double *b,
+                     double *x,
+                     const size_t n);
+
+/******************************************************************************
+ *                               NEAREST SPD
+ ******************************************************************************/
+
+void nearest_spd(const double *A, const size_t n, double *A_hat);
+
+/******************************************************************************
+ *                                TRANSFORMS
  ******************************************************************************/
 
 void tf_set_rot(double T[4 * 4], const double C[3 * 3]);
@@ -184,6 +216,85 @@ void pose_set_trans(pose_t *pose, const double r[3]);
 void pose_print(const char *prefix, const pose_t *pose);
 void pose2tf(const pose_t *pose, double T[4 * 4]);
 pose_t *load_poses(const char *csv_path, int *nb_poses);
+
+/*****************************************************************************
+ *                                   IMAGE
+ *****************************************************************************/
+
+typedef struct image_t {
+  uint8_t *data;
+  int width;
+  int height;
+} image_t;
+
+void image_init(image_t *img, uint8_t *data, int width, int height);
+
+/*****************************************************************************
+ *                                  PINHOLE
+ *****************************************************************************/
+
+void pinhole_K(const double fx,
+               const double fy,
+               const double cx,
+               const double cy,
+               double K[3 * 3]);
+double pinhole_focal_length(const int image_width, const double fov);
+int pinhole_project(const double K[3 * 3], const double p[3], double x[2]);
+void pinhole_calc_K(const double image_width,
+                    const double image_height,
+                    const double lens_hfov,
+                    const double lens_vfov,
+                    double K[3 * 3]);
+
+/*****************************************************************************
+ *                                 RADTAN
+ *****************************************************************************/
+
+void radtan4_distort(const double k1,
+                     const double k2,
+                     const double p1,
+                     const double p2,
+                     const double p[2],
+                     double p_d[2]);
+
+void radtan4_point_jacobian(const double k1,
+                            const double k2,
+                            const double p1,
+                            const double p2,
+                            const double p[2],
+                            double J_point[2 * 2]);
+
+void radtan4_param_jacobian(const double k1,
+                            const double k2,
+                            const double p1,
+                            const double p2,
+                            const double p[2],
+                            double J_param[2 * 4]);
+
+/*****************************************************************************
+ *                                  EQUI
+ *****************************************************************************/
+
+void equi4_distort(const double k1,
+                   const double k2,
+                   const double k3,
+                   const double k4,
+                   const double p[2],
+                   double p_d[2]);
+
+void equi4_point_jacobian(const double k1,
+                          const double k2,
+                          const double k3,
+                          const double k4,
+                          const double p[2],
+                          double J_point[2 * 2]);
+
+void equi4_param_jacobian(const double k1,
+                          const double k2,
+                          const double k3,
+                          const double k4,
+                          const double p[2],
+                          double J_param[2 * 4]);
 
 #ifdef __cplusplus
 }
