@@ -405,8 +405,8 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
     double q_WC[4] = {0};
     double r_WC[3] = {0};
     pose2tf(&data->cam_poses[k], T_WC);
-    tf_quat(T_WC, q_WC);
-    tf_trans(T_WC, r_WC);
+    tf_quat_get(T_WC, q_WC);
+    tf_trans_get(T_WC, r_WC);
 
     /* Invert T_WC to T_CW */
     double T_CW[4 * 4] = {0};

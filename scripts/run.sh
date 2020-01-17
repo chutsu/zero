@@ -36,26 +36,24 @@ time make
 # ./build/bin/test_core --target test_tf_hpoint
 # ./build/bin/test_core --target test_quat2rot
 
+# ./build/bin/test_core --target test_svd
+# ./build/bin/test_core --target test_svdcomp
+# ./build/bin/test_core --target test_pinv
+
+# ./build/bin/test_core --target test_cholesky
+# ./build/bin/test_core --target test_chol_lls_solve
+# ./build/bin/test_core --target test_chol_lls_solve2
+
 # ./build/bin/test_ba
 # ./build/bin/test_ba --target test_ba_residuals
 # ./build/bin/test_ba --target test_ba_jacobians
-./build/bin/test_ba --target test_ba_update
+# ./build/bin/test_ba --target test_ba_update
 # ./build/bin/test_ba --target test_ba_cost
 # ./build/bin/test_ba --target test_ba_solve
-
-# ./build/bin/test_svd
-# ./build/bin/test_svd --target test_svd
-# ./build/bin/test_svd --target test_svdcomp
-# ./build/bin/test_svd --target test_pinv
-
-# ./build/bin/test_chol
-# ./build/bin/test_chol --target test_cholesky
-# ./build/bin/test_chol --target test_chol_lls_solve
-# ./build/bin/test_chol --target test_chol_lls_solve2
 
 # ./build/bin/test_template
 
 # cd firmware
-# arduino --upload firmware6050.ino --port /dev/ttyUSB0
+# arduino --upload firmware.ino --port /dev/ttyUSB0
 # make clean
 # make flash

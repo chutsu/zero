@@ -461,7 +461,6 @@ void mat_set(double *A,
              const double val) {
   assert(A != NULL);
   assert(stride != 0);
-
   A[(i * stride) + j] = val;
 }
 
@@ -856,18 +855,21 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
     anorm = MAX(anorm, (fabs(w[i]) + fabs(rv1[i])));
   }
 
-  /* accumulate the right-hand transformation */
+  /* Accumulate the right-hand transformation */
   for (i = n - 1; i >= 0; i--) {
     if (i < n - 1) {
       if (g) {
-        for (j = l; j < n; j++)
+        for (j = l; j < n; j++) {
           V[j * n + i] = ((A[i * n + j] / A[i * n + l]) / g);
+        }
         /* double division to avoid underflow */
         for (j = l; j < n; j++) {
-          for (s = 0.0, k = l; k < n; k++)
+          for (s = 0.0, k = l; k < n; k++) {
             s += (A[i * n + k] * V[k * n + j]);
-          for (k = l; k < n; k++)
+          }
+          for (k = l; k < n; k++) {
             V[k * n + j] += (s * V[k * n + i]);
+          }
         }
       }
       for (j = l; j < n; j++)
@@ -882,25 +884,32 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
   for (i = n - 1; i >= 0; i--) {
     l = i + 1;
     g = w[i];
-    if (i < n - 1)
-      for (j = l; j < n; j++)
+    if (i < n - 1) {
+      for (j = l; j < n; j++) {
         A[i * n + j] = 0.0;
+      }
+    }
     if (g) {
       g = 1.0 / g;
       if (i != n - 1) {
         for (j = l; j < n; j++) {
-          for (s = 0.0, k = l; k < m; k++)
+          for (s = 0.0, k = l; k < m; k++) {
             s += (A[k * n + i] * A[k * n + j]);
+          }
           f = (s / A[i * n + i]) * g;
-          for (k = i; k < m; k++)
+
+          for (k = i; k < m; k++) {
             A[k * n + j] += (f * A[k * n + i]);
+          }
         }
       }
-      for (j = i; j < m; j++)
+      for (j = i; j < m; j++) {
         A[j * n + i] = (A[j * n + i] * g);
+      }
     } else {
-      for (j = i; j < m; j++)
+      for (j = i; j < m; j++) {
         A[j * n + i] = 0.0;
+      }
     }
     ++A[i * n + i];
   }
@@ -954,7 +963,7 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
         return (0);
       }
 
-      /* shift from bottom 2 x 2 minor */
+      /* Shift from bottom 2 x 2 minor */
       x = w[l];
       nm = k - 1;
       y = w[nm];
@@ -1232,7 +1241,7 @@ tweak : {
  *                               TRANSFORMS
  ******************************************************************************/
 
-void tf_set_rot(double T[4 * 4], const double C[3 * 3]) {
+void tf_rot_set(double T[4 * 4], const double C[3 * 3]) {
   assert(T != NULL);
   assert(C != NULL);
   assert(T != C);
@@ -1248,7 +1257,7 @@ void tf_set_rot(double T[4 * 4], const double C[3 * 3]) {
   T[10] = C[8];
 }
 
-void tf_set_trans(double T[4 * 4], const double r[3]) {
+void tf_trans_set(double T[4 * 4], const double r[3]) {
   assert(T != NULL);
   assert(r != NULL);
   assert(T != r);
@@ -1258,7 +1267,7 @@ void tf_set_trans(double T[4 * 4], const double r[3]) {
   T[11] = r[2];
 }
 
-void tf_trans(const double T[4 * 4], double r[3]) {
+void tf_trans_get(const double T[4 * 4], double r[3]) {
   assert(T != NULL);
   assert(r != NULL);
   assert(T != r);
@@ -1268,7 +1277,7 @@ void tf_trans(const double T[4 * 4], double r[3]) {
   r[2] = T[11];
 }
 
-void tf_rot(const double T[4 * 4], double C[3 * 3]) {
+void tf_rot_get(const double T[4 * 4], double C[3 * 3]) {
   assert(T != NULL);
   assert(C != NULL);
   assert(T != C);
@@ -1284,13 +1293,13 @@ void tf_rot(const double T[4 * 4], double C[3 * 3]) {
   C[8] = T[10];
 }
 
-void tf_quat(const double T[4 * 4], double q[4]) {
+void tf_quat_get(const double T[4 * 4], double q[4]) {
   assert(T != NULL);
   assert(q != NULL);
   assert(T != q);
 
   double C[3 * 3] = {0};
-  tf_rot(T, C);
+  tf_rot_get(T, C);
   rot2quat(C, q);
 }
 
@@ -1302,21 +1311,21 @@ void tf_inv(const double T[4 * 4], double T_inv[4 * 4]) {
   /* Get original rotation and translation component */
   double C[3 * 3] = {0};
   double r[3] = {0};
-  tf_rot(T, C);
-  tf_trans(T, r);
+  tf_rot_get(T, C);
+  tf_trans_get(T, r);
 
   /* Invert rotation component */
   double C_inv[3 * 3] = {0};
   mat_transpose(C, 3, 3, C_inv);
 
   /* Set rotation component */
-  tf_set_rot(T_inv, C_inv);
+  tf_rot_set(T_inv, C_inv);
 
   /* Set translation component */
   double r_inv[3] = {0};
   mat_scale(C_inv, 3, 3, -1.0);
   dot(C_inv, 3, 3, r, 3, 1, r_inv);
-  tf_set_trans(T_inv, r_inv);
+  tf_trans_set(T_inv, r_inv);
 
   /* Make sure the last element is 1 */
   T_inv[15] = 1.0;
@@ -1573,8 +1582,8 @@ void pose2tf(const pose_t *pose, double T[4 * 4]) {
   quat2rot(pose->q, C);
 
   eye(T, 4, 4);
-  tf_set_rot(T, C);
-  tf_set_trans(T, pose->r);
+  tf_rot_set(T, C);
+  tf_trans_set(T, pose->r);
 }
 
 pose_t *load_poses(const char *csv_path, int *nb_poses) {
@@ -1660,14 +1669,14 @@ double pinhole_focal_length(const int image_width, const double fov) {
   return ((image_width / 2.0) / tan(deg2rad(fov) / 2.0));
 }
 
-int pinhole_project(const double K[9], const double p[3], double x[2]) {
+int pinhole_project(const double K[9], const double p_C[3], double x[2]) {
   const double fx = K[0];
   const double fy = K[4];
   const double cx = K[2];
   const double cy = K[5];
 
-  const double px = p[0] / p[2];
-  const double py = p[1] / p[2];
+  const double px = p_C[0] / p_C[2];
+  const double py = p_C[1] / p_C[2];
 
   x[0] = px * fx + cx;
   x[1] = py * fy + cy;
@@ -1739,7 +1748,7 @@ void radtan4_point_jacobian(const double k1,
   /* Point Jacobian is 2x2 */
   /* clang-format off */
   J_point[0] = k1 * r2 + k2 * r4 + 2 * p1 * y + 6 * p2 * x +
-                x * (2 * k1 * x + 4 * k2 * x * r2) + 1;
+               x * (2 * k1 * x + 4 * k2 * x * r2) + 1;
   J_point[1] = 2 * p1 * x + 2 * p2 * y + y * (2 * k1 * x + 4 * k2 * x * r2);
   J_point[2] = J_point[1];
   J_point[3] = k1 * r2 + k2 * r4 + 6 * p1 * y + 2 * p2 * x +

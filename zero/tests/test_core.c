@@ -489,14 +489,14 @@ int test_chol_lls_solve2() {
   return 0;
 }
 
-int test_tf_set_rot() {
+int test_tf_rot_set() {
   double C[9];
   for (int i = 0; i < 9; i++) {
     C[i] = 1.0;
   }
 
   double T[16] = {0.0};
-  tf_set_rot(T, C);
+  tf_rot_set(T, C);
   /* print_matrix("T", T, 4, 4); */
 
   MU_CHECK(fltcmp(T[0], 1.0) == 0);
@@ -522,11 +522,11 @@ int test_tf_set_rot() {
   return 0;
 }
 
-int test_tf_set_trans() {
+int test_tf_trans_set() {
   double r[3] = {1.0, 2.0, 3.0};
 
   double T[16] = {0.0};
-  tf_set_trans(T, r);
+  tf_trans_set(T, r);
   /* print_matrix("T", T, 4, 4); */
 
   MU_CHECK(fltcmp(T[0], 0.0) == 0);
@@ -552,7 +552,7 @@ int test_tf_set_trans() {
   return 0;
 }
 
-int test_tf_trans() {
+int test_tf_trans_get() {
   /* clang-format off */
   double T[16] = {1.0, 2.0, 3.0, 4.0,
                   5.0, 6.0, 7.0, 8.0,
@@ -563,7 +563,7 @@ int test_tf_trans() {
 
   /* Get translation vector */
   double r[3];
-  tf_trans(T, r);
+  tf_trans_get(T, r);
   print_vector("r", r, 3);
 
   MU_CHECK(fltcmp(r[0], 4.0) == 0);
@@ -573,7 +573,7 @@ int test_tf_trans() {
   return 0;
 }
 
-int test_tf_rot() {
+int test_tf_rot_get() {
   /* Transform */
   /* clang-format off */
   double T[16] = {1.0, 2.0, 3.0, 4.0,
@@ -585,7 +585,7 @@ int test_tf_rot() {
 
   /* Get rotation matrix */
   double C[9];
-  tf_rot(T, C);
+  tf_rot_get(T, C);
   print_matrix("C", C, 3, 3);
 
   MU_CHECK(fltcmp(C[0], 1.0) == 0);
@@ -603,7 +603,7 @@ int test_tf_rot() {
   return 0;
 }
 
-int test_tf_quat() {
+int test_tf_quat_get() {
   /* Transform */
   /* clang-format off */
   double T[16] = {1.0, 0.0, 0.0, 0.0,
@@ -616,11 +616,11 @@ int test_tf_quat() {
   const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
   double C[9] = {0};
   euler321(euler, C);
-  tf_set_rot(T, C);
+  tf_rot_set(T, C);
 
   /* Extract quaternion from transform */
   double q[4] = {0};
-  tf_quat(T, q);
+  tf_quat_get(T, q);
 
   /* Convert quaternion back to euler angles */
   double rpy[3] = {0};
@@ -645,10 +645,10 @@ int test_tf_inv() {
   const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
   double C[9] = {0};
   euler321(euler, C);
-  tf_set_rot(T, C);
+  tf_rot_set(T, C);
   /* -- Set translation component */
   double r[3] = {1.0, 2.0, 3.0};
-  tf_set_trans(T, r);
+  tf_trans_set(T, r);
   print_matrix("T", T, 4, 4);
   printf("\n");
 
@@ -819,11 +819,11 @@ void test_suite() {
   MU_ADD_TEST(test_chol_lls_solve2);
 
   /* Transforms */
-  MU_ADD_TEST(test_tf_set_rot);
-  MU_ADD_TEST(test_tf_set_trans);
-  MU_ADD_TEST(test_tf_trans);
-  MU_ADD_TEST(test_tf_rot);
-  MU_ADD_TEST(test_tf_quat);
+  MU_ADD_TEST(test_tf_rot_set);
+  MU_ADD_TEST(test_tf_trans_set);
+  MU_ADD_TEST(test_tf_trans_get);
+  MU_ADD_TEST(test_tf_rot_get);
+  MU_ADD_TEST(test_tf_quat_get);
   MU_ADD_TEST(test_tf_inv);
   MU_ADD_TEST(test_tf_point);
   MU_ADD_TEST(test_tf_hpoint);

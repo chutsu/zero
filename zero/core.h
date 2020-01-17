@@ -182,14 +182,20 @@ void chol_lls_solve2(const double *A,
 void nearest_spd(const double *A, const size_t n, double *A_hat);
 
 /******************************************************************************
+ *                                   TIME
+ ******************************************************************************/
+
+typedef uint64_t timestamp_t;
+
+/******************************************************************************
  *                                TRANSFORMS
  ******************************************************************************/
 
-void tf_set_rot(double T[4 * 4], const double C[3 * 3]);
-void tf_set_trans(double T[4 * 4], const double r[3]);
-void tf_trans(const double T[4 * 4], double r[3]);
-void tf_rot(const double T[4 * 4], double C[3 * 3]);
-void tf_quat(const double T[4 * 4], double q[4]);
+void tf_rot_set(double T[4 * 4], const double C[3 * 3]);
+void tf_trans_set(double T[4 * 4], const double r[3]);
+void tf_trans_get(const double T[4 * 4], double r[3]);
+void tf_rot_get(const double T[4 * 4], double C[3 * 3]);
+void tf_quat_get(const double T[4 * 4], double q[4]);
 void tf_inv(const double T[4 * 4], double T_inv[4 * 4]);
 void tf_point(const double T[4 * 4], const double p[3], double retval[3]);
 void tf_hpoint(const double T[4 * 4], const double p[4], double retval[4]);
@@ -207,12 +213,15 @@ void quatdelta(const double dalpha[3], double dq[4]);
  ******************************************************************************/
 
 struct pose_t {
+  timestamp_t ts;
   double q[4];
   double r[3];
 } typedef pose_t;
 
 void pose_set_quat(pose_t *pose, const double q[4]);
 void pose_set_trans(pose_t *pose, const double r[3]);
+void pose_quat_get(const pose_t *pose, double q[4]);
+void pose_trans_get(const pose_t *pose, double r[3]);
 void pose_print(const char *prefix, const pose_t *pose);
 void pose2tf(const pose_t *pose, double T[4 * 4]);
 pose_t *load_poses(const char *csv_path, int *nb_poses);
@@ -239,7 +248,7 @@ void pinhole_K(const double fx,
                const double cy,
                double K[3 * 3]);
 double pinhole_focal_length(const int image_width, const double fov);
-int pinhole_project(const double K[3 * 3], const double p[3], double x[2]);
+int pinhole_project(const double K[3 * 3], const double p_C[3], double x[2]);
 void pinhole_calc_K(const double image_width,
                     const double image_height,
                     const double lens_hfov,
