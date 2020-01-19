@@ -98,10 +98,6 @@ typedef struct {
 typedef struct bme280_t {
 } bme280_t;
 
-void bme280_setup(bme280_t *sensor) {
-
-}
-
 float bme280_read_temperature(bme280_t *sensor) {
 
 }
@@ -111,6 +107,10 @@ float bme280_read_pressure(bme280_t *sensor) {
 }
 
 float bme280_read_humidity(bme280_t *sensor) {
+
+}
+
+void bme280_setup(bme280_t *sensor) {
 
 }
 
