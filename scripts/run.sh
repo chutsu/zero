@@ -3,9 +3,9 @@ set -e
 
 # node js/zero.js
 
-make format_code
+# make format_code
 # make clean
-time make
+# time make
 # ./build/bin/test_core
 # ./build/bin/test_core --target test_eye
 # ./build/bin/test_core --target test_ones
@@ -53,7 +53,7 @@ time make
 
 # ./build/bin/test_template
 
-# cd firmware
-# arduino --upload firmware.ino --port /dev/ttyUSB0
+cd firmware
+arduino --upload firmware.ino --port /dev/ttyUSB0
 # make clean
 # make flash

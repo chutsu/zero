@@ -137,56 +137,6 @@ typedef struct mpu6050_t {
   float sample_rate = 0.0f;
 } mpu6050_t;
 
-/* PROTOTYPES */
-void mpu6050_setup(mpu6050_t *imu);
-int8_t mpu6050_ping();
-uint8_t mpu6050_get_dplf();
-void mpu6050_set_dplf(const uint8_t setting);
-uint8_t mpu6050_get_sample_rate_div();
-void mpu6050_set_sample_rate_div(const int8_t setting);
-float mpu6050_get_sample_rate();
-void mpu6050_set_sample_rate(float sample_rate);
-void mpu6050_set_gyro_range(const int8_t range);
-uint8_t mpu6050_get_gyro_range();
-void mpu6050_set_accel_range(const int8_t setting);
-uint8_t mpu6050_get_accel_range();
-void mpu6050_get_data(mpu6050_t *imu);
-
-/** Initialize MPU6050 sensor */
-void mpu6050_setup(mpu6050_t *imu) {
-  // Configure Digital low-pass filter
-  uint8_t dlpf_cfg = 0;
-  mpu6050_set_dplf(dlpf_cfg);
-
-  // Set power management register
-  i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, 0x00);
-
-  // Configure Gyroscope range
-  const uint8_t gyro_range = 0;
-  mpu6050_set_gyro_range(gyro_range);
-  switch (gyro_range) {
-  case 0: imu->gyro_sensitivity = 131.0; break;
-  case 1: imu->gyro_sensitivity = 65.5; break;
-  case 2: imu->gyro_sensitivity = 32.8; break;
-  case 3: imu->gyro_sensitivity = 16.4; break;
-  }
-
-  // Configure accel range
-  const uint8_t accel_range = 0;
-  mpu6050_set_accel_range(accel_range);
-  switch (accel_range) {
-  case 0: imu->accel_sensitivity = 16384.0; break;
-  case 1: imu->accel_sensitivity = 8192.0; break;
-  case 2: imu->accel_sensitivity = 4096.0; break;
-  case 3: imu->accel_sensitivity = 2048.0; break;
-  }
-
-  // Configure sample rate
-  float sample_rate = 400;
-  mpu6050_set_sample_rate(sample_rate);
-  imu->sample_rate = mpu6050_get_sample_rate();
-}
-
 /** Get MPU6050 address */
 int8_t mpu6050_ping() {
   return i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_WHO_AM_I);
@@ -354,6 +304,41 @@ void mpu6050_get_data(mpu6050_t *imu) {
 
   // Set last_updated
   // imu->last_updated = clock();
+}
+
+/** Initialize MPU6050 sensor */
+void mpu6050_setup(mpu6050_t *imu) {
+  // Configure Digital low-pass filter
+  uint8_t dlpf_cfg = 0;
+  mpu6050_set_dplf(dlpf_cfg);
+
+  // Set power management register
+  i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, 0x00);
+
+  // Configure Gyroscope range
+  const uint8_t gyro_range = 0;
+  mpu6050_set_gyro_range(gyro_range);
+  switch (gyro_range) {
+  case 0: imu->gyro_sensitivity = 131.0; break;
+  case 1: imu->gyro_sensitivity = 65.5; break;
+  case 2: imu->gyro_sensitivity = 32.8; break;
+  case 3: imu->gyro_sensitivity = 16.4; break;
+  }
+
+  // Configure accel range
+  const uint8_t accel_range = 0;
+  mpu6050_set_accel_range(accel_range);
+  switch (accel_range) {
+  case 0: imu->accel_sensitivity = 16384.0; break;
+  case 1: imu->accel_sensitivity = 8192.0; break;
+  case 2: imu->accel_sensitivity = 4096.0; break;
+  case 3: imu->accel_sensitivity = 2048.0; break;
+  }
+
+  // Configure sample rate
+  float sample_rate = 400;
+  mpu6050_set_sample_rate(sample_rate);
+  imu->sample_rate = mpu6050_get_sample_rate();
 }
 
 #endif /* MPU6050_H */
