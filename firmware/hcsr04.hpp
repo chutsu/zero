@@ -2,12 +2,12 @@
 #define HC_SR04_HPP
 
 #include <stdint.h>
-#include "pwm.hpp"
+
+#include <Arduino.h>
 
 struct hcsr04_t {
   uint8_t trig_pin;
   uint8_t echo_pin;
-	pwm_t pwm;
 };
 
 void hcsr04_setup(hcsr04_t *sensor,

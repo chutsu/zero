@@ -6,6 +6,7 @@
 
 #include "core.hpp"
 #include "pwm.hpp"
+#include "mpu6050.hpp"
 
 /******************************************************************************
  * PID
@@ -65,26 +66,6 @@ void pid_ctrl_reset(pid_ctrl_t *pid) {
   pid->error_p = 0.0;
   pid->error_i = 0.0;
   pid->error_d = 0.0;
-}
-
-
-/*****************************************************************************
- * ESC
- *****************************************************************************/
-
-struct esc_t {
-  pwm_t m1;
-  pwm_t m2;
-  pwm_t m3;
-  pwm_t m4;
-};
-
-void esc_setup(esc_t *esc, uint8_t pins[4]) {
-  const float freq = 1000.0f;
-  pwm_setup(&esc->m1, pins[0], freq);
-  pwm_setup(&esc->m2, pins[1], freq);
-  pwm_setup(&esc->m3, pins[2], freq);
-  pwm_setup(&esc->m4, pins[3], freq);
 }
 
 /*****************************************************************************
@@ -183,6 +164,29 @@ void att_ctrl_update(att_ctrl_t *ctrl,
   ctrl->outputs[3] = (m4 < 0.0) ? 0.0 : m4;
 
   ctrl->dt = 0.0;
+}
+
+/*****************************************************************************
+ * FCU
+ *****************************************************************************/
+
+struct fcu_t {
+  esc_t esc;
+  mpu6050_t imu;
+
+  att_ctrl_t att_ctrl;
+};
+
+void fcu_setup(fcu_t *fcu) {
+  uint8_t esc_pins[4] = {0, 0, 0, 0};
+  esc_setup(fcu->esc, esc_pins);
+  mpu6050_setup(fcu->imu);
+
+  att_ctrl_setup(fcu->att_ctrl);
+}
+
+void fcu_update(fcu_t *fcu) {
+  mpu6050_get_data(fcu->imu);
 }
 
 #endif // CONTROL_HPP

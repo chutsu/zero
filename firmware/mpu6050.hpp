@@ -211,6 +211,11 @@ uint8_t mpu6050_get_sample_rate_div() {
   return i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV);
 }
 
+/** Set sample rate */
+void mpu6050_set_sample_rate_div(const int8_t div) {
+  i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV, div);
+}
+
 /** Set sample rate division */
 void mpu6050_set_sample_rate(float sample_rate) {
   // gyro_output_rate = 8kHz (iff DPLF_CFG: 0 or 7) or 1kHz
@@ -225,11 +230,6 @@ void mpu6050_set_sample_rate(float sample_rate) {
   // smplrt_div = (gyro_output_rate / sample_rate) - 1
   float smplrt_div = (gyro_rate / sample_rate) - 1;
   mpu6050_set_sample_rate_div(smplrt_div);
-}
-
-/** Set sample rate */
-void mpu6050_set_sample_rate_div(const int8_t div) {
-  i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV, div);
 }
 
 /** Get sample rate */
@@ -340,5 +340,31 @@ void mpu6050_setup(mpu6050_t *imu) {
   mpu6050_set_sample_rate(sample_rate);
   imu->sample_rate = mpu6050_get_sample_rate();
 }
+
+// void print_mpu6050_config() {
+//   Serial.print("Accel sensitivity: ");
+//   Serial.print(imu.accel_sensitivity);
+//   Serial.print("\n\r");
+//
+//   Serial.print("Gyro sensitivity: ");
+//   Serial.print(imu.gyro_sensitivity);
+//   Serial.print("\n\r");
+//
+//   Serial.print("DPLF: ");
+//   Serial.print(mpu6050_get_dplf());
+//   Serial.print("\n\r");
+//
+//   Serial.print("Ping: ");
+//   Serial.print(mpu6050_ping());
+//   Serial.print("\n\r");
+//
+//   Serial.print("Sample rate div: ");
+//   Serial.print(mpu6050_get_sample_rate_div());
+//   Serial.print("\n\r");
+//
+//   Serial.print("Sample rate: ");
+//   Serial.print(imu.sample_rate);
+//   Serial.print("\n\r");
+// }
 
 #endif /* MPU6050_H */
