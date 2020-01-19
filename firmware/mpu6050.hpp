@@ -137,11 +137,60 @@ typedef struct mpu6050_t {
   float sample_rate = 0.0f;
 } mpu6050_t;
 
-/** Initialize MPU6050 sensor */
+/* PROTOTYPES */
 void mpu6050_setup(mpu6050_t *imu);
+int8_t mpu6050_ping();
+uint8_t mpu6050_get_dplf();
+void mpu6050_set_dplf(const uint8_t setting);
+uint8_t mpu6050_get_sample_rate_div();
+void mpu6050_set_sample_rate_div(const int8_t setting);
+float mpu6050_get_sample_rate();
+void mpu6050_set_sample_rate(float sample_rate);
+void mpu6050_set_gyro_range(const int8_t range);
+uint8_t mpu6050_get_gyro_range();
+void mpu6050_set_accel_range(const int8_t setting);
+uint8_t mpu6050_get_accel_range();
+void mpu6050_get_data(mpu6050_t *imu);
+
+/** Initialize MPU6050 sensor */
+void mpu6050_setup(mpu6050_t *imu) {
+  // Configure Digital low-pass filter
+  uint8_t dlpf_cfg = 0;
+  mpu6050_set_dplf(dlpf_cfg);
+
+  // Set power management register
+  i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, 0x00);
+
+  // Configure Gyroscope range
+  const uint8_t gyro_range = 0;
+  mpu6050_set_gyro_range(gyro_range);
+  switch (gyro_range) {
+  case 0: imu->gyro_sensitivity = 131.0; break;
+  case 1: imu->gyro_sensitivity = 65.5; break;
+  case 2: imu->gyro_sensitivity = 32.8; break;
+  case 3: imu->gyro_sensitivity = 16.4; break;
+  }
+
+  // Configure accel range
+  const uint8_t accel_range = 0;
+  mpu6050_set_accel_range(accel_range);
+  switch (accel_range) {
+  case 0: imu->accel_sensitivity = 16384.0; break;
+  case 1: imu->accel_sensitivity = 8192.0; break;
+  case 2: imu->accel_sensitivity = 4096.0; break;
+  case 3: imu->accel_sensitivity = 2048.0; break;
+  }
+
+  // Configure sample rate
+  float sample_rate = 400;
+  mpu6050_set_sample_rate(sample_rate);
+  imu->sample_rate = mpu6050_get_sample_rate();
+}
 
 /** Get MPU6050 address */
-int8_t mpu6050_ping();
+int8_t mpu6050_ping() {
+  return i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_WHO_AM_I);
+}
 
 /**
  * Get `DPLF_CFG` (Digital Low-Pass Filter) config
@@ -170,7 +219,11 @@ int8_t mpu6050_ping();
  * 6           5               18.5        1
  * 7           RESERVED        RESERVED    8
  */
-uint8_t mpu6050_get_dplf();
+uint8_t mpu6050_get_dplf() {
+  uint8_t data = i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_CONFIG);
+  data = (data & 0b00000111);
+  return data;
+}
 
 /**
  * Set `DPLF_CFG` (Digital Low-Pass Filter) config
@@ -199,33 +252,108 @@ uint8_t mpu6050_get_dplf();
  * 6           5               18.5        1
  * 7           RESERVED        RESERVED    8
  */
-void mpu6050_set_dplf(const uint8_t setting);
+void mpu6050_set_dplf(const uint8_t setting) {
+  i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_CONFIG, setting);
+}
 
 /** Get sample rate division */
-uint8_t mpu6050_get_sample_rate_div();
+uint8_t mpu6050_get_sample_rate_div() {
+  return i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV);
+}
 
 /** Set sample rate division */
-void mpu6050_set_sample_rate_div(const int8_t setting);
+void mpu6050_set_sample_rate(float sample_rate) {
+  // gyro_output_rate = 8kHz (iff DPLF_CFG: 0 or 7) or 1kHz
+  uint8_t dlpf_cfg = mpu6050_get_dplf();
+  float gyro_rate = ((dlpf_cfg == 0) || (dlpf_cfg == 7)) ? 8000.0f : 1000.0f;
 
-/** Get sample rate */
-float mpu6050_get_sample_rate();
+  // Calculate and set sample rate divider needed to get desired sample rate.
+  // The equation is given in MPU6050 register map documentation (page 12 of
+  // 46). Under the sample rate divider register section.
+  //
+  // sample_rate = gyro_output_rate / (1 + smplrt_div)
+  // smplrt_div = (gyro_output_rate / sample_rate) - 1
+  float smplrt_div = (gyro_rate / sample_rate) - 1;
+  mpu6050_set_sample_rate_div(smplrt_div);
+}
 
 /** Set sample rate */
-void mpu6050_set_sample_rate(float sample_rate);
+void mpu6050_set_sample_rate_div(const int8_t div) {
+  i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV, div);
+}
+
+/** Get sample rate */
+float mpu6050_get_sample_rate() {
+  // Get sample rate divider
+  uint8_t smplrt_div = mpu6050_get_sample_rate_div();
+
+  // Get gyro sample rate
+  uint8_t dlpf_cfg = mpu6050_get_dplf();
+  float gyro_rate = ((dlpf_cfg == 0) || (dlpf_cfg == 7)) ? 8000.0f : 1000.0f;
+
+  // Calculate sample rate. The equation is given in MPU6050 register map
+  // documentation (page 12 of 46). Under the sample rate divider register
+  // section.
+  return gyro_rate / (1 + smplrt_div);
+}
 
 /** Set gyro range */
-void mpu6050_set_gyro_range(const int8_t range);
+void mpu6050_set_gyro_range(const int8_t range) {
+  uint8_t data = range << 3;
+  i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_GYRO_CONFIG, data);
+}
 
 /** Get gyro range */
-uint8_t mpu6050_get_gyro_range();
+uint8_t mpu6050_get_gyro_range() {
+  uint8_t data = i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_GYRO_CONFIG);
+  data = (data >> 3) & 0b00000011;
+  return data;
+}
 
 /** Set accelerometer range */
-void mpu6050_set_accel_range(const int8_t setting);
+void mpu6050_set_accel_range(const int8_t range) {
+  // assert(range > 3 || range < 0);
+  uint8_t data = range << 3;
+  i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_ACCEL_CONFIG, data);
+}
 
 /** Get accelerometer range */
-uint8_t mpu6050_get_accel_range();
+uint8_t mpu6050_get_accel_range() {
+  uint8_t data = i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_ACCEL_CONFIG);
+  data  = (data >> 3) & 0b00000011;
+  return data;
+}
 
 /** Get IMU data */
-void mpu6050_get_data(mpu6050_t *imu);
+void mpu6050_get_data(mpu6050_t *imu) {
+  // Read data
+  uint8_t data[14] = {0};
+  memset(data, '\0', 14);
+  i2c_read_bytes(MPU6050_ADDRESS, MPU6050_REG_ACCEL_XOUT_H, 14, data);
+
+  // Accelerometer
+  const double g = 9.81; // Gravitational constant
+  const int16_t raw_ax = (data[0] << 8) | data[1];
+  const int16_t raw_ay = (data[2] << 8) | data[3];
+  const int16_t raw_az = (data[4] << 8) | data[5];
+  imu->accel[0] = (raw_ax / imu->accel_sensitivity) * g;
+  imu->accel[1] = (raw_ay / imu->accel_sensitivity) * g;
+  imu->accel[2] = (raw_az / imu->accel_sensitivity) * g;
+
+  // Temperature
+  const int16_t raw_temp = (data[6] << 8) | (data[7]);
+  imu->temperature = raw_temp / 340.0 + 36.53;
+
+  // Gyroscope
+  const int16_t raw_gx = (data[8] << 8) | (data[9]);
+  const int16_t raw_gy = (data[10] << 8) | (data[11]);
+  const int16_t raw_gz = (data[12] << 8) | (data[13]);
+  imu->gyro[0] = deg2rad(raw_gx / imu->gyro_sensitivity);
+  imu->gyro[1] = deg2rad(raw_gy / imu->gyro_sensitivity);
+  imu->gyro[2] = deg2rad(raw_gz / imu->gyro_sensitivity);
+
+  // Set last_updated
+  // imu->last_updated = clock();
+}
 
 #endif /* MPU6050_H */

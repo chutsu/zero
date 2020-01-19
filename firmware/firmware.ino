@@ -7,11 +7,11 @@
 
 // GLOBAL VARIABLES
 mpu6050_t imu;
-pwm_t pwm;
 hcsr04_t uds;
+// pwm_t pwm;
 
-uint8_t trig_pin = PB0;
-uint8_t echo_pin = PB1;
+uint8_t trig_pin = PB8;
+uint8_t echo_pin = PB9;
 
 void print_mpu6050_config() {
   Serial.print("Accel sensitivity: ");
@@ -40,28 +40,41 @@ void print_mpu6050_config() {
 }
 
 void setup() {
+
+  i2c_setup();
+	// mpu6050_setup(&imu);
+	hcsr04_setup(&uds, trig_pin, echo_pin);
+	/* pwm_setup(&pwm, trig_pin, 1000); */
+
   pinMode(trig_pin, OUTPUT);
   digitalWrite(trig_pin, LOW);
   pinMode(echo_pin, INPUT);
 
-  /* i2c_setup(); */
-	/* mpu6050_setup(&imu); */
-	/* hc_sr04_setup(&uds, trig_pin, echo_pin); */
-	/* pwm_setup(&pwm, trig_pin, 1000); */
 
   Serial.begin(115200);
   Serial.print("------------");
   Serial.print("\n\r");
   Serial.print("setup done\n\r");
+
+  float distance = hcsr04_measure(&uds);
+  Serial.print("distance: ");
+  Serial.print(distance);
+  Serial.print("\n\r");
+
+  // print_mpu6050_config();
 }
 
 void loop() {
-	/* mpu6050_get_data(&imu); */
-  /* Serial.print("x: "); Serial.print(imu.accel[0]); Serial.print(" "); */
-  /* Serial.print("y: "); Serial.print(imu.accel[1]); Serial.print(" "); */
-  /* Serial.print("z: "); Serial.print(imu.accel[2]); Serial.print(" "); */
-  /* Serial.print("\n\r"); */
+  float distance = hcsr04_measure(&uds);
+  Serial.print("distance: ");
+  Serial.print(distance);
+  Serial.print("\n\r");
 
+	// mpu6050_get_data(&imu);
+  // Serial.print("x: "); Serial.print(imu.accel[0]); Serial.print(" ");
+  // Serial.print("y: "); Serial.print(imu.accel[1]); Serial.print(" ");
+  // Serial.print("z: "); Serial.print(imu.accel[2]); Serial.print(" ");
+  // Serial.print("\n\r");
 }
 
 void __assert(const char *__func, const char *__file, int __lineno, const char *__sexp) {
