@@ -14,25 +14,32 @@ void hcsr04_setup(hcsr04_t *sensor,
                   const uint8_t trig_pin,
                   const uint8_t echo_pin) {
   // Configure trigger and echo pins
-  pinMode(trig_pin, OUTPUT);
-  pinMode(echo_pin, INPUT);
   sensor->trig_pin = trig_pin;
   sensor->echo_pin = echo_pin;
-
-	// pwm_setup(&sensor->pwm, trig_pin, 100000);
-	// pwm_set(&sensor->pwm, 100);
+  pinMode(sensor->trig_pin, OUTPUT);
+  pinMode(sensor->echo_pin, INPUT);
 }
 
 float hcsr04_measure(hcsr04_t *sensor) {
-  // digitalWrite(sensor->trig_pin, HIGH);
-  // delayMicroseconds(10);
-  // digitalWrite(sensor->trig_pin, LOW);
-  // const float duration = pulseIn(sensor->echo_pin, HIGH, 1000);
-  // digitalWrite(sensor->trig_pin, LOW);
-  // return duration * 0.00343 / 2.0;
+  // Makesure pin is low
+  digitalWrite(sensor->trig_pin, LOW);
+  delayMicroseconds(2);
 
-  const float duration = pulseIn(sensor->echo_pin, HIGH, 1000);
-  return duration * 0.00343 / 2.0;
+  // Hold trigger for 10 microseconds
+  digitalWrite(sensor->trig_pin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(sensor->trig_pin, LOW);
+
+  // Measure echo signal
+  const float duration_ms = pulseIn(sensor->echo_pin, HIGH, 1000);
+  const float temperature = 20.0;
+  double sof_cm = 0.03313 + 0.0000606 * temperature;
+  double dist_cm = duration_ms / 2.0 * sof_cm;
+  if (dist_cm == 0 || dist_cm > 400) {
+    return -1.0 ;
+  } else {
+    return dist_cm;
+  }
 }
 
 #endif  // HC_SR04_HPP
