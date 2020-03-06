@@ -295,6 +295,49 @@ int test_skew() {
   return 0;
 }
 
+int test_check_jacobian() {
+  const size_t m = 2;
+  const size_t n = 3;
+  const double threshold = 1e-6;
+  const int print = 1;
+
+  // Positive test
+  {
+    const double fdiff[6] = {
+      0.0, 1.0, 2.0,
+      3.0, 4.0, 5.0
+    };
+    const double jac[6] = {
+      0.0, 1.0, 2.0,
+      3.0, 4.0, 5.0
+    };
+    int retval = check_jacobian("test_check_jacobian",
+                                fdiff, jac, m, n,
+                                threshold,
+                                print);
+    MU_CHECK(retval == 0);
+  }
+
+  // Negative test
+  {
+    const double fdiff[6] = {
+      0.0, 1.0, 2.0,
+      3.0, 4.0, 5.0
+    };
+    const double jac[6] = {
+      0.0, 1.0, 2.0,
+      3.1, 4.0, 5.0
+    };
+    int retval = check_jacobian("test_check_jacobian",
+                                fdiff, jac, m, n,
+                                threshold,
+                                print);
+    MU_CHECK(retval == -1);
+  }
+
+  return 0;
+}
+
 int test_svd() {
   double A[M * N];
   double A_orig[M * N];
@@ -807,6 +850,7 @@ void test_suite() {
   MU_ADD_TEST(test_vec_sub);
   MU_ADD_TEST(test_dot);
   MU_ADD_TEST(test_skew);
+  MU_ADD_TEST(test_check_jacobian);
 
   /* SVD */
   MU_ADD_TEST(test_svd);

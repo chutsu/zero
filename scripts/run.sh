@@ -5,7 +5,7 @@ set -e
 
 # make format_code
 # make clean
-# time make
+time make
 # ./build/bin/test_core
 # ./build/bin/test_core --target test_eye
 # ./build/bin/test_core --target test_ones
@@ -26,6 +26,7 @@ set -e
 # ./build/bin/test_core --target test_vec_sub
 # ./build/bin/test_core --target test_dot
 # ./build/bin/test_core --target test_skew
+./build/bin/test_core --target test_check_jacobian
 # ./build/bin/test_core --target test_tf_set_rot
 # ./build/bin/test_core --target test_tf_set_trans
 # ./build/bin/test_core --target test_tf_trans
@@ -35,7 +36,6 @@ set -e
 # ./build/bin/test_core --target test_tf_point
 # ./build/bin/test_core --target test_tf_hpoint
 # ./build/bin/test_core --target test_quat2rot
-
 # ./build/bin/test_core --target test_svd
 # ./build/bin/test_core --target test_svdcomp
 # ./build/bin/test_core --target test_pinv
@@ -53,7 +53,7 @@ set -e
 
 # ./build/bin/test_template
 
-cd firmware
-arduino --upload firmware.ino --port /dev/ttyUSB0
+# cd firmware
+# arduino --upload firmware.ino --port /dev/ttyUSB0
 # make clean
 # make flash

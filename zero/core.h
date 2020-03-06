@@ -82,7 +82,9 @@ double rad2deg(const double r);
 int fltcmp(const double x, const double y);
 double pythag(const double a, const double b);
 double lerpd(const double a, const double b, const double t);
+void lerp3d(const double *a, const double *b, const double t, double *x);
 float lerpf(const float a, const float b, const float t);
+void lerp3f(const float *a, const float *b, const float t, float *x);
 double sinc(const double x);
 
 /******************************************************************************
@@ -99,7 +101,7 @@ void eye(double *A, const size_t m, const size_t n);
 void ones(double *A, const size_t m, const size_t n);
 void zeros(double *A, const size_t m, const size_t n);
 
-double *mat_new(const int m, const int n);
+double *mat_new(const size_t m, const size_t n);
 int mat_save(const char *save_path, const double *A, const int m, const int n);
 void mat_set(double *A,
              const size_t stride,
@@ -152,6 +154,13 @@ void dot(const double *A,
 void skew(const double x[3], double A[3 * 3]);
 void fwdsubs(const double *L, const double *b, double *y, const size_t n);
 void bwdsubs(const double *U, const double *y, double *x, const size_t n);
+int check_jacobian(const char *jac_name,
+                   const double *fdiff,
+                   const double *jac,
+									 const size_t m,
+									 const size_t n,
+                   const double threshold,
+									 const int print);
 
 /******************************************************************************
  *                                   SVD

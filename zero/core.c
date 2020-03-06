@@ -313,7 +313,10 @@ int fltcmp(const double x, const double y) {
 }
 
 double pythag(const double a, const double b) {
-  double at = fabs(a), bt = fabs(b), ct, result;
+  double at = fabs(a);
+  double bt = fabs(b);
+  double ct = 0.0;
+  double result = 0.0;
 
   if (at > bt) {
     ct = bt / at;
@@ -321,17 +324,31 @@ double pythag(const double a, const double b) {
   } else if (bt > 0.0) {
     ct = at / bt;
     result = bt * sqrt(1.0 + ct * ct);
-  } else
+  } else {
     result = 0.0;
-  return (result);
+  }
+
+  return result;
 }
 
 double lerpd(const double a, const double b, const double t) {
   return a * (1.0 - t) + b * t;
 }
 
+void lerp3d(const double *a, const double *b, const double t, double *x) {
+  x[0] = lerpf(a[0], b[0], t);
+  x[1] = lerpf(a[1], b[1], t);
+  x[2] = lerpf(a[2], b[2], t);
+}
+
 float lerpf(const float a, const float b, const float t) {
   return a * (1.0 - t) + b * t;
+}
+
+void lerp3f(const float *a, const float *b, const float t, float *x) {
+  x[0] = lerpf(a[0], b[0], t);
+  x[1] = lerpf(a[1], b[1], t);
+  x[2] = lerpf(a[2], b[2], t);
 }
 
 double sinc(const double x) {
@@ -428,7 +445,7 @@ void zeros(double *A, const size_t m, const size_t n) {
   }
 }
 
-double *mat_new(const int m, const int n) {
+double *mat_new(const size_t m, const size_t n) {
   return calloc(m * n, sizeof(double));
 }
 
@@ -731,6 +748,46 @@ void bwdsubs(const double *U, const double *y, double *x, const size_t n) {
     }
     x[i] = alpha / U[i * n + i];
   }
+}
+
+int check_jacobian(const char *jac_name,
+                   const double *fdiff,
+                   const double *jac,
+									 const size_t m,
+									 const size_t n,
+                   const double threshold,
+									 const int print) {
+  int retval = 0;
+  int ok = 1;
+	double *delta = mat_new(m, n);
+	mat_sub(fdiff, jac, delta, m, n);
+
+  // Check if any of the values are beyond the threshold
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < n; j++) {
+      if (fabs(mat_val(delta, n, i, j)) >= threshold) {
+        ok = 0;
+      }
+    }
+  }
+
+  // Print result
+  if (ok == 0) {
+    if (print) {
+      LOG_ERROR("Bad jacobian [%s]!\n", jac_name);
+      print_matrix("num diff jac", fdiff, m, n);
+      print_matrix("analytical jac", jac, m, n);
+      print_matrix("difference matrix", delta, m, n);
+    }
+    retval = -1;
+  } else {
+    if (print) {
+      printf("Check [%s] ok!\n", jac_name);
+    }
+    retval = 0;
+  }
+
+  return retval;
 }
 
 /******************************************************************************

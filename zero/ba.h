@@ -331,7 +331,7 @@ static void J_intrinsics_point(const double K[3 * 3], double J[2 * 2]) {
   /* 		  0.0, K[1, 1]]; */
   zeros(J, 2, 2);
   J[0] = K[0];
-  J[2] = K[2];
+  J[3] = K[2];
 }
 
 static void J_project(const double p_C[3], double J[2 * 3]) {
@@ -343,9 +343,9 @@ static void J_project(const double p_C[3], double J[2 * 3]) {
   /* 		  0, 1 / z, -y / z^2]; */
   zeros(J, 2, 3);
   J[0] = 1.0 / z;
+  J[2] = -x / (z * z);
   J[4] = 1.0 / z;
-  J[2] = -x / z * z;
-  J[5] = -y / z * z;
+  J[5] = -y / (z * z);
 }
 
 static void J_camera_rotation(const double q_WC[4],
@@ -501,16 +501,23 @@ void ba_update(
   mat_transpose(E, E_rows, E_cols, E_t);
   dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
 
+  /* Apply damping */
+  double *damp_term = mat_new(E_cols, E_cols);
+  double *H_damped = mat_new(E_cols, E_cols);
+  eye(damp_term, E_cols, E_cols);
+  mat_scale(damp_term, E_cols, E_cols, 10.0);
+  mat_add(H, damp_term, H_damped, E_cols, E_cols);
+
   /* g = -E' * W * e; */
   double *g = vec_new(E_cols);
   mat_scale(E_t, E_cols, E_rows, -1.0);
   dot(E_t, E_cols, E_rows, e, e_size, 1, g);
   free(E_t);
 
-  /* #<{(| dx = pinv(H) * g; |)}># */
+  /* dx = pinv(H) * g; */
   /* double *H_inv = mat_new(E_cols, E_cols); */
   /* double *dx = vec_new(E_cols); */
-  /* pinv(H, E_cols, E_cols, H_inv); */
+  /* pinv(H_damped, E_cols, E_cols, H_inv); */
   /* dot(H_inv, E_cols, E_cols, g, E_cols, 1, dx); */
   /* free(H); */
   /* free(H_inv); */
@@ -518,51 +525,52 @@ void ba_update(
 
   /* Use Cholesky on [H dx = g] to solve for dx */
   double *dx = vec_new(E_cols);
-  double *H_hat = mat_new(E_cols, E_cols);
+  /* double *H_hat = mat_new(E_cols, E_cols); */
   /* print_matrix("H", H, E_cols, E_cols); */
   /* print_matrix("g", g, E_cols, 1); */
-  mat_save("/tmp/E.csv", E, E_rows, E_cols);
-  mat_save("/tmp/H.csv", H, E_cols, E_cols);
-  mat_save("/tmp/g.csv", g, E_cols, 1);
-  nearest_spd(H, E_cols, H_hat);
-  /* chol_lls_solve2(H_hat, g, dx, E_cols); */
-  free(H);
-  free(H_hat);
-  free(g);
+  /* mat_save("/tmp/E.csv", E, E_rows, E_cols); */
+  /* mat_save("/tmp/H.csv", H, E_cols, E_cols); */
+  /* mat_save("/tmp/g.csv", g, E_cols, 1); */
+  /* nearest_spd(H, E_cols, H_hat); */
+  chol_lls_solve(H_damped, g, dx, E_cols);
+  /* chol_lls_solve2(H_damped, g, dx, E_cols); */
+  /* free(H); */
+  /* free(H_hat); */
+  /* free(g); */
 
-  /* #<{(| Update camera poses |)}># */
-  /* for (int k = 0; k < data->nb_frames; k++) { */
-  /*   const int s = k * 6; */
-  /*  */
-  /*   #<{(| Update camera rotation |)}># */
-  /*   #<{(| dq = quatdelta(dalpha) |)}># */
-  /*   #<{(| q_WC_k = quatmul(dq, q_WC_k) |)}># */
-  /*   const double dalpha[3] = {dx[s], dx[s + 1], dx[s + 2]}; */
-  /*   double dq[4] = {0}; */
-  /*   double q_new[4] = {0}; */
-  /*   quatdelta(dalpha, dq); */
-  /*   quatmul(dq, data->cam_poses[k].q, q_new); */
-  /*   data->cam_poses[k].q[0] = q_new[0]; */
-  /*   data->cam_poses[k].q[1] = q_new[1]; */
-  /*   data->cam_poses[k].q[2] = q_new[2]; */
-  /*   data->cam_poses[k].q[3] = q_new[3]; */
-  /*  */
-  /*   #<{(| Update camera position |)}># */
-  /*   #<{(| r_WC_k += dr_WC |)}># */
-  /*   const double dr_WC[3] = {dx[s + 3], dx[s + 4], dx[s + 5]}; */
-  /*   data->cam_poses[k].r[0] += dr_WC[0]; */
-  /*   data->cam_poses[k].r[1] += dr_WC[1]; */
-  /*   data->cam_poses[k].r[2] += dr_WC[2]; */
-  /* } */
-  /*  */
-  /* #<{(| Update points |)}># */
-  /* for (int i = 0; i < data->nb_points; i++) { */
-  /*   const int s = (data->nb_frames * 6) + (i * 3); */
-  /*   const double dp_W[3] = {dx[s], dx[s + 1], dx[s + 2]}; */
-  /*   data->points[i][0] += dp_W[0]; */
-  /*   data->points[i][1] += dp_W[1]; */
-  /*   data->points[i][2] += dp_W[2]; */
-  /* } */
+  /* Update camera poses */
+  for (int k = 0; k < data->nb_frames; k++) {
+    const int s = k * 6;
+
+    /* Update camera rotation */
+    /* dq = quatdelta(dalpha) */
+    /* q_WC_k = quatmul(dq, q_WC_k) */
+    const double dalpha[3] = {dx[s], dx[s + 1], dx[s + 2]};
+    double dq[4] = {0};
+    double q_new[4] = {0};
+    quatdelta(dalpha, dq);
+    quatmul(dq, data->cam_poses[k].q, q_new);
+    data->cam_poses[k].q[0] = q_new[0];
+    data->cam_poses[k].q[1] = q_new[1];
+    data->cam_poses[k].q[2] = q_new[2];
+    data->cam_poses[k].q[3] = q_new[3];
+
+    /* Update camera position */
+    /* r_WC_k += dr_WC */
+    const double dr_WC[3] = {dx[s + 3], dx[s + 4], dx[s + 5]};
+    data->cam_poses[k].r[0] += dr_WC[0];
+    data->cam_poses[k].r[1] += dr_WC[1];
+    data->cam_poses[k].r[2] += dr_WC[2];
+  }
+
+  /* Update points */
+  for (int i = 0; i < data->nb_points; i++) {
+    const int s = (data->nb_frames * 6) + (i * 3);
+    const double dp_W[3] = {dx[s], dx[s + 1], dx[s + 2]};
+    data->points[i][0] += dp_W[0];
+    data->points[i][1] += dp_W[1];
+    data->points[i][2] += dp_W[2];
+  }
 
   /* Clean up */
   free(dx);
@@ -576,7 +584,7 @@ double ba_cost(const double *e, const int length) {
 }
 
 void ba_solve(ba_data_t *data) {
-  int max_iter = 2;
+  int max_iter = 10;
   double cost_prev = 0.0;
 
   for (int iter = 0; iter < max_iter; iter++) {
