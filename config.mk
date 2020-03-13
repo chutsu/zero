@@ -17,11 +17,11 @@ CC=gcc \
 CFLAGS=-I$(INC_DIR)
 LIBS=-L$(BLD_DIR) \
 	-lzero \
-	-lblas \
-	-llapack \
 	-llapacke \
-	-lpthread \
+	-llapack \
 	-lgfortran \
+	-lblas \
+	-lpthread \
 	-lm
 
 # ARCHIVER SETTTINGS

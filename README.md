@@ -4,4 +4,4 @@ Just bits and bobs.
 
 ## LICENCE
 
-GPLv3
+MIT

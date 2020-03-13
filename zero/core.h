@@ -15,6 +15,10 @@ extern "C" {
 
 #include <lapacke.h>
 
+#define F77_FUNC(func)    func
+extern int F77_FUNC(dpotrf)(char *uplo, int *n, double *a, int *lda, int *info); /* block version of dpotf2 */
+extern int F77_FUNC(dpotrs)(char *uplo, int *n, int *nrhs, double *a, int *lda, double *b, int *ldb, int *info);
+
 /******************************************************************************
  *                                LOGGING
  ******************************************************************************/
@@ -183,6 +187,7 @@ void chol_lls_solve2(const double *A,
                      const double *b,
                      double *x,
                      const size_t n);
+int chol_Axb(double *A, double *B, double *x, int m, int iscolmaj);
 
 /******************************************************************************
  *                               NEAREST SPD
@@ -208,6 +213,9 @@ void tf_quat_get(const double T[4 * 4], double q[4]);
 void tf_inv(const double T[4 * 4], double T_inv[4 * 4]);
 void tf_point(const double T[4 * 4], const double p[3], double retval[3]);
 void tf_hpoint(const double T[4 * 4], const double p[4], double retval[4]);
+void tf_perturb_rot(double T[4 * 4], const double step_size, const int i);
+void tf_perturb_trans(double T[4 * 4], const double step_size, const int i);
+void rvec2rot(const double *rvec, const double eps, double *R);
 void euler321(const double euler[3], double C[3 * 3]);
 void rot2quat(const double C[3 * 3], double q[4]);
 void quat2euler(const double q[4], double euler[3]);

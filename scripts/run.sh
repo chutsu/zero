@@ -1,6 +1,15 @@
 #!/bin/sh
 set -e
 
+debug() {
+  gdb \
+    -ex=run \
+    -ex=bt \
+    -ex="set confirm off" \
+    -ex=quit \
+    --args "$1" "$2" "$3"
+}
+
 # node js/zero.js
 
 # make format_code
@@ -26,7 +35,7 @@ time make
 # ./build/bin/test_core --target test_vec_sub
 # ./build/bin/test_core --target test_dot
 # ./build/bin/test_core --target test_skew
-./build/bin/test_core --target test_check_jacobian
+# ./build/bin/test_core --target test_check_jacobian
 # ./build/bin/test_core --target test_tf_set_rot
 # ./build/bin/test_core --target test_tf_set_trans
 # ./build/bin/test_core --target test_tf_trans
@@ -35,6 +44,8 @@ time make
 # ./build/bin/test_core --target test_tf_inv
 # ./build/bin/test_core --target test_tf_point
 # ./build/bin/test_core --target test_tf_hpoint
+# ./build/bin/test_core --target test_tf_perturb_rot
+# ./build/bin/test_core --target test_tf_perturb_trans
 # ./build/bin/test_core --target test_quat2rot
 # ./build/bin/test_core --target test_svd
 # ./build/bin/test_core --target test_svdcomp
@@ -43,9 +54,12 @@ time make
 # ./build/bin/test_core --target test_cholesky
 # ./build/bin/test_core --target test_chol_lls_solve
 # ./build/bin/test_core --target test_chol_lls_solve2
+# ./build/bin/test_core --target test_chol_Axb
 
 # ./build/bin/test_ba
 # ./build/bin/test_ba --target test_ba_residuals
+# ./build/bin/test_ba --target test_J_cam_pose
+# ./build/bin/test_ba --target test_J_landmark
 # ./build/bin/test_ba --target test_ba_jacobians
 # ./build/bin/test_ba --target test_ba_update
 # ./build/bin/test_ba --target test_ba_cost

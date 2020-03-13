@@ -498,32 +498,32 @@ int test_chol_lls_solve() {
 
 int test_chol_lls_solve2() {
   /* clang-format off */
-  /* const int n = 3; */
-  /* double A[9] = { */
-  /*   2.0, -1.0, 0.0, */
-  /*   -1.0, 2.0, -1.0, */
-  /*   0.0, -1.0, 1.0 */
-  /* }; */
-  /* double b[3] = {1.0, 0.0, 0.0}; */
-  /* double x[3] = {0.0, 0.0, 0.0}; */
+  const int m = 3;
+  double A[9] = {
+    2.0, -1.0, 0.0,
+    -1.0, 2.0, -1.0,
+    0.0, -1.0, 1.0
+  };
+  double b[3] = {1.0, 0.0, 0.0};
+  double x[3] = {0.0, 0.0, 0.0};
   /* clang-format on */
 
-  /* clang-format off */
-  int n = 4;
-  double A[16] = {
-    4.16, -3.12, 0.56, -0.10,
-    -3.12, 5.03, -0.83, 1.18,
-    0.56, -0.83, 0.76, 0.34,
-    -0.10, 1.18,  0.34, 1.18
-  };
-  double b[4] = {1.0, 0.0, 0.0, 0.0};
-  double x[4] = {0.0, 0.0, 0.0, 0.0};
-  /* clang-format on */
+  /* #<{(| clang-format off |)}># */
+  /* int m = 4; */
+  /* double A[16] = { */
+  /*   4.16, -3.12, 0.56, -0.10, */
+  /*   -3.12, 5.03, -0.83, 1.18, */
+  /*   0.56, -0.83, 0.76, 0.34, */
+  /*   -0.10, 1.18,  0.34, 1.18 */
+  /* }; */
+  /* double b[4] = {1.0, 0.0, 0.0, 0.0}; */
+  /* double x[4] = {0.0, 0.0, 0.0, 0.0}; */
+  /* #<{(| clang-format on |)}># */
 
   struct timespec t = tic();
-  chol_lls_solve2(A, b, x, n);
+  chol_lls_solve2(A, b, x, m);
   printf("time taken: [%fs]\n", toc(&t));
-  print_vector("x", x, n);
+  print_vector("x", x, m);
 
   /* MU_CHECK(fltcmp(x[0], 1.0) == 0); */
   /* MU_CHECK(fltcmp(x[1], 1.0) == 0); */
@@ -531,6 +531,26 @@ int test_chol_lls_solve2() {
 
   return 0;
 }
+
+/* int test_chol_Axb() { */
+/*   #<{(| clang-format off |)}># */
+/*   const int m = 3; */
+/*   double A[9] = { */
+/*     2.0, -1.0, 0.0, */
+/*     -1.0, 2.0, -1.0, */
+/*     0.0, -1.0, 1.0 */
+/*   }; */
+/*   double b[3] = {1.0, 0.0, 0.0}; */
+/*   double x[3] = {0.0, 0.0, 0.0}; */
+/*   #<{(| clang-format on |)}># */
+/*  */
+/*   struct timespec t = tic(); */
+/*   chol_Axb(A, b, x, m, 0); */
+/*   printf("time taken: [%fs]\n", toc(&t)); */
+/*   print_vector("x", x, m); */
+/*  */
+/*   return 0; */
+/* } */
 
 int test_tf_rot_set() {
   double C[9];
@@ -761,6 +781,50 @@ int test_tf_hpoint() {
   return 0;
 }
 
+int test_tf_perturb_rot() {
+  /* Transform */
+  /* clang-format off */
+  double T[4 * 4] = {1.0, 0.0, 0.0, 1.0,
+                     0.0, 1.0, 0.0, 2.0,
+                     0.0, 0.0, 1.0, 3.0,
+                     0.0, 0.0, 0.0, 1.0};
+  /* clang-format on */
+
+	/* Perturb rotation */
+	const double step_size = 1e-2;
+	tf_perturb_rot(T, step_size, 0);
+	print_matrix("T", T, 4, 4);
+
+	/* Assert */
+	MU_CHECK(fltcmp(T[0], 1.0) == 0);
+	MU_CHECK(fltcmp(T[5], 1.0) != 0);
+	MU_CHECK(fltcmp(T[10], 1.0) != 0);
+
+	return 0;
+}
+
+int test_tf_perturb_trans() {
+  /* Transform */
+  /* clang-format off */
+  double T[4 * 4] = {1.0, 0.0, 0.0, 1.0,
+                     0.0, 1.0, 0.0, 2.0,
+                     0.0, 0.0, 1.0, 3.0,
+                     0.0, 0.0, 0.0, 1.0};
+  /* clang-format on */
+
+	/* Perturb translation */
+	const double step_size = 1e-2;
+	tf_perturb_trans(T, step_size, 0);
+	print_matrix("T", T, 4, 4);
+
+	/* Assert */
+	MU_CHECK(fltcmp(T[3], 1.01) == 0);
+	MU_CHECK(fltcmp(T[7], 2.0) == 0);
+	MU_CHECK(fltcmp(T[11], 3.0) == 0);
+
+	return 0;
+}
+
 int test_euler321() {
   /* Euler to rotation matrix */
   const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
@@ -861,6 +925,7 @@ void test_suite() {
   MU_ADD_TEST(test_cholesky);
   MU_ADD_TEST(test_chol_lls_solve);
   MU_ADD_TEST(test_chol_lls_solve2);
+  /* MU_ADD_TEST(test_chol_Axb); */
 
   /* Transforms */
   MU_ADD_TEST(test_tf_rot_set);
@@ -871,6 +936,8 @@ void test_suite() {
   MU_ADD_TEST(test_tf_inv);
   MU_ADD_TEST(test_tf_point);
   MU_ADD_TEST(test_tf_hpoint);
+	MU_ADD_TEST(test_tf_perturb_rot);
+	MU_ADD_TEST(test_tf_perturb_trans);
   MU_ADD_TEST(test_euler321);
   MU_ADD_TEST(test_rot2quat);
   MU_ADD_TEST(test_quat2euler);

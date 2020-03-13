@@ -382,7 +382,7 @@ void print_matrix(const char *prefix,
   printf("%s:\n", prefix);
   for (size_t i = 0; i < m; i++) {
     for (size_t j = 0; j < n; j++) {
-      printf("%f\t", data[idx]);
+      printf("%.12f\t", data[idx]);
       idx++;
     }
     printf("\n");
@@ -675,7 +675,7 @@ void vec_sub(const double *x, const double *y, double *z, size_t length) {
   assert(length > 0);
 
   for (size_t i = 0; i < length; i++) {
-    z[i] = x[i] + y[i];
+    z[i] = x[i] - y[i];
   }
 }
 
@@ -719,15 +719,11 @@ void dot(const double *A,
 }
 
 void skew(const double x[3], double A[3 * 3]) {
-  A[0] = 0.0;
-  A[1] = -x[2];
-  A[2] = x[1];
-  A[3] = x[2];
-  A[4] = 0.0;
-  A[5] = -x[0];
-  A[6] = -x[1];
-  A[7] = x[0];
-  A[8] = 0.0;
+	// clang-format off
+  A[0] = 0.0;   A[1] = -x[2]; A[2] = x[1];
+  A[3] = x[2];  A[4] = 0.0;   A[5] = -x[0];
+  A[6] = -x[1]; A[7] = x[0];  A[8] = 0.0;
+	// clang-format on
 }
 
 void fwdsubs(const double *L, const double *b, double *y, const size_t n) {
@@ -772,12 +768,16 @@ int check_jacobian(const char *jac_name,
   }
 
   // Print result
+
   if (ok == 0) {
     if (print) {
       LOG_ERROR("Bad jacobian [%s]!\n", jac_name);
-      print_matrix("num diff jac", fdiff, m, n);
-      print_matrix("analytical jac", jac, m, n);
-      print_matrix("difference matrix", delta, m, n);
+			print_matrix("analytical jac", jac, m, n);
+			printf("\n");
+			print_matrix("num diff jac", fdiff, m, n);
+			printf("\n");
+			print_matrix("difference matrix", delta, m, n);
+			printf("\n");
     }
     retval = -1;
   } else {
@@ -1210,26 +1210,106 @@ void chol_lls_solve(const double *A,
 void chol_lls_solve2(const double *A,
                      const double *b,
                      double *x,
-                     const size_t n) {
+                     const size_t m) {
   /* Cholesky Decomposition */
-  const char uplo = 'U';
-  double *a = mat_new(n, n);
-  mat_triu(A, n, a);
+  const char uplo = 'L';
+  double *a = mat_new(m, m);
+  /* mat_triu(A, n, a); */
+  mat_copy(A, m, m, a);
 
-  int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, uplo, n, a, n);
+  print_matrix("a", a, m, m);
+  int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, uplo, m, a, m);
   if (retval != 0) {
     fprintf(stderr, "Failed to decompose A using Cholesky Decomposition!\n");
   }
+  print_matrix("a", a, m, m);
 
   /* Solve Ax = b using Cholesky decomposed A from above */
-  vec_copy(b, n, x);
-  retval = LAPACKE_dpotrs(LAPACK_ROW_MAJOR, uplo, n, n, a, n, x, n);
+  vec_copy(b, m, x);
+  print_vector("b", b, m);
+  retval = LAPACKE_dpotrs(LAPACK_ROW_MAJOR, uplo, m, m, a, m, x, m);
   if (retval != 0) {
     fprintf(stderr, "Failed to solve Ax = b!\n");
   }
 
-  free(a);
+  /* free(a); */
 }
+
+/* int chol_Axb(double *A, double *B, double *x, int m, int iscolmaj) { */
+/* 	static double *buf=NULL; */
+/* 	static int buf_sz=0; */
+/*  */
+/* 	double *a; */
+/* 	int a_sz, tot_sz; */
+/* 	register int i, j; */
+/* 	int info, nrhs=1; */
+/*  */
+/* 	if (A == NULL){ */
+/* 		if (buf) free(buf); */
+/* 		buf=NULL; */
+/* 		buf_sz=0; */
+/*  */
+/* 		return 1; */
+/* 	} */
+/*  */
+/* 	#<{(| Calculate required memory size |)}># */
+/* 	a_sz=(iscolmaj)? 0 : m*m; */
+/* 	tot_sz=a_sz; */
+/*  */
+/* 	if(tot_sz>buf_sz){ #<{(| insufficient memory, allocate a "big" memory chunk at once |)}># */
+/* 		if(buf) free(buf); #<{(| free previously allocated memory |)}># */
+/*  */
+/* 		buf_sz=tot_sz; */
+/* 		buf=(double *)malloc(buf_sz*sizeof(double)); */
+/* 		if(!buf){ */
+/* 			fprintf(stderr, "memory allocation in sba_Axb_Chol() failed!\n"); */
+/* 			exit(1); */
+/* 		} */
+/* 	} */
+/*  */
+/* 	if(!iscolmaj){ */
+/* 		a=buf; */
+/*  */
+/* 		#<{(| store A into a and B into x; A is assumed to be symmetric, hence */
+/* 			* the column and row major order representations are the same */
+/* 			|)}># */
+/* 		for(i=0; i<m; ++i){ */
+/* 			a[i]=A[i]; */
+/* 			x[i]=B[i]; */
+/* 		} */
+/* 		for(j=m*m; i<j; ++i) // copy remaining rows; note that i is not re-initialized */
+/* 			a[i]=A[i]; */
+/* 	} */
+/* 	else{ #<{(| no copying is necessary for A |)}># */
+/* 		a=A; */
+/* 		for(i=0; i<m; ++i) */
+/* 			x[i]=B[i]; */
+/* 	} */
+/*  */
+/*   #<{(| Cholesky decomposition of A |)}># */
+/*   F77_FUNC(dpotrf)("U", (int *)&m, a, (int *)&m, (int *)&info); */
+/*   if(info!=0){ */
+/*     if(info<0){ */
+/*       fprintf(stderr, "LAPACK error: illegal value for argument %d of dpotf2/dpotrf in sba_Axb_Chol()\n", -info); */
+/*       exit(1); */
+/*     } */
+/*     else{ */
+/*       fprintf(stderr, "LAPACK error: the leading minor of order %d is not positive definite,\nthe factorization could not be completed for dpotf2/dpotrf in sba_Axb_Chol()\n", info); */
+/*       return 0; */
+/*     } */
+/*   } */
+/*  */
+/*   #<{(| below are two alternative ways for solving the linear system: |)}># */
+/*   #<{(| use the computed Cholesky in one lapack call |)}># */
+/*   F77_FUNC(dpotrs)("U", (int *)&m, (int *)&nrhs, a, (int *)&m, x, (int *)&m, &info); */
+/*   if(info<0){ */
+/*     fprintf(stderr, "LAPACK error: illegal value for argument %d of dpotrs in sba_Axb_Chol()\n", -info); */
+/*     exit(1); */
+/*   } */
+/*  */
+/* 	return 1; */
+/* } */
+
 
 /******************************************************************************
  *                               NEAREST SPD
@@ -1306,9 +1386,11 @@ void tf_rot_set(double T[4 * 4], const double C[3 * 3]) {
   T[0] = C[0];
   T[1] = C[1];
   T[2] = C[2];
+
   T[4] = C[3];
   T[5] = C[4];
   T[6] = C[5];
+
   T[8] = C[6];
   T[9] = C[7];
   T[10] = C[8];
@@ -1407,6 +1489,94 @@ void tf_hpoint(const double T[4 * 4], const double hp[4], double retval[4]) {
   assert(T != NULL);
   assert(hp != retval);
   dot(T, 4, 4, hp, 4, 1, retval);
+}
+
+void tf_perturb_rot(double T[4 * 4], const double step_size, const int i) {
+	/* Build perturb drvec */
+	double drvec[3] = {0};
+	drvec[i] = step_size;
+
+	/* Decompose transform to rotation and translation */
+	double C[3 * 3] = {0};
+	tf_rot_get(T, C);
+
+	/* Perturb rotation */
+	double C_rvec[3 * 3] = {0};
+	double C_diff[3 * 3] = {0};
+	rvec2rot(drvec, 1e-8, C_rvec);
+	dot(C_rvec, 3, 3, C, 3, 3, C_diff);
+  tf_rot_set(T, C_diff);
+}
+
+void tf_perturb_trans(double T[4 * 4], const double step_size, const int i) {
+	/* Build perturb dr */
+	double dr[3] = {0};
+	dr[i] = step_size;
+
+	/* Decompose transform get translation */
+	double r[3] = {0};
+	tf_trans_get(T, r);
+
+	/* Perturb translation */
+  const double r_diff[3] = {r[0] + dr[0], r[1] + dr[1], r[2] + dr[2]};
+	tf_trans_set(T, r_diff);
+}
+
+void rvec2rot(const double *rvec, const double eps, double *R) {
+  /* Magnitude of rvec */
+  const double theta = sqrt(rvec[0] * rvec[0] + rvec[1] * rvec[1]);
+  // ^ basically norm(rvec), but faster
+
+  /* Check if rotation is too small */
+  if (theta < eps) {
+		R[0] = 1.0;
+		R[1] = -rvec[2];
+		R[2] = rvec[1];
+
+    R[3] = rvec[2];
+		R[4] = 1.0;
+		R[5] = -rvec[0];
+
+    R[6] = -rvec[1];
+		R[7] = rvec[0],
+		R[8] = 1.0;
+		return;
+  }
+
+  /* Convert rvec to rotation matrix */
+  double rvec_normed[3] = {rvec[0], rvec[1], rvec[2]};
+	vec_scale(rvec_normed, 3, 1 / theta);
+  const double x = rvec_normed[0];
+  const double y = rvec_normed[1];
+  const double z = rvec_normed[2];
+
+  const double c = cos(theta);
+  const double s = sin(theta);
+  const double C = 1 - c;
+
+  const double xs = x * s;
+  const double ys = y * s;
+  const double zs = z * s;
+
+  const double xC = x * C;
+  const double yC = y * C;
+  const double zC = z * C;
+
+  const double xyC = x * yC;
+  const double yzC = y * zC;
+  const double zxC = z * xC;
+
+  R[0] = x * xC + c;
+	R[1] = xyC - zs;
+	R[2] =  zxC + ys;
+
+  R[3] = xyC + zs;
+	R[4] = y * yC + c;
+	R[5] = yzC - xs;
+
+	R[6] = zxC - ys;
+	R[7] = yzC + xs;
+	R[8] = z * zC + c;
 }
 
 void euler321(const double euler[3], double C[3 * 3]) {

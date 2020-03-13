@@ -5,6 +5,31 @@
 
 #include "zero/core.h"
 
+static void project(const double *K,
+										const double *T_WC,
+										const double *p_W,
+										double *z) {
+	/* Invert camera pose to T_CW */
+	double T_CW[4 * 4] = {0};
+	tf_inv(T_WC, T_CW);
+
+	/* Transform point from world frame to camera frame */
+	double p_C[3] = {0};
+	tf_point(T_CW, p_W, p_C);
+
+	/* Project */
+	const double x = p_C[0] / p_C[2];
+	const double y = p_C[1] / p_C[2];
+
+	/* Scale and center */
+	const double fx = K[0];
+	const double fy = K[4];
+	const double cx = K[2];
+	const double cy = K[5];
+	z[0] = fx * x + cx;
+	z[1] = fy * y + cy;
+}
+
 static void load_camera(const char *data_path, double K[3 * 3]) {
   /* Setup csv path */
   char cam_csv[1000] = {0};
@@ -331,7 +356,7 @@ static void J_intrinsics_point(const double K[3 * 3], double J[2 * 2]) {
   /* 		  0.0, K[1, 1]]; */
   zeros(J, 2, 2);
   J[0] = K[0];
-  J[3] = K[2];
+  J[3] = K[4];
 }
 
 static void J_project(const double p_C[3], double J[2 * 3]) {
@@ -366,7 +391,7 @@ static void J_camera_rotation(const double q_WC[4],
   double S[3 * 3] = {0};
   skew(x, S);
 
-  dot(C_WC, 3, 3, S, 3, 3, J);
+  dot(C_CW, 3, 3, S, 3, 3, J);
 }
 
 static void J_camera_translation(const double q_WC[4], double J[3 * 3]) {
@@ -387,6 +412,120 @@ static void J_target_point(const double q_WC[4], double J[3 * 3]) {
   /* J = C_CW */
   mat_transpose(C_WC, 3, 3, J);
 }
+
+static int check_J_cam_pose(const double *cam_K,
+														const double *T_WC,
+														const double *p_W,
+														const double *J_cam_pose) {
+	const double step_size = 1e-8;
+	const double threshold = 1e-2;
+  const double z[2] = {0.0, 0.0};
+  double fdiff[2 * 6] = {0.0};
+
+  // Perturb rotation
+  for (int i = 0; i < 3; i++) {
+    // Forward difference
+		// -- Perturb rotation
+    double T_WC_fd[4 * 4] = {0};
+		mat_copy(T_WC, 4, 4, T_WC_fd);
+		tf_perturb_rot(T_WC_fd, step_size, i);
+		// -- Project landmark to image plane
+		double z_fd[2] = {0};
+		project(cam_K, T_WC_fd, p_W, z_fd);
+		// -- Calculate reprojection error
+		double e_fd[2] = {0};
+		e_fd[0] = z[0] - z_fd[0];
+		e_fd[1] = z[1] - z_fd[1];
+
+    // Backward difference
+		// -- Perturb rotation
+    double T_WC_bd[4 * 4] = {0};
+		mat_copy(T_WC, 4, 4, T_WC_bd);
+		tf_perturb_rot(T_WC_bd, -step_size, i);
+		// -- Project landmark to image plane
+		double z_bd[2] = {0};
+		project(cam_K, T_WC_bd, p_W, z_bd);
+		// -- Calculate reprojection error
+		double e_bd[2] = {0};
+		e_bd[0] = z[0] - z_bd[0];
+		e_bd[1] = z[1] - z_bd[1];
+
+		// Set finite difference
+		fdiff[i] = (e_fd[0] - e_bd[0]) / (2 * step_size);
+		fdiff[i + 6] = (e_fd[1] - e_bd[1]) / (2 * step_size);
+  }
+
+  // Perturb translation
+  for (int i = 0; i < 3; i++) {
+    // Forward difference
+		// -- Perturb translation
+    double T_WC_fd[4 * 4] = {0};
+		mat_copy(T_WC, 4, 4, T_WC_fd);
+		tf_perturb_trans(T_WC_fd, step_size, i);
+		// -- Project landmark to image plane
+		double z_fd[2] = {0};
+		project(cam_K, T_WC_fd, p_W, z_fd);
+		// -- Calculate reprojection error
+		double e_fd[2] = {z[0] - z_fd[0], z[1] - z_fd[1]};
+
+    // Backward difference
+		// -- Perturb translation
+    double T_WC_bd[4 * 4] = {0};
+		mat_copy(T_WC, 4, 4, T_WC_bd);
+		tf_perturb_trans(T_WC_bd, -step_size, i);
+		// -- Project landmark to image plane
+		double z_bd[2] = {0};
+		project(cam_K, T_WC_bd, p_W, z_bd);
+		// -- Calculate reprojection error
+		double e_bd[2] = {z[0] - z_bd[0], z[1] - z_bd[1]};
+
+		// Set finite difference
+		fdiff[i + 3] = (e_fd[0] - e_bd[0]) / (2 * step_size);
+		fdiff[i + 9] = (e_fd[1] - e_bd[1]) / (2 * step_size);
+  }
+
+  return check_jacobian("J_cam_pose", fdiff, J_cam_pose, 2, 6, threshold, 1);
+}
+
+static int check_J_landmark(const double *cam_K,
+														const double *T_WC,
+														const double *p_W,
+														const double *J_landmark) {
+	const double step_size = 1e-8;
+	const double threshold = 1e-2;
+  const double z[2] = {0.0, 0.0};
+  double fdiff[2 * 6] = {0.0};
+
+  // Perturb landmark
+  for (int i = 0; i < 3; i++) {
+    // Forward difference
+		// -- Perturb landmark
+    double p_W_fd[3] = {p_W[0], p_W[1], p_W[2]};
+		p_W_fd[i] += step_size;
+		// -- Project landmark to image plane
+		double z_fd[2] = {0};
+		project(cam_K, T_WC, p_W_fd, z_fd);
+		// -- Calculate reprojection error
+		double e_fd[2] = {z[0] - z_fd[0], z[1] - z_fd[1]};
+
+    // Backward difference
+		// -- Perturb landmark
+    double p_W_bd[3] = {p_W[0], p_W[1], p_W[2]};
+		p_W_bd[i] -= step_size;
+		// -- Project landmark to image plane
+		double z_bd[2] = {0};
+		project(cam_K, T_WC, p_W_bd, z_bd);
+		// -- Calculate reprojection error
+		double e_bd[2] = {z[0] - z_bd[0], z[1] - z_bd[1]};
+
+		// Set finite difference
+		fdiff[i] = (e_fd[0] - e_bd[0]) / (2 * step_size);
+		fdiff[i + 3] = (e_fd[1] - e_bd[1]) / (2 * step_size);
+  }
+
+  return check_jacobian("J_landmark", fdiff, J_landmark, 2, 3, threshold, 1);
+}
+
 
 double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
   /* Initialize memory for jacobian */
@@ -452,8 +591,14 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
 
       /* J_cam_pos = -1 * J_K * J_P * J_r; */
       double J_cam_pos[2 * 3] = {0};
+      dot(J_K, 2, 2, J_P, 2, 3, J_KP);
       dot(J_KP, 2, 3, J_r, 3, 3, J_cam_pos);
       mat_scale(J_cam_pos, 2, 3, -1);
+
+      /* double J_cam_pose[2 * 6] = {0}; */
+      /* mat_block_set(J_cam_pose, 6, 0, 0, 1, 2, J_cam_rot); */
+      /* mat_block_set(J_cam_pose, 6, 0, 3, 1, 5, J_cam_pos); */
+			/* check_J_cam_pose(data->cam_K, T_WC, p_W, J_cam_pose); */
 
       /* -- Fill in the big jacobian */
       mat_block_set(J, *J_cols, rs, cs, re, cs + 3, J_cam_rot);
@@ -474,6 +619,8 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
       /* J_point = -1 * J_K * J_P * J_target_point(q_WC); */
       double J_point[2 * 3] = {0};
       dot(J_KP, 2, 3, J_p, 3, 3, J_point);
+      mat_scale(J_point, 2, 3, -1);
+			/* check_J_landmark(data->cam_K, T_WC, p_W, J_point); */
 
       /* -- Fill in the big jacobian */
       mat_block_set(J, *J_cols, rs, cs, re, ce, J_point);
@@ -495,19 +642,22 @@ void ba_update(
   /* W = diag(repmat(sigma, data->nb_measurements, 1)); */
 
   /* Solve Gauss-Newton system [H dx = g]: Solve for dx */
+	/* -- Calculate L.H.S of Gauss-Newton */
   /* H = (E' * W * E); */
   double *E_t = mat_new(E_cols, E_rows);
   double *H = mat_new(E_cols, E_cols);
   mat_transpose(E, E_rows, E_cols, E_t);
   dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
 
-  /* Apply damping */
+  /* -- Apply damping */
+	/* H = H + lambda * I */
   double *damp_term = mat_new(E_cols, E_cols);
   double *H_damped = mat_new(E_cols, E_cols);
   eye(damp_term, E_cols, E_cols);
-  mat_scale(damp_term, E_cols, E_cols, 10.0);
+  mat_scale(damp_term, E_cols, E_cols, 200.0);
   mat_add(H, damp_term, H_damped, E_cols, E_cols);
 
+	/* -- Calculate R.H.S of Gauss-Newton */
   /* g = -E' * W * e; */
   double *g = vec_new(E_cols);
   mat_scale(E_t, E_cols, E_rows, -1.0);
