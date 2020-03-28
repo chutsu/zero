@@ -1,11 +1,20 @@
 #include "zero/munit.h"
 #include "zero/ba.h"
 
-/* #define TEST_DATA "zero/tests/test_data/ba_data" */
-#define TEST_DATA "/tmp/ba_data"
+/* #define TEST_DATA "zero/tests/test_data/ba_data_gt" */
+#define TEST_DATA "zero/tests/test_data/ba_data_noisy"
+#define TEST_JAC "zero/tests/test_data/ba_data_noisy/J.csv"
 
 #define STEP_SIZE 1e-8
 #define THRESHOLD 1e-3
+
+int test_load_camera() {
+  double K[3 * 3] = {0};
+  load_camera(TEST_DATA, K);
+  print_matrix("K", K, 3, 3);
+
+  return 0;
+}
 
 int test_parse_keypoints_line() {
   keypoints_t *keypoints = parse_keypoints_line("4,1,2,3,4\n");
@@ -17,7 +26,7 @@ int test_parse_keypoints_line() {
   MU_CHECK(fltcmp(keypoints->data[1][0], 3.0) == 0);
   MU_CHECK(fltcmp(keypoints->data[1][1], 4.0) == 0);
 
-  keypoints_delete(keypoints);
+  keypoints_free(keypoints);
 
   return 0;
 }
@@ -31,7 +40,7 @@ int test_load_keypoints() {
     MU_CHECK(keypoints[i]->size > 0);
     /* printf("frame[%d]\n", i); */
     /* keypoints_print(keypoints[i]); */
-    keypoints_delete(keypoints[i]);
+    keypoints_free(keypoints[i]);
   }
   free(keypoints);
 
@@ -197,30 +206,43 @@ int test_J_landmark() {
 }
 
 int test_ba_jacobians() {
-  /* Test */
+  /* Test function */
   int J_rows = 0;
   int J_cols = 0;
   ba_data_t *data = ba_load_data(TEST_DATA);
   double *J = ba_jacobian(data, &J_rows, &J_cols);
+  mat_save("/tmp/J.csv", J, J_rows, J_cols);
 
-  /* Write Jacobians to csv file */
-  int idx = 0;
-  FILE *csv_file = fopen("/tmp/J.csv", "w");
-  for (int i = 0; i < J_rows; i++) {
-    for (int j = 0; j < J_cols; j++) {
-      fprintf(csv_file, "%f", J[idx]);
-      idx++;
-      if ((j + 1) != J_cols) {
-        fprintf(csv_file, ",");
+  /* Load ground truth jacobian */
+  int nb_rows = 0;
+  int nb_cols = 0;
+  double **J_data = csv_data(TEST_JAC, &nb_rows, &nb_cols);
+
+  /* Compare calculated jacobian against ground truth jacobian */
+  MU_CHECK(J_rows == nb_rows);
+  MU_CHECK(J_cols == nb_cols);
+  int index = 0;
+  int jac_ok = 1;
+
+  for (int i = 0; i < nb_rows; i++) {
+    for (int j = 0; j < nb_cols; j++) {
+      if (fabs(J_data[i][j] - J[index]) > 8.0) {
+        printf("row: [%d] col: [%d] index: [%d] ", i, j, index);
+        printf("expected: [%f] ", J_data[i][j]);
+        printf("got: [%f]\n", J[index]);
+        jac_ok = 0;
+        goto end;
       }
+      index++;
     }
-    fprintf(csv_file, "\n");
   }
-  fclose(csv_file);
+end:
+  MU_CHECK(jac_ok == 1);
 
   /* Clean up */
   free(J);
   ba_data_free(data);
+  /* OCTAVE_SCRIPT("zero/tests/scripts/plot_matrix.m /tmp/J.csv"); */
 
   return 0;
 }
@@ -243,10 +265,11 @@ int test_ba_update() {
 
   /* Apply damping */
 	/* H = H + lambda * I */
+	double lambda = 0.001;
   double *damp_term = mat_new(E_cols, E_cols);
   double *H_damped = mat_new(E_cols, E_cols);
   eye(damp_term, E_cols, E_cols);
-  mat_scale(damp_term, E_cols, E_cols, 100.0);
+  mat_scale(damp_term, E_cols, E_cols, lambda);
   mat_add(H, damp_term, H_damped, E_cols, E_cols);
 
   /* g = -E' * W * e; */
@@ -303,6 +326,7 @@ int test_ba_solve() {
 }
 
 void test_suite() {
+  MU_ADD_TEST(test_load_camera);
   MU_ADD_TEST(test_parse_keypoints_line);
   MU_ADD_TEST(test_load_keypoints);
   MU_ADD_TEST(test_ba_load_data);

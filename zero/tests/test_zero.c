@@ -1,9 +1,64 @@
 #include "zero/munit.h"
-#include "zero/core.h"
+#include "zero/zero.h"
 
 /* TEST PARAMS */
 #define M 10
 #define N 10
+#define TEST_CSV "zero/tests/test_data/test_csv.csv"
+#define TEST_POSES_CSV "zero/tests/test_data/poses.csv"
+
+int test_malloc_string() {
+  char *s = malloc_string("hello world!");
+  MU_CHECK(strcmp(s, "hello world!") == 0);
+  return 0;
+}
+
+int test_csv_rows() {
+  int nb_rows = csv_rows(TEST_CSV);
+  MU_CHECK(nb_rows == 10);
+  return 0;
+}
+
+int test_csv_cols() {
+  int nb_cols = csv_cols(TEST_CSV);
+  MU_CHECK(nb_cols == 10);
+  return 0;
+}
+
+int test_csv_fields() {
+  int nb_fields = 0;
+  char **fields = csv_fields(TEST_CSV, &nb_fields);
+  char *expected[10] = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+
+  MU_CHECK(nb_fields == 10);
+  for (int i = 0; i < nb_fields; i++) {
+    /* printf("field[%d]: %s\n", i, fields[i]); */
+    MU_CHECK(strcmp(fields[i], expected[i]) == 0);
+    free(fields[i]);
+  }
+  free(fields);
+
+  return 0;
+}
+
+int test_csv_data() {
+  int nb_rows = 0;
+  int nb_cols = 0;
+  double **data = csv_data(TEST_CSV, &nb_rows, &nb_cols);
+
+  int index = 0;
+  for (int i = 0; i < nb_rows; i++) {
+    for (int j = 0; j < nb_rows; j++) {
+      MU_CHECK(fltcmp(data[i][j], index + 1) == 0);
+      index++;
+
+      /* printf("%f ", data[i][j]); */
+    }
+    /* printf("\n"); */
+  }
+
+  return 0;
+}
 
 int test_eye() {
   double A[25] = {0.0};
@@ -893,8 +948,124 @@ int test_quat2rot() {
   return 0;
 }
 
+int test_pose_init() {
+  pose_t pose;
+
+  timestamp_t ts = 0;
+  double q[4] = {1.0, 2.0, 3.0, 4.0};
+  double r[3] = {1.0, 2.0, 3.0};
+  pose_init(&pose, ts, q, r);
+
+  MU_CHECK(pose.ts == 0);
+  MU_CHECK(fltcmp(pose.q[0], 1.0) == 0);
+  MU_CHECK(fltcmp(pose.q[1], 2.0) == 0);
+  MU_CHECK(fltcmp(pose.q[2], 3.0) == 0);
+  MU_CHECK(fltcmp(pose.q[3], 4.0) == 0);
+  MU_CHECK(fltcmp(pose.r[0], 1.0) == 0);
+  MU_CHECK(fltcmp(pose.r[1], 2.0) == 0);
+  MU_CHECK(fltcmp(pose.r[2], 3.0) == 0);
+
+  return 0;
+}
+
+int test_pose_set_get_quat() {
+  pose_t pose;
+
+  double q[4] = {1.0, 2.0, 3.0, 4.0};
+  pose_set_quat(&pose, q);
+
+  double q_got[4] = {1.0, 2.0, 3.0, 4.0};
+  pose_get_quat(&pose, q_got);
+
+  MU_CHECK(fltcmp(pose.q[0], 1.0) == 0);
+  MU_CHECK(fltcmp(pose.q[1], 2.0) == 0);
+  MU_CHECK(fltcmp(pose.q[2], 3.0) == 0);
+  MU_CHECK(fltcmp(pose.q[3], 4.0) == 0);
+
+  MU_CHECK(fltcmp(q_got[0], 1.0) == 0);
+  MU_CHECK(fltcmp(q_got[1], 2.0) == 0);
+  MU_CHECK(fltcmp(q_got[2], 3.0) == 0);
+  MU_CHECK(fltcmp(q_got[3], 4.0) == 0);
+
+  return 0;
+}
+
+int test_pose_set_get_trans() {
+  pose_t pose;
+
+  double r[3] = {1.0, 2.0, 3.0};
+  pose_set_trans(&pose, r);
+
+  double r_got[3] = {1.0, 2.0, 3.0};
+  pose_get_trans(&pose, r_got);
+
+  MU_CHECK(fltcmp(pose.r[0], 1.0) == 0);
+  MU_CHECK(fltcmp(pose.r[1], 2.0) == 0);
+  MU_CHECK(fltcmp(pose.r[2], 3.0) == 0);
+
+  MU_CHECK(fltcmp(r_got[0], 1.0) == 0);
+  MU_CHECK(fltcmp(r_got[1], 2.0) == 0);
+  MU_CHECK(fltcmp(r_got[2], 3.0) == 0);
+
+  return 0;
+}
+
+int test_pose_print() {
+  pose_t pose;
+
+  timestamp_t ts = 0;
+  double q[4] = {1.0, 0.0, 0.0, 0.0};
+  double r[3] = {0.0, 0.0, 0.0};
+  pose_init(&pose, ts, q, r);
+  pose_print("pose", &pose);
+
+  return 0;
+}
+
+int test_pose2tf() {
+  pose_t pose;
+
+  timestamp_t ts = 0;
+  double q[4] = {1.0, 0.0, 0.0, 0.0};
+  double r[3] = {1.0, 2.0, 3.0};
+  pose_init(&pose, ts, q, r);
+
+  double T[4 * 4] = {0};
+  pose2tf(&pose, T);
+  /* print_matrix("T", T, 4, 4); */
+
+  MU_CHECK(fltcmp(T[0], 1.0) == 0);
+  MU_CHECK(fltcmp(T[5], 1.0) == 0);
+  MU_CHECK(fltcmp(T[10], 1.0) == 0);
+
+  MU_CHECK(fltcmp(T[3], 1.0) == 0);
+  MU_CHECK(fltcmp(T[7], 2.0) == 0);
+  MU_CHECK(fltcmp(T[11], 3.0) == 0);
+
+  return 0;
+}
+
+int test_load_poses() {
+  int nb_poses = 0;
+  pose_t *poses = load_poses(TEST_POSES_CSV, &nb_poses);
+
+  for (int i = 0; i < nb_poses; i++) {
+    pose_print("pose", &poses[i]);
+  }
+  free(poses);
+
+  return 0;
+}
+
 void test_suite() {
-  /* Linear Algebra */
+  /* DATA */
+  MU_ADD_TEST(test_malloc_string);
+  MU_ADD_TEST(test_csv_rows);
+  MU_ADD_TEST(test_csv_cols);
+  MU_ADD_TEST(test_csv_fields);
+  MU_ADD_TEST(test_csv_data);
+
+  /* LINEAR ALGEBRA */
   MU_ADD_TEST(test_eye);
   MU_ADD_TEST(test_ones);
   MU_ADD_TEST(test_zeros);
@@ -927,7 +1098,7 @@ void test_suite() {
   MU_ADD_TEST(test_chol_lls_solve2);
   /* MU_ADD_TEST(test_chol_Axb); */
 
-  /* Transforms */
+  /* TRANSFORMS */
   MU_ADD_TEST(test_tf_rot_set);
   MU_ADD_TEST(test_tf_trans_set);
   MU_ADD_TEST(test_tf_trans_get);
@@ -942,6 +1113,14 @@ void test_suite() {
   MU_ADD_TEST(test_rot2quat);
   MU_ADD_TEST(test_quat2euler);
   MU_ADD_TEST(test_quat2rot);
+
+  /* POSE */
+  MU_ADD_TEST(test_pose_init);
+  MU_ADD_TEST(test_pose_set_get_quat);
+  MU_ADD_TEST(test_pose_set_get_trans);
+  MU_ADD_TEST(test_pose_print);
+  MU_ADD_TEST(test_pose2tf);
+  MU_ADD_TEST(test_load_poses);
 }
 
 MU_RUN_TESTS(test_suite);

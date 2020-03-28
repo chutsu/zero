@@ -1,4 +1,4 @@
-#include "zero/core.h"
+#include "zero/zero.h"
 
 /******************************************************************************
  *                                   DATA
@@ -128,7 +128,7 @@ double **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
 
   /* Initialize memory for csv data */
   double **data = malloc(sizeof(double *) * *nb_rows);
-  for (int i = 0; i < *nb_cols; i++) {
+  for (int i = 0; i < *nb_rows; i++) {
     data[i] = malloc(sizeof(double) * *nb_cols);
   }
 
@@ -145,11 +145,14 @@ double **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
   int row_idx = 0;
   int col_idx = 0;
 
+  /* Loop through data line by line */
   while (fgets(line, len_max, infile) != NULL) {
+    /* Ignore if comment line */
     if (line[0] == '#') {
       continue;
     }
 
+    /* Iterate through values in line separated by commas */
     char entry[100] = {0};
     for (size_t i = 0; i < strlen(line); i++) {
       char c = line[i];
@@ -170,7 +173,7 @@ double **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
     row_idx++;
   }
 
-  /* Cleanup */
+  /* Clean up */
   fclose(infile);
 
   return data;
@@ -1770,6 +1773,19 @@ void quatdelta(const double dalpha[3], double dq[4]) {
  *                                   POSE
  ******************************************************************************/
 
+void pose_init(pose_t *pose,
+               const timestamp_t ts,
+               const double q[4],
+               const double r[3]) {
+  assert(pose != NULL);
+  assert(q != NULL);
+  assert(r != NULL);
+
+  pose->ts = ts;
+  pose_set_quat(pose, q);
+  pose_set_trans(pose, r);
+}
+
 void pose_set_quat(pose_t *pose, const double q[4]) {
   assert(pose != NULL);
   assert(q != NULL);
@@ -1787,6 +1803,25 @@ void pose_set_trans(pose_t *pose, const double r[3]) {
   pose->r[0] = r[0];
   pose->r[1] = r[1];
   pose->r[2] = r[2];
+}
+
+void pose_get_quat(const pose_t *pose, double q[4]) {
+  assert(pose != NULL);
+  assert(q != NULL);
+
+  q[0] = pose->q[0];
+  q[1] = pose->q[1];
+  q[2] = pose->q[2];
+  q[3] = pose->q[3];
+}
+
+void pose_get_trans(const pose_t *pose, double r[3]) {
+  assert(pose != NULL);
+  assert(r != NULL);
+
+  r[0] = pose->r[0];
+  r[1] = pose->r[1];
+  r[2] = pose->r[2];
 }
 
 void pose_print(const char *prefix, const pose_t *pose) {

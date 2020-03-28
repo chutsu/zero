@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#include "zero/core.h"
+#include "zero/zero.h"
 
 static void project(const double *K,
 										const double *T_WC,
@@ -83,7 +83,7 @@ struct keypoints_t {
   int size;
 } typedef keypoints_t;
 
-void keypoints_delete(keypoints_t *keypoints) {
+void keypoints_free(keypoints_t *keypoints) {
   for (int i = 0; i < keypoints->size; i++) {
     free(keypoints->data[i]);
   }
@@ -272,7 +272,7 @@ void ba_data_free(ba_data_t *data) {
 
   /* Keypoints */
   for (int i = 0; i < data->nb_frames; i++) {
-    keypoints_delete(data->keypoints[i]);
+    keypoints_free(data->keypoints[i]);
   }
   free(data->keypoints);
 
@@ -526,7 +526,6 @@ static int check_J_landmark(const double *cam_K,
   return check_jacobian("J_landmark", fdiff, J_landmark, 2, 3, threshold, 1);
 }
 
-
 double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
   /* Initialize memory for jacobian */
   *J_rows = ba_residual_size(data);
@@ -601,7 +600,7 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
 			/* check_J_cam_pose(data->cam_K, T_WC, p_W, J_cam_pose); */
 
       /* -- Fill in the big jacobian */
-      mat_block_set(J, *J_cols, rs, cs, re, cs + 3, J_cam_rot);
+      mat_block_set(J, *J_cols, rs, cs, re, cs + 2, J_cam_rot);
       mat_block_set(J, *J_cols, rs, cs + 3, re, ce, J_cam_pos);
       /* double J_cam_pose_ones[2 * 6] = {0.0}; */
       /* ones(J_cam_pose_ones, 2, 6); */
@@ -654,7 +653,7 @@ void ba_update(
   double *damp_term = mat_new(E_cols, E_cols);
   double *H_damped = mat_new(E_cols, E_cols);
   eye(damp_term, E_cols, E_cols);
-  mat_scale(damp_term, E_cols, E_cols, 200.0);
+  mat_scale(damp_term, E_cols, E_cols, 1.0);
   mat_add(H, damp_term, H_damped, E_cols, E_cols);
 
 	/* -- Calculate R.H.S of Gauss-Newton */

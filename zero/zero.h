@@ -1,5 +1,5 @@
-#ifndef CORE_H
-#define CORE_H
+#ifndef ZERO_H
+#define ZERO_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -167,7 +167,7 @@ int check_jacobian(const char *jac_name,
 									 const int print);
 
 /******************************************************************************
- *                                   SVD
+ *                                  SVD
  ******************************************************************************/
 
 int svd(double *A, int m, int n, double *U, double *s, double *V_t);
@@ -235,10 +235,14 @@ struct pose_t {
   double r[3];
 } typedef pose_t;
 
+void pose_init(pose_t *pose,
+               const timestamp_t ts,
+               const double q[4],
+               const double r[3]);
 void pose_set_quat(pose_t *pose, const double q[4]);
 void pose_set_trans(pose_t *pose, const double r[3]);
-void pose_quat_get(const pose_t *pose, double q[4]);
-void pose_trans_get(const pose_t *pose, double r[3]);
+void pose_get_quat(const pose_t *pose, double q[4]);
+void pose_get_trans(const pose_t *pose, double r[3]);
 void pose_print(const char *prefix, const pose_t *pose);
 void pose2tf(const pose_t *pose, double T[4 * 4]);
 pose_t *load_poses(const char *csv_path, int *nb_poses);
@@ -325,4 +329,4 @@ void equi4_param_jacobian(const double k1,
 #ifdef __cplusplus
 }
 #endif
-#endif // CORE_H
+#endif // ZERO_H
