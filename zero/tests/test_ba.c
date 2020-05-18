@@ -1,16 +1,18 @@
 #include "zero/munit.h"
 #include "zero/ba.h"
 
-/* #define TEST_DATA "zero/tests/test_data/ba_data_gt" */
-#define TEST_DATA "zero/tests/test_data/ba_data_noisy"
-#define TEST_JAC "zero/tests/test_data/ba_data_noisy/J.csv"
+/* #define TEST_BA_DATA "zero/tests/test_data/ba_data_gt" */
+#define TEST_BA_DATA "zero/tests/test_data/ba_data_noisy"
+#define TEST_BA_JAC "zero/tests/test_data/ba_jacobian.csv"
+#define TEST_BA_UPDATE_H "zero/tests/test_data/ba_update_H.csv"
+#define TEST_BA_UPDATE_DX "zero/tests/test_data/ba_update_dx.csv"
 
 #define STEP_SIZE 1e-8
 #define THRESHOLD 1e-3
 
 int test_load_camera() {
   double K[3 * 3] = {0};
-  load_camera(TEST_DATA, K);
+  load_camera(TEST_BA_DATA, K);
   print_matrix("K", K, 3, 3);
 
   return 0;
@@ -33,7 +35,7 @@ int test_parse_keypoints_line() {
 
 int test_load_keypoints() {
   int nb_frames = 0;
-  keypoints_t **keypoints = load_keypoints(TEST_DATA, &nb_frames);
+  keypoints_t **keypoints = load_keypoints(TEST_BA_DATA, &nb_frames);
 
   for (int i = 0; i < nb_frames; i++) {
     MU_CHECK(keypoints[i] != NULL);
@@ -48,13 +50,13 @@ int test_load_keypoints() {
 }
 
 int test_ba_load_data() {
-  ba_data_t *data = ba_load_data(TEST_DATA);
+  ba_data_t *data = ba_load_data(TEST_BA_DATA);
   ba_data_free(data);
   return 0;
 }
 
 int test_ba_residuals() {
-  ba_data_t *data = ba_load_data(TEST_DATA);
+  ba_data_t *data = ba_load_data(TEST_BA_DATA);
 
   int r_size = 0;
   double *r = ba_residuals(data, &r_size);
@@ -205,18 +207,18 @@ int test_J_landmark() {
 	return 0;
 }
 
-int test_ba_jacobians() {
+int test_ba_jacobian() {
   /* Test function */
   int J_rows = 0;
   int J_cols = 0;
-  ba_data_t *data = ba_load_data(TEST_DATA);
+  ba_data_t *data = ba_load_data(TEST_BA_DATA);
   double *J = ba_jacobian(data, &J_rows, &J_cols);
-  mat_save("/tmp/J.csv", J, J_rows, J_cols);
+  /* mat_save("/tmp/J.csv", J, J_rows, J_cols); */
 
   /* Load ground truth jacobian */
-  int nb_rows = 0;
-  int nb_cols = 0;
-  double **J_data = csv_data(TEST_JAC, &nb_rows, &nb_cols);
+  int nb_rows = 0.0;
+  int nb_cols = 0.0;
+  double **J_data = csv_data(TEST_BA_JAC, &nb_rows, &nb_cols);
 
   /* Compare calculated jacobian against ground truth jacobian */
   MU_CHECK(J_rows == nb_rows);
@@ -226,7 +228,7 @@ int test_ba_jacobians() {
 
   for (int i = 0; i < nb_rows; i++) {
     for (int j = 0; j < nb_cols; j++) {
-      if (fabs(J_data[i][j] - J[index]) > 8.0) {
+      if (fabs(J_data[i][j] - J[index]) > 1e-5) {
         printf("row: [%d] col: [%d] index: [%d] ", i, j, index);
         printf("expected: [%f] ", J_data[i][j]);
         printf("got: [%f]\n", J[index]);
@@ -248,60 +250,24 @@ end:
 }
 
 int test_ba_update() {
-  ba_data_t *data = ba_load_data(TEST_DATA);
+  ba_data_t *data = ba_load_data(TEST_BA_DATA);
 
   int e_size = 0;
-  double *e = ba_residuals(data, &e_size);
+  double *e_before = ba_residuals(data, &e_size);
+  printf("before: %f\n", ba_cost(e_before, e_size));
 
   int E_rows = 0;
   int E_cols = 0;
   double *E = ba_jacobian(data, &E_rows, &E_cols);
 
-  /* H = (E' * W * E); */
-  double *E_t = mat_new(E_cols, E_rows);
-  double *H = mat_new(E_cols, E_cols);
-  mat_transpose(E, E_rows, E_cols, E_t);
-  dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
+  ba_update(data, e_before, e_size, E, E_rows, E_cols);
 
-  /* Apply damping */
-	/* H = H + lambda * I */
-	double lambda = 0.001;
-  double *damp_term = mat_new(E_cols, E_cols);
-  double *H_damped = mat_new(E_cols, E_cols);
-  eye(damp_term, E_cols, E_cols);
-  mat_scale(damp_term, E_cols, E_cols, lambda);
-  mat_add(H, damp_term, H_damped, E_cols, E_cols);
+  double *e_after = ba_residuals(data, &e_size);
+  printf("after: %f\n", ba_cost(e_after, e_size));
 
-  /* g = -E' * W * e; */
-  double *g = vec_new(E_cols);
-  mat_scale(E_t, E_cols, E_rows, -1.0);
-  dot(E_t, E_cols, E_rows, e, e_size, 1, g);
-
-  /* #<{(| dx = pinv(H) * g; |)}># */
-  /* double *H_inv = mat_new(E_cols, E_cols); */
-  /* double *dx = vec_new(E_cols); */
-  /* pinv(H, E_cols, E_cols, H_inv); */
-  /* dot(H_inv, E_cols, E_cols, g, E_cols, 1, dx); */
-
-  /* Use Cholesky on [H dx = g] to solve for dx */
-  double *dx = vec_new(E_cols);
-  chol_lls_solve(H_damped, g, dx, E_cols);
-
-  /* mat_save("/tmp/E.csv", E, E_rows, E_cols); */
-  /* mat_save("/tmp/E_t.csv", E_t, E_cols, E_rows); */
-  mat_save("/tmp/H.csv", H, E_cols, E_cols);
-  mat_save("/tmp/H_damped.csv", H_damped, E_cols, E_cols);
-  mat_save("/tmp/g.csv", g, E_cols, 1);
-  mat_save("/tmp/dx.csv", dx, E_cols, 1);
-
-  /* ba_update(data, e, e_size, E, E_rows, E_cols); */
-
-  free(e);
+  free(e_before);
+  free(e_after);
   free(E);
-  free(E_t);
-  free(H);
-  /* free(H_inv); */
-  free(g);
   ba_data_free(data);
 
   return 0;
@@ -318,7 +284,7 @@ int test_ba_cost() {
 }
 
 int test_ba_solve() {
-  ba_data_t *data = ba_load_data(TEST_DATA);
+  ba_data_t *data = ba_load_data(TEST_BA_DATA);
   ba_solve(data);
   ba_data_free(data);
 
@@ -333,7 +299,7 @@ void test_suite() {
   MU_ADD_TEST(test_ba_residuals);
   MU_ADD_TEST(test_J_cam_pose);
   MU_ADD_TEST(test_J_landmark);
-  MU_ADD_TEST(test_ba_jacobians);
+  MU_ADD_TEST(test_ba_jacobian);
   MU_ADD_TEST(test_ba_update);
   MU_ADD_TEST(test_ba_cost);
   MU_ADD_TEST(test_ba_solve);

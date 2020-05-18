@@ -20,9 +20,8 @@ int csv_rows(const char *fp) {
 
   /* Loop through lines */
   int nb_rows = 0;
-  char line[1024] = {0};
-  size_t len_max = 1024;
-  while (fgets(line, len_max, infile) != NULL) {
+  char line[MAX_LINE_LENGTH] = {0};
+  while (fgets(line, MAX_LINE_LENGTH, infile) != NULL) {
     if (line[0] != '#') {
       nb_rows++;
     }
@@ -43,9 +42,8 @@ int csv_cols(const char *fp) {
   }
 
   /* Get line that isn't the header */
-  char line[1024] = {0};
-  size_t len_max = 1024;
-  while (fgets(line, len_max, infile) != NULL) {
+  char line[MAX_LINE_LENGTH] = {0};
+  while (fgets(line, MAX_LINE_LENGTH, infile) != NULL) {
     if (line[0] != '#') {
       break;
     }
@@ -54,7 +52,7 @@ int csv_cols(const char *fp) {
   /* Parse line to obtain number of elements */
   int nb_elements = 1;
   int found_separator = 0;
-  for (size_t i = 0; i < len_max; i++) {
+  for (size_t i = 0; i < MAX_LINE_LENGTH; i++) {
     if (line[i] == ',') {
       found_separator = 1;
       nb_elements++;
@@ -76,10 +74,9 @@ char **csv_fields(const char *fp, int *nb_fields) {
   }
 
   /* Get last header line */
-  char field_line[1024] = {0};
-  char line[1024] = {0};
-  size_t len_max = 1024;
-  while (fgets(line, len_max, infile) != NULL) {
+  char field_line[MAX_LINE_LENGTH] = {0};
+  char line[MAX_LINE_LENGTH] = {0};
+  while (fgets(line, MAX_LINE_LENGTH, infile) != NULL) {
     if (line[0] != '#') {
       break;
     } else {
@@ -140,13 +137,12 @@ double **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
   }
 
   /* Loop through data */
-  char line[1024] = {0};
-  size_t len_max = 1024;
+  char line[MAX_LINE_LENGTH] = {0};
   int row_idx = 0;
   int col_idx = 0;
 
   /* Loop through data line by line */
-  while (fgets(line, len_max, infile) != NULL) {
+  while (fgets(line, MAX_LINE_LENGTH, infile) != NULL) {
     /* Ignore if comment line */
     if (line[0] == '#') {
       continue;
@@ -180,7 +176,7 @@ double **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
 }
 
 static int *parse_iarray_line(char *line) {
-  char entry[1024] = {0};
+  char entry[MAX_LINE_LENGTH] = {0};
   int index = 0;
   int *data = NULL;
 
@@ -211,9 +207,9 @@ int **load_iarrays(const char *csv_path, int *nb_arrays) {
   *nb_arrays = csv_rows(csv_path);
   int **array = calloc(*nb_arrays, sizeof(int *));
 
-  char line[1024] = {0};
+  char line[MAX_LINE_LENGTH] = {0};
   int frame_idx = 0;
-  while (fgets(line, 1024, csv_file) != NULL) {
+  while (fgets(line, MAX_LINE_LENGTH, csv_file) != NULL) {
     if (line[0] == '#') {
       continue;
     }
@@ -227,7 +223,7 @@ int **load_iarrays(const char *csv_path, int *nb_arrays) {
 }
 
 static double *parse_darray_line(char *line) {
-  char entry[1024] = {0};
+  char entry[MAX_LINE_LENGTH] = {0};
   int index = 0;
   double *data = NULL;
 
@@ -258,9 +254,9 @@ double **load_darrays(const char *csv_path, int *nb_arrays) {
   *nb_arrays = csv_rows(csv_path);
   double **array = calloc(*nb_arrays, sizeof(double *));
 
-  char line[1024] = {0};
+  char line[MAX_LINE_LENGTH] = {0};
   int frame_idx = 0;
-  while (fgets(line, 1024, csv_file) != NULL) {
+  while (fgets(line, MAX_LINE_LENGTH, csv_file) != NULL) {
     if (line[0] == '#') {
       continue;
     }
@@ -452,6 +448,41 @@ double *mat_new(const size_t m, const size_t n) {
   return calloc(m * n, sizeof(double));
 }
 
+int mat_cmp(const double *A, const double *B, const size_t m, const size_t n) {
+  size_t index = 0;
+
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < n; j++) {
+      int retval = fltcmp(A[index], B[index]);
+      if (retval != 0) {
+        printf("Failed at index[%zu]\n", index);
+        return retval;
+      }
+      index++;
+    }
+  }
+
+  return 0;
+}
+
+int mat_equals(const double *A, const double *B,
+               const size_t m, const size_t n,
+               const double thresh) {
+  size_t index = 0;
+
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < n; j++) {
+      if (fabs(A[index] - B[index]) > thresh) {
+        printf("Failed at index[%zu]\n", index);
+        return -1;
+      }
+      index++;
+    }
+  }
+
+  return 0;
+}
+
 int mat_save(const char *save_path, const double *A, const int m, const int n) {
   FILE *csv_file = fopen(save_path, "w");
   if (csv_file == NULL) {
@@ -472,6 +503,66 @@ int mat_save(const char *save_path, const double *A, const int m, const int n) {
   fclose(csv_file);
 
   return 0;
+}
+
+double *mat_load(const char *mat_path, int *nb_rows, int *nb_cols) {
+  /* Obtain number of rows and columns in csv data */
+  *nb_rows = csv_rows(mat_path);
+  *nb_cols = csv_cols(mat_path);
+  if (*nb_rows == -1 || *nb_cols == -1) {
+    return NULL;
+  }
+
+  /* Initialize memory for csv data */
+  double *A = malloc(sizeof(double) * *nb_rows * *nb_cols);
+
+  /* Load file */
+  FILE *infile = fopen(mat_path, "r");
+  if (infile == NULL) {
+    fclose(infile);
+    return NULL;
+  }
+
+  /* Loop through data */
+  char line[MAX_LINE_LENGTH] = {0};
+  int row_idx = 0;
+  int col_idx = 0;
+  int idx = 0;
+
+  /* Loop through data line by line */
+  while (fgets(line, MAX_LINE_LENGTH, infile) != NULL) {
+    /* Ignore if comment line */
+    if (line[0] == '#') {
+      continue;
+    }
+
+    /* Iterate through values in line separated by commas */
+    char entry[100] = {0};
+    for (size_t i = 0; i < strlen(line); i++) {
+      char c = line[i];
+      if (c == ' ') {
+        continue;
+      }
+
+      if (c == ',' || c == '\n') {
+        A[idx] = strtod(entry, NULL);
+        idx++;
+
+        memset(entry, '\0', sizeof(char) * 100);
+        col_idx++;
+      } else {
+        entry[strlen(entry)] = c;
+      }
+    }
+
+    col_idx = 0;
+    row_idx++;
+  }
+
+  /* Clean up */
+  fclose(infile);
+
+  return A;
 }
 
 void mat_set(double *A,
@@ -604,16 +695,6 @@ void mat_transpose(const double *A, size_t m, size_t n, double *A_t) {
   }
 }
 
-int mat_equals(const double *A, const double *B, const int m, const size_t n) {
-  for (size_t i = 0; i < (m * n); i++) {
-    if (fltcmp(A[i], B[i]) != 0) {
-      return -1;
-    }
-  }
-
-  return 0;
-}
-
 void mat_add(const double *A, const double *B, double *C, size_t m, size_t n) {
   assert(A != NULL && B != NULL && C != NULL && B != C && A != C);
   assert(m > 0 && n > 0);
@@ -712,11 +793,9 @@ void dot(const double *A,
 
   for (size_t i = 0; i < m; i++) {
     for (size_t j = 0; j < n; j++) {
-      double sum = 0.0;
       for (size_t k = 0; k < A_n; k++) {
-        sum += A[(i * A_n) + k] * B[(k * B_n) + j];
+        C[(i * n) + j] += A[(i * A_n) + k] * B[(k * B_n) + j];
       }
-      C[(i * n) + j] = sum;
     }
   }
 }
@@ -1853,17 +1932,17 @@ pose_t *load_poses(const char *csv_path, int *nb_poses) {
   assert(nb_poses != NULL);
 
   FILE *csv_file = fopen(csv_path, "r");
-  char line[1024] = {0};
+  char line[MAX_LINE_LENGTH] = {0};
   *nb_poses = csv_rows(csv_path);
   pose_t *poses = malloc(sizeof(pose_t) * *nb_poses);
 
   int pose_idx = 0;
-  while (fgets(line, 1024, csv_file) != NULL) {
+  while (fgets(line, MAX_LINE_LENGTH, csv_file) != NULL) {
     if (line[0] == '#') {
       continue;
     }
 
-    char entry[1024] = {0};
+    char entry[MAX_LINE_LENGTH] = {0};
     double data[7] = {0};
     int index = 0;
     for (size_t i = 0; i < strlen(line); i++) {

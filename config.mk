@@ -7,7 +7,12 @@ TESTS_DIR=$(PWD)/tests
 # COMPILER SETTINGS
 CC=gcc \
 	-Wall \
-	-g
+	-O3 \
+	-march=native \
+	-fopenmp \
+	-D_DEFAULT_SOURCE \
+	-D_POSIX_C_SOURCE=199309L
+	# -g
 	# -DNDEBUG \
 	-O3 \
 	# -march=native \
@@ -20,6 +25,7 @@ LIBS=-L$(BLD_DIR) \
 	-llapacke \
 	-llapack \
 	-lgfortran \
+	-lgsl \
 	-lblas \
 	-lpthread \
 	-lm

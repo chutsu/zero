@@ -424,7 +424,7 @@ int test_svd() {
   print_matrix("A", A_orig, M, N);
   printf("\n");
   print_matrix("USV'", USV, M, N);
-  MU_CHECK(mat_equals(A_orig, USV, M, N) == 0);
+  MU_CHECK(mat_equals(A_orig, USV, M, N, 1e-5) == 0);
 
   return 0;
 }
@@ -461,7 +461,7 @@ int test_svdcomp() {
   print_matrix("A", A_orig, M, N);
   printf("\n");
   print_matrix("USV", USV, M, N);
-  MU_CHECK(mat_equals(A_orig, USV, M, N) == 0);
+  MU_CHECK(mat_equals(A_orig, USV, M, N, 1e-5) == 0);
 
   return 0;
 }
@@ -485,7 +485,7 @@ int test_pinv() {
 
   double Imn[M * N];
   eye(Imn, M, N);
-  MU_CHECK(mat_equals(AiA, Imn, M, N) == 0);
+  MU_CHECK(mat_equals(AiA, Imn, M, N, 1e-5) == 0);
 
   return 0;
 }
@@ -520,7 +520,7 @@ int test_cholesky() {
     print_matrix("A", A, n, n);
   }
 
-  int retval = mat_equals(A, LLt, n, n);
+  int retval = mat_equals(A, LLt, n, n, 1e-5);
   MU_CHECK(retval == 0);
   free(L);
 

@@ -78,7 +78,7 @@ time make
 # ./build/bin/test_ba --target test_ba_residuals
 # ./build/bin/test_ba --target test_J_cam_pose
 # ./build/bin/test_ba --target test_J_landmark
-./build/bin/test_ba --target test_ba_jacobians
+# ./build/bin/test_ba --target test_ba_jacobian
 # ./build/bin/test_ba --target test_ba_update
 # ./build/bin/test_ba --target test_ba_cost
 ./build/bin/test_ba --target test_ba_solve

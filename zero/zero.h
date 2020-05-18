@@ -15,6 +15,8 @@ extern "C" {
 
 #include <lapacke.h>
 
+#define MAX_LINE_LENGTH 9046
+
 #define F77_FUNC(func)    func
 extern int F77_FUNC(dpotrf)(char *uplo, int *n, double *a, int *lda, int *info); /* block version of dpotf2 */
 extern int F77_FUNC(dpotrs)(char *uplo, int *n, int *nrhs, double *a, int *lda, double *b, int *ldb, int *info);
@@ -106,7 +108,12 @@ void ones(double *A, const size_t m, const size_t n);
 void zeros(double *A, const size_t m, const size_t n);
 
 double *mat_new(const size_t m, const size_t n);
+int mat_cmp(const double *A, const double *B, const size_t m, const size_t n);
+int mat_equals(const double *A, const double *B,
+               const size_t m, const size_t n,
+               const double thresh);
 int mat_save(const char *save_path, const double *A, const int m, const int n);
+double *mat_load(const char *save_path, int *nb_rows, int *nb_cols);
 void mat_set(double *A,
              const size_t stride,
              const size_t i,
@@ -135,7 +142,6 @@ void mat_triu(const double *A, const size_t n, double *U);
 void mat_tril(const double *A, const size_t n, double *L);
 double mat_trace(const double *A, const size_t m, const size_t n);
 void mat_transpose(const double *A, size_t m, size_t n, double *A_t);
-int mat_equals(const double *A, const double *B, const int m, const size_t n);
 void mat_add(const double *A, const double *B, double *C, size_t m, size_t n);
 void mat_sub(const double *A, const double *B, double *C, size_t m, size_t n);
 void mat_scale(double *A, const size_t m, const size_t n, const double scale);

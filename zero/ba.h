@@ -2,6 +2,9 @@
 #define BA_H
 
 #include <string.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_linalg.h>
 
 #include "zero/zero.h"
 
@@ -580,51 +583,34 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
       J_project(p_C, J_P);
       J_camera_rotation(q_WC, r_WC, p_W, J_C);
       J_camera_translation(q_WC, J_r);
-
-      /* J_cam_rot = -1 * J_K * J_P * J_C; */
+      /* -- J_cam_rot = -1 * J_K * J_P * J_C; */
       double J_KP[2 * 3] = {0};
       double J_cam_rot[2 * 3] = {0};
       dot(J_K, 2, 2, J_P, 2, 3, J_KP);
       dot(J_KP, 2, 3, J_C, 3, 3, J_cam_rot);
       mat_scale(J_cam_rot, 2, 3, -1);
-
-      /* J_cam_pos = -1 * J_K * J_P * J_r; */
+      /* -- J_cam_pos = -1 * J_K * J_P * J_r; */
       double J_cam_pos[2 * 3] = {0};
       dot(J_K, 2, 2, J_P, 2, 3, J_KP);
       dot(J_KP, 2, 3, J_r, 3, 3, J_cam_pos);
       mat_scale(J_cam_pos, 2, 3, -1);
-
-      /* double J_cam_pose[2 * 6] = {0}; */
-      /* mat_block_set(J_cam_pose, 6, 0, 0, 1, 2, J_cam_rot); */
-      /* mat_block_set(J_cam_pose, 6, 0, 3, 1, 5, J_cam_pos); */
-			/* check_J_cam_pose(data->cam_K, T_WC, p_W, J_cam_pose); */
-
       /* -- Fill in the big jacobian */
       mat_block_set(J, *J_cols, rs, cs, re, cs + 2, J_cam_rot);
       mat_block_set(J, *J_cols, rs, cs + 3, re, ce, J_cam_pos);
-      /* double J_cam_pose_ones[2 * 6] = {0.0}; */
-      /* ones(J_cam_pose_ones, 2, 6); */
-      /* mat_block_set(J, *J_cols, rs, cs, re, ce, J_cam_pose_ones); */
 
       /* Point jacobian */
       /* -- Setup row start, row end, column start and column end */
       cs = (data->nb_frames * 6) + point_ids[i] * 3;
       ce = cs + 2;
-
       /* -- Form jacobians */
       double J_p[3 * 3] = {0};
       J_target_point(q_WC, J_p);
-
-      /* J_point = -1 * J_K * J_P * J_target_point(q_WC); */
+      /* -- J_point = -1 * J_K * J_P * J_target_point(q_WC); */
       double J_point[2 * 3] = {0};
       dot(J_KP, 2, 3, J_p, 3, 3, J_point);
       mat_scale(J_point, 2, 3, -1);
-			/* check_J_landmark(data->cam_K, T_WC, p_W, J_point); */
-
       /* -- Fill in the big jacobian */
       mat_block_set(J, *J_cols, rs, cs, re, ce, J_point);
-      /* double J_point_ones[2 * 3] = {1.0}; */
-      /* mat_block_set(J, *J_cols, rs, cs, re, ce, J_point_ones); */
 
       meas_idx++;
     }
@@ -634,8 +620,12 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
   return J;
 }
 
-void ba_update(
-    ba_data_t *data, double *e, int e_size, double *E, int E_rows, int E_cols) {
+void ba_update(ba_data_t *data,
+               double *e,
+               int e_size, double
+               *E,
+               int E_rows,
+               int E_cols) {
   assert(e_size == E_rows);
   /* Form weight matrix */
   /* W = diag(repmat(sigma, data->nb_measurements, 1)); */
@@ -653,8 +643,17 @@ void ba_update(
   double *damp_term = mat_new(E_cols, E_cols);
   double *H_damped = mat_new(E_cols, E_cols);
   eye(damp_term, E_cols, E_cols);
-  mat_scale(damp_term, E_cols, E_cols, 1.0);
+  mat_scale(damp_term, E_cols, E_cols, 1e-6);
   mat_add(H, damp_term, H_damped, E_cols, E_cols);
+
+	/* H = H + lambda * H_diag */
+  /* double *h_diag = vec_new(E_cols); */
+  /* double *H_diag = mat_new(E_cols, E_cols); */
+  /* double *H_damped = mat_new(E_cols, E_cols); */
+  /* mat_diag_get(H, E_cols, E_cols, h_diag); */
+  /* mat_diag_set(H_diag, E_cols, E_cols, h_diag); */
+  /* mat_scale(H_diag, E_cols, E_cols, 1000.0); */
+  /* mat_add(H, H_diag, H_damped, E_cols, E_cols); */
 
 	/* -- Calculate R.H.S of Gauss-Newton */
   /* g = -E' * W * e; */
@@ -663,29 +662,37 @@ void ba_update(
   dot(E_t, E_cols, E_rows, e, e_size, 1, g);
   free(E_t);
 
-  /* dx = pinv(H) * g; */
-  /* double *H_inv = mat_new(E_cols, E_cols); */
-  /* double *dx = vec_new(E_cols); */
-  /* pinv(H_damped, E_cols, E_cols, H_inv); */
-  /* dot(H_inv, E_cols, E_cols, g, E_cols, 1, dx); */
-  /* free(H); */
-  /* free(H_inv); */
-  /* free(g); */
-
   /* Use Cholesky on [H dx = g] to solve for dx */
-  double *dx = vec_new(E_cols);
-  /* double *H_hat = mat_new(E_cols, E_cols); */
-  /* print_matrix("H", H, E_cols, E_cols); */
-  /* print_matrix("g", g, E_cols, 1); */
-  /* mat_save("/tmp/E.csv", E, E_rows, E_cols); */
-  /* mat_save("/tmp/H.csv", H, E_cols, E_cols); */
-  /* mat_save("/tmp/g.csv", g, E_cols, 1); */
-  /* nearest_spd(H, E_cols, H_hat); */
-  chol_lls_solve(H_damped, g, dx, E_cols);
+  /* double *dx = vec_new(E_cols); */
+  /* chol_lls_solve(H_damped, g, dx, E_cols); */
   /* chol_lls_solve2(H_damped, g, dx, E_cols); */
   /* free(H); */
   /* free(H_hat); */
   /* free(g); */
+
+  double *dx = vec_new(E_cols);
+  {
+    gsl_matrix *A =  gsl_matrix_alloc(E_cols, E_cols);
+    int idx = 0;
+    for (int i = 0; i < E_cols; i++) {
+      for (int j = 0; j < E_cols; j++) {
+        gsl_matrix_set(A, i, j, H_damped[idx]);
+        idx++;
+      }
+    }
+
+    gsl_vector *b =  gsl_vector_alloc(E_cols);
+    for (int i = 0; i < E_cols; i++) {
+      gsl_vector_set(b, i, g[i]);
+    }
+
+    gsl_vector *x =  gsl_vector_alloc(E_cols);
+    gsl_linalg_cholesky_decomp1(A);
+    gsl_linalg_cholesky_solve(A, b, x);
+    for (int i = 0; i < E_cols; i++) {
+      dx[i] = gsl_vector_get(x, i);
+    }
+  }
 
   /* Update camera poses */
   for (int k = 0; k < data->nb_frames; k++) {
@@ -733,7 +740,7 @@ double ba_cost(const double *e, const int length) {
 }
 
 void ba_solve(ba_data_t *data) {
-  int max_iter = 10;
+  int max_iter = 1000;
   double cost_prev = 0.0;
 
   for (int iter = 0; iter < max_iter; iter++) {
@@ -750,6 +757,7 @@ void ba_solve(ba_data_t *data) {
     ba_update(data, e, e_size, E, E_rows, E_cols);
     const double cost = ba_cost(e, e_size);
     printf("iter: %d\t cost: %.4e\n", iter, cost);
+    /* printf("iter: %d\t cost: %f\n", iter, cost); */
     free(e);
     free(E);
 
