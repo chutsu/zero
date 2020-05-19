@@ -3,6 +3,10 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <assert.h>
+
+#include <vector>
+#include <string>
 
 #include <Wire.h>
 #include <Arduino.h>
@@ -20,119 +24,436 @@ inline float deg2rad(const float d) { return d * (M_PI / 180.0); }
 
 inline float rad2deg(const float r) { return r * (180.0 / M_PI); }
 
-inline int8_t int8(const uint8_t *data, const size_t offset) {
+inline int8_t int8(const uint8_t *data, const size_t offset=0) {
   return (int8_t)(data[offset]);
 }
 
-inline uint8_t uint8(const uint8_t *data, const size_t offset) {
+inline uint8_t uint8(const uint8_t *data, const size_t offset=0) {
   return (uint8_t)(data[offset]);
 }
 
-inline int16_t int16(const uint8_t *data, const size_t offset) {
+inline int16_t int16(const uint8_t *data, const size_t offset=0) {
   return (int16_t)((data[offset + 1] << 8) | (data[offset]));
 }
 
-inline uint16_t uint16(const uint8_t *data, const size_t offset) {
+inline uint16_t uint16(const uint8_t *data, const size_t offset=0) {
   return (uint16_t)((data[offset + 1] << 8) | (data[offset]));
 }
 
-inline int32_t int32(const uint8_t *data, const size_t offset) {
-  return (int32_t)((data[offset + 3] << 24) | (data[offset + 2] << 16) |
-      (data[offset + 1] << 8) | (data[offset]));
+inline int32_t int32(const uint8_t *data, const size_t offset=0) {
+	return (int32_t)((data[offset + 3] << 24) | (data[offset + 2] << 16) |
+			(data[offset + 1] << 8) | (data[offset]));
 }
 
-inline uint32_t uint32(const uint8_t *data, const size_t offset) {
+inline uint32_t uint32(const uint8_t *data, const size_t offset=0) {
   return (uint32_t)((data[offset + 3] << 24) | (data[offset + 2] << 16) |
       (data[offset + 1] << 8) | (data[offset]));
 }
 
-inline void tf_trans(const float T[16], float r[3]) {
+void euler321(const double euler[3], double C[3 * 3]) {
+  assert(euler != NULL);
+  assert(C != NULL);
+
+  const float phi = euler[0];
+  const float theta = euler[1];
+  const float psi = euler[2];
+
+  /* 1st row */
+  C[0] = cos(psi) * cos(theta);
+  C[1] = cos(psi) * sin(theta) * sin(phi) - sin(psi) * cos(phi);
+  C[2] = cos(psi) * sin(theta) * cos(phi) + sin(psi) * sin(phi);
+  /* 2nd row */
+  C[3] = sin(psi) * cos(theta);
+  C[4] = sin(psi) * sin(theta) * sin(phi) + cos(psi) * cos(phi);
+  C[5] = sin(psi) * sin(theta) * cos(phi) - cos(psi) * sin(phi);
+  /* 3rd row */
+  C[6] = -sin(theta);
+  C[7] = cos(theta) * sin(phi);
+  C[8] = cos(theta) * cos(phi);
+}
+
+void quat2euler(const float q[4], float euler[3]) {
+  assert(q != NULL);
+  assert(euler != NULL);
+
+  const float qw = q[0];
+  const float qx = q[1];
+  const float qy = q[2];
+  const float qz = q[3];
+
+  const float qw2 = qw * qw;
+  const float qx2 = qx * qx;
+  const float qy2 = qy * qy;
+  const float qz2 = qz * qz;
+
+  const float t1 = atan2(2 * (qx * qw + qz * qy), (qw2 - qx2 - qy2 + qz2));
+  const float t2 = asin(2 * (qy * qw - qx * qz));
+  const float t3 = atan2(2 * (qx * qy + qz * qw), (qw2 + qx2 - qy2 - qz2));
+
+  euler[0] = t1;
+  euler[1] = t2;
+  euler[2] = t3;
+}
+
+void rot2quat(const float C[3 * 3], float q[4]) {
+  assert(C != NULL);
+  assert(q != NULL);
+
+  const float C00 = C[0];
+  const float C01 = C[1];
+  const float C02 = C[2];
+  const float C10 = C[3];
+  const float C11 = C[4];
+  const float C12 = C[5];
+  const float C20 = C[6];
+  const float C21 = C[7];
+  const float C22 = C[8];
+
+  const float tr = C00 + C11 + C22;
+  float S = 0.0f;
+  float qw = 0.0f;
+  float qx = 0.0f;
+  float qy = 0.0f;
+  float qz = 0.0f;
+
+  if (tr > 0) {
+    S = sqrt(tr + 1.0) * 2; // S=4*qw
+    qw = 0.25 * S;
+    qx = (C21 - C12) / S;
+    qy = (C02 - C20) / S;
+    qz = (C10 - C01) / S;
+  } else if ((C00 > C11) && (C[0] > C22)) {
+    S = sqrt(1.0 + C[0] - C11 - C22) * 2; // S=4*qx
+    qw = (C21 - C12) / S;
+    qx = 0.25 * S;
+    qy = (C01 + C10) / S;
+    qz = (C02 + C20) / S;
+  } else if (C11 > C22) {
+    S = sqrt(1.0 + C11 - C[0] - C22) * 2; // S=4*qy
+    qw = (C02 - C20) / S;
+    qx = (C01 + C10) / S;
+    qy = 0.25 * S;
+    qz = (C12 + C21) / S;
+  } else {
+    S = sqrt(1.0 + C22 - C[0] - C11) * 2; // S=4*qz
+    qw = (C10 - C01) / S;
+    qx = (C02 + C20) / S;
+    qy = (C12 + C21) / S;
+    qz = 0.25 * S;
+  }
+
+  q[0] = qw;
+  q[1] = qx;
+  q[2] = qy;
+  q[3] = qz;
+}
+
+void tf_trans(const float T[16], float r[3]) {
   r[0] = T[3];
   r[1] = T[7];
   r[2] = T[11];
 }
 
-inline void tf_rot(const float T[16], float C[9]) {
+void tf_rot(const float T[16], float C[9]) {
   C[0] = T[0]; C[1] = T[1]; C[2] = T[2];
   C[3] = T[3]; C[4] = T[4]; C[5] = T[5];
   C[6] = T[6]; C[7] = T[7]; C[8] = T[8];
 }
 
-void __assert(const char *__func,
-              const char *__file,
-              int __lineno, const char *__sexp) {
-  // transmit diagnostic informations through serial link.
-  Serial.println(__func);
-  Serial.println(__file);
-  Serial.println(__lineno, DEC);
-  Serial.println(__sexp);
-  Serial.flush();
-  // abort program execution.
-  abort();
+void tf_quat(const float T[4 * 4], float q[4]) {
+  assert(T != NULL);
+  assert(q != NULL);
+  assert(T != q);
+
+  float C[3 * 3] = {0};
+  tf_rot(T, C);
+  rot2quat(C, q);
 }
 
+/* void __assert(const char *__func, */
+/*               const char *__file, */
+/*               int __lineno, const char *__sexp) { */
+/*   // transmit diagnostic informations through serial link. */
+/*   Serial.println(__func); */
+/*   Serial.println(__file); */
+/*   Serial.println(__lineno, DEC); */
+/*   Serial.println(__sexp); */
+/*   Serial.flush(); */
+/*   // abort program execution. */
+/*   abort(); */
+/* } */
+
 /*******************************************************************************
- *                                  I2C
+ *                                 SERIAL
+ ******************************************************************************/
+
+class serial_t {
+public:
+  Stream *serial_in;
+  Print *serial_out;
+
+  serial_t() {
+    serial_in = &Serial;
+    serial_out = &Serial;
+    Serial.begin(115200);
+  }
+
+  void read_byte(uint8_t &b) {
+    b = serial_in->read();
+  }
+
+  void read_bytes(uint8_t *data, const size_t len) {
+    serial_in->readBytes(data, len);
+  }
+
+  void write_byte(const uint8_t b) {
+    serial_out->write(b);
+  }
+
+  void write_bytes(const uint8_t *data, const size_t len) {
+    serial_out->write(data, len);
+  }
+
+  /**
+  * Simple printf for writing to an Arduino serial port.  Allows specifying
+  * Serial..Serial3.
+  *
+  * const HardwareSerial&, the serial port to use (Serial..Serial3)
+  * const char* fmt, the formatting string followed by the data to be formatted
+  *
+  *     int d = 65;
+  *     float f = 123.4567;
+  *     char* str = "Hello";
+  *     serial_t::printf(Serial, "<fmt>", d);
+  *
+  * Example:
+  *   serial_t::printf(Serial, "Sensor %d is %o and reads %1f\n", d, d, f) will
+  *   output "Sensor 65 is on and reads 123.5" to the serial port.
+  *
+  * Formatting strings <fmt>
+  * %B    - binary (d = 0b1000001)
+  * %b    - binary (d = 1000001)
+  * %c    - character (s = H)
+  * %d/%i - integer (d = 65)\
+  * %f    - float (f = 123.45)
+  * %3f   - float (f = 123.346) three decimal places specified by %3.
+  * %s    - char* string (s = Hello)
+  * %X    - hexidecimal (d = 0x41)
+  * %x    - hexidecimal (d = 41)
+  * %%    - escaped percent ("%")
+  **/
+  void printf(const char* fmt, ...) {
+    va_list argv;
+    va_start(argv, fmt);
+
+    for (int i = 0; fmt[i] != '\0'; i++) {
+      if (fmt[i] == '%') {
+        // Look for specification of number of decimal places
+        int places = 2;
+        if (fmt[i+1] >= '0' && fmt[i+1] <= '9') {
+          places = fmt[i+1] - '0';
+          i++;
+        }
+
+        switch (fmt[++i]) {
+          case 'B': serial_out->print("0b");
+          case 'b': serial_out->print(va_arg(argv, int), BIN); break;
+          case 'c': serial_out->print((char) va_arg(argv, int)); break;
+          case 'd':
+          case 'i': serial_out->print(va_arg(argv, int), DEC); break;
+          case 'f': serial_out->print(va_arg(argv, double), places); break;
+          case 'l': serial_out->print(va_arg(argv, long), DEC); break;
+          case 's': serial_out->print(va_arg(argv, const char*)); break;
+          case 'X':
+            serial_out->print("0x");
+            serial_out->print(va_arg(argv, int), HEX);
+            break;
+          case '%': serial_out->print(fmt[i]); break;
+          default: serial_out->print("?"); break;
+        }
+      } else {
+        serial_out->print(fmt[i]);
+      }
+    }
+    va_end(argv);
+  }
+};
+
+/*******************************************************************************
+ *                                  GPIO
+ ******************************************************************************/
+
+class gpio_t {
+public:
+  gpio_t() {}
+
+  void set_pin(const int pin, const int mode) { pinMode(pin, mode); }
+
+  void digital_write(const int pin, const int mode) { digitalWrite(pin, mode); }
+  int digital_read(const int pin) { return digitalRead(pin); }
+
+  void analog_write(const int pin, const int mode) { analogWrite(pin, mode); }
+  int analog_read(const int pin) { return analogRead(pin); }
+
+  void delay(const int ms) { delay(ms); }
+  void delay_us(const int us) { delayMicroseconds(us); }
+
+  int pulse_in(const int pin, const int val, const int timeout_us=1000000) {
+    return pulseIn(pin, val, timeout_us);
+  }
+
+  unsigned long pulse_in_long(const int pin,
+                              const int val,
+                              const int timeout_us=1000000) {
+    return pulseIn(pin, val, timeout_us);
+  }
+};
+
+/*******************************************************************************
+ *                                   I2C
  ******************************************************************************/
 
 /* DEFINES */
 #define I2C_BUF_MAX 1024
 
-void i2c_setup() {
-  Wire.begin();
-}
+class i2c_t {
+public:
 
-uint8_t i2c_read_byte(const uint8_t dev_addr, const uint8_t reg_addr) {
-  // Request
-  Wire.beginTransmission(dev_addr);
-  Wire.write(reg_addr);
-  Wire.endTransmission();
-
-  // Response
-  uint8_t size = 1;
-  uint8_t last = 1;
-  Wire.beginTransmission(dev_addr);
-  Wire.requestFrom(dev_addr, size, last);
-  const uint8_t data = Wire.read();
-  Wire.endTransmission();
-
-  return data;
-}
-
-void i2c_write_byte(const uint8_t dev_addr,
-                    const uint8_t reg_addr,
-                    const uint8_t value) {
-  // Request
-  Wire.beginTransmission(dev_addr);
-  Wire.write(reg_addr);
-  Wire.write(value);
-  Wire.endTransmission();
-}
-
-void i2c_read_bytes(const uint8_t dev_addr,
-                    const uint8_t reg_addr,
-                    const size_t length,
-                    uint8_t *data) {
-  Wire.beginTransmission(dev_addr);
-  Wire.write(reg_addr);
-
-  Wire.requestFrom(dev_addr, length);
-  for (size_t i = 0; i < length; i++) {
-    data[i] = Wire.read();
+  i2c_t() {
+    Wire.begin();
   }
 
-  Wire.endTransmission();
-}
+  uint8_t read_byte(const uint8_t dev_addr, const uint8_t reg_addr) {
+    Wire.beginTransmission(dev_addr);
+    Wire.write(reg_addr);
+    Wire.endTransmission();
 
-void i2c_write_bytes(const uint8_t dev_addr,
-                     const uint8_t reg_addr,
-                     const uint8_t *data,
-                     const size_t length) {
-  Wire.beginTransmission(dev_addr);
-  Wire.write(reg_addr);
-  Wire.write(data, length);
-  Wire.endTransmission();
-}
+    uint8_t size = 1;
+    uint8_t last = 1;
+    Wire.requestFrom(dev_addr, size, last);
+    const uint8_t data = Wire.read();
+
+    return data;
+  }
+
+  void read_bytes(const uint8_t dev_addr,
+                  const uint8_t reg_addr,
+                  const size_t length,
+                  uint8_t *data) {
+    Wire.beginTransmission(dev_addr);
+    Wire.write(reg_addr);
+    Wire.endTransmission();
+
+    Wire.requestFrom(dev_addr, length);
+    for (size_t i = 0; i < length; i++) {
+      data[i] = Wire.read();
+    }
+  }
+
+	uint8_t read_u8(const uint8_t dev_addr, const uint8_t reg_addr) {
+		return read_byte(dev_addr, reg_addr);
+	}
+
+	int8_t read_s8(const uint8_t dev_addr, const uint8_t reg_addr) {
+		return read_byte(dev_addr, reg_addr);
+	}
+
+	uint16_t read_u16(const uint8_t dev_addr, const uint8_t reg_addr) {
+		uint8_t bytes[2] = {0};
+		read_bytes(dev_addr, reg_addr, 2, bytes);
+    return uint16(bytes);
+	}
+
+	int16_t read_s16(const uint8_t dev_addr, const uint8_t reg_addr) {
+		return read_u16(dev_addr, reg_addr);
+	}
+
+	uint32_t read_u32(const uint8_t dev_addr, const uint8_t reg_addr) {
+		uint8_t bytes[4] = {0};
+		read_bytes(dev_addr, reg_addr, 4, bytes);
+    return uint32(bytes);
+	}
+
+	int32_t read_s32(const uint8_t dev_addr, const uint8_t reg_addr) {
+		return read_u32(dev_addr, reg_addr);
+	}
+
+  void write_byte(const uint8_t dev_addr,
+                  const uint8_t reg_addr,
+                  const uint8_t value) {
+    Wire.beginTransmission(dev_addr);
+    Wire.write(reg_addr);
+    Wire.write(value);
+    Wire.endTransmission();
+  }
+
+  void write_bytes(const uint8_t dev_addr,
+                   const uint8_t reg_addr,
+                   const uint8_t *data,
+                   const size_t length) {
+    Wire.beginTransmission(dev_addr);
+    Wire.write(reg_addr);
+    Wire.write(data, length);
+    Wire.endTransmission();
+  }
+
+	void scan_addrs(uint8_t *addrs, uint8_t *nb_addrs) {
+		*nb_addrs = 0;
+
+		for (uint8_t addr = 1; addr < 127; addr++) {
+			Wire.beginTransmission(addr);
+			if (Wire.endTransmission() == 0) {
+				addrs[*nb_addrs] = addr;
+				*nb_addrs += 1;
+			}
+		}
+	}
+
+	void scan_i2c_addrs(serial_t &serial) {
+		uint8_t addrs[128] = {0};
+		uint8_t nb_addrs;
+		scan_addrs(addrs, &nb_addrs);
+
+		serial.printf("scanning i2c devices:\n\r");
+		serial.printf("nb_addrs: %d\n\r", nb_addrs);
+		for (uint8_t i = 0; i < nb_addrs; i++) {
+			serial.printf("%X\n\r", addrs[i]);
+		}
+
+		delay(5000);
+	}
+};
+
+/*******************************************************************************
+ *                                    PWM
+ ******************************************************************************/
+
+class pwm_t {
+public:
+  uint8_t pin = 0;
+  uint8_t freq = 0;
+  uint32_t channel = 0;
+  /* HardwareTimer *timer = nullptr; */
+
+  pwm_t() {}
+
+  pwm_t(const uint8_t pin_, const uint8_t freq_)
+    : pin{pin_}, freq{freq_} {}
+
+  void setup() {
+    /* channel = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin), PinMap_PWM)); */
+    /* TIM_TypeDef *Instance = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin), PinMap_PWM); */
+    /* timer = new HardwareTimer(Instance); */
+    /* timer->setPWM(channel, pin, freq, 50); */
+  }
+
+  void set(const uint8_t duty_cycle) {
+    /* timer->pause(); */
+    /* timer->setPWM(channel, pin, freq, duty_cycle); */
+    /* timer->refresh(); */
+    /* timer->resume(); */
+  }
+};
 
 /*******************************************************************************
  *                                  HC-SR04
@@ -140,30 +461,28 @@ void i2c_write_bytes(const uint8_t dev_addr,
 
 class hcsr04_t {
 public:
+  gpio_t gpio;
   uint8_t trig_pin;
   uint8_t echo_pin;
 
-  hcsr04_t(const uint8_t trig_pin_, const uint8_t echo_pin_)
-    : trig_pin{trig_pin_}, echo_pin{echo_pin_} {}
-
-  void setup() {
-    // Configure trigger and echo pins
-    pinMode(trig_pin, OUTPUT);
-    pinMode(echo_pin, INPUT);
+  hcsr04_t(gpio_t &gpio_, const uint8_t trig_pin_, const uint8_t echo_pin_)
+    : gpio{gpio_} {
+    gpio.set_pin(trig_pin_, OUTPUT);
+    gpio.set_pin(echo_pin_, INPUT);
   }
 
   float measure() {
     // Makesure pin is low
-    digitalWrite(trig_pin, LOW);
-    delayMicroseconds(2);
+    gpio.digital_write(trig_pin, LOW);
+    gpio.delay_us(2);
 
     // Hold trigger for 10 microseconds
-    digitalWrite(trig_pin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trig_pin, LOW);
+    gpio.digital_write(trig_pin, HIGH);
+    gpio.delay_us(10);
+    gpio.digital_write(trig_pin, LOW);
 
     // Measure echo signal
-    const float duration_ms = pulseIn(echo_pin, HIGH, 1000);
+    const float duration_ms = gpio.pulse_in(echo_pin, HIGH, 1000);
     const float temperature = 20.0;
     double sof_cm = 0.03313 + 0.0000606 * temperature;
     double dist_cm = duration_ms / 2.0 * sof_cm;
@@ -179,144 +498,150 @@ public:
  *                                  MPU-6050
  ******************************************************************************/
 
-// GENERAL
-#define MPU6050_ADDRESS 0x68
-#define MPU6050_ADDRESS_AD0_LOW 0x68  // addr pin low (GND) [default]
-#define MPU6050_ADDRESS_AD0_HIGH 0x69 // addr pin high (VCC)
-
-// REGISTER ADDRESSES
-#define MPU6050_REG_XG_OFFS_TC 0x00
-#define MPU6050_REG_YG_OFFS_TC 0x01
-#define MPU6050_REG_ZG_OFFS_TC 0x02
-#define MPU6050_REG_X_FINE_GAIN 0x03
-#define MPU6050_REG_Y_FINE_GAIN 0x04
-#define MPU6050_REG_Z_FINE_GAIN 0x05
-#define MPU6050_REG_XA_OFFS_H 0x06
-#define MPU6050_REG_XA_OFFS_L_TC 0x07
-#define MPU6050_REG_YA_OFFS_H 0x08
-#define MPU6050_REG_YA_OFFS_L_TC 0x09
-#define MPU6050_REG_ZA_OFFS_H 0x0A
-#define MPU6050_REG_ZA_OFFS_L_TC 0x0B
-#define MPU6050_REG_XG_OFFS_USRH 0x13
-#define MPU6050_REG_XG_OFFS_USRL 0x14
-#define MPU6050_REG_YG_OFFS_USRH 0x15
-#define MPU6050_REG_YG_OFFS_USRL 0x16
-#define MPU6050_REG_ZG_OFFS_USRH 0x17
-#define MPU6050_REG_ZG_OFFS_USRL 0x18
-#define MPU6050_REG_SMPLRT_DIV 0x19
-#define MPU6050_REG_CONFIG 0x1A
-#define MPU6050_REG_GYRO_CONFIG 0x1B
-#define MPU6050_REG_ACCEL_CONFIG 0x1C
-#define MPU6050_REG_FF_THR 0x1D
-#define MPU6050_REG_FF_DUR 0x1E
-#define MPU6050_REG_MOT_THR 0x1F
-#define MPU6050_REG_MOT_DUR 0x20
-#define MPU6050_REG_ZRMOT_THR 0x21
-#define MPU6050_REG_ZRMOT_DUR 0x22
-#define MPU6050_REG_FIFO_EN 0x23
-#define MPU6050_REG_I2C_MST_CTRL 0x24
-#define MPU6050_REG_I2C_SLV0_ADDR 0x25
-#define MPU6050_REG_I2C_SLV0_REG 0x26
-#define MPU6050_REG_I2C_SLV0_CTRL 0x27
-#define MPU6050_REG_I2C_SLV1_ADDR 0x28
-#define MPU6050_REG_I2C_SLV1_REG 0x29
-#define MPU6050_REG_I2C_SLV1_CTRL 0x2A
-#define MPU6050_REG_I2C_SLV2_ADDR 0x2B
-#define MPU6050_REG_I2C_SLV2_REG 0x2C
-#define MPU6050_REG_I2C_SLV2_CTRL 0x2D
-#define MPU6050_REG_I2C_SLV3_ADDR 0x2E
-#define MPU6050_REG_I2C_SLV3_REG 0x2F
-#define MPU6050_REG_I2C_SLV3_CTRL 0x30
-#define MPU6050_REG_I2C_SLV4_ADDR 0x31
-#define MPU6050_REG_I2C_SLV4_REG 0x32
-#define MPU6050_REG_I2C_SLV4_DO 0x33
-#define MPU6050_REG_I2C_SLV4_CTRL 0x34
-#define MPU6050_REG_I2C_SLV4_DI 0x35
-#define MPU6050_REG_I2C_MST_STATUS 0x36
-#define MPU6050_REG_INT_PIN_CFG 0x37
-#define MPU6050_REG_INT_ENABLE 0x38
-#define MPU6050_REG_DMP_INT_STATUS 0x39
-#define MPU6050_REG_INT_STATUS 0x3A
-#define MPU6050_REG_ACCEL_XOUT_H 0x3B
-#define MPU6050_REG_ACCEL_XOUT_L 0x3C
-#define MPU6050_REG_ACCEL_YOUT_H 0x3D
-#define MPU6050_REG_ACCEL_YOUT_L 0x3E
-#define MPU6050_REG_ACCEL_ZOUT_H 0x3F
-#define MPU6050_REG_ACCEL_ZOUT_L 0x40
-#define MPU6050_REG_TEMP_OUT_H 0x41
-#define MPU6050_REG_TEMP_OUT_L 0x42
-#define MPU6050_REG_GYRO_XOUT_H 0x43
-#define MPU6050_REG_GYRO_XOUT_L 0x44
-#define MPU6050_REG_GYRO_YOUT_H 0x45
-#define MPU6050_REG_GYRO_YOUT_L 0x46
-#define MPU6050_REG_GYRO_ZOUT_H 0x47
-#define MPU6050_REG_GYRO_ZOUT_L 0x48
-#define MPU6050_REG_EXT_SENS_DATA_00 0x49
-#define MPU6050_REG_EXT_SENS_DATA_01 0x4A
-#define MPU6050_REG_EXT_SENS_DATA_02 0x4B
-#define MPU6050_REG_EXT_SENS_DATA_03 0x4C
-#define MPU6050_REG_EXT_SENS_DATA_04 0x4D
-#define MPU6050_REG_EXT_SENS_DATA_05 0x4E
-#define MPU6050_REG_EXT_SENS_DATA_06 0x4F
-#define MPU6050_REG_EXT_SENS_DATA_07 0x50
-#define MPU6050_REG_EXT_SENS_DATA_08 0x51
-#define MPU6050_REG_EXT_SENS_DATA_09 0x52
-#define MPU6050_REG_EXT_SENS_DATA_10 0x53
-#define MPU6050_REG_EXT_SENS_DATA_11 0x54
-#define MPU6050_REG_EXT_SENS_DATA_12 0x55
-#define MPU6050_REG_EXT_SENS_DATA_13 0x56
-#define MPU6050_REG_EXT_SENS_DATA_14 0x57
-#define MPU6050_REG_EXT_SENS_DATA_15 0x58
-#define MPU6050_REG_EXT_SENS_DATA_16 0x59
-#define MPU6050_REG_EXT_SENS_DATA_17 0x5A
-#define MPU6050_REG_EXT_SENS_DATA_18 0x5B
-#define MPU6050_REG_EXT_SENS_DATA_19 0x5C
-#define MPU6050_REG_EXT_SENS_DATA_20 0x5D
-#define MPU6050_REG_EXT_SENS_DATA_21 0x5E
-#define MPU6050_REG_EXT_SENS_DATA_22 0x5F
-#define MPU6050_REG_EXT_SENS_DATA_23 0x60
-#define MPU6050_REG_MOT_DETECT_STATUS 0x61
-#define MPU6050_REG_I2C_SLV0_DO 0x63
-#define MPU6050_REG_I2C_SLV1_DO 0x64
-#define MPU6050_REG_I2C_SLV2_DO 0x65
-#define MPU6050_REG_I2C_SLV3_DO 0x66
-#define MPU6050_REG_I2C_MST_DELAY_CTRL 0x67
-#define MPU6050_REG_SIGNAL_PATH_RESET 0x68
-#define MPU6050_REG_MOT_DETECT_CTRL 0x69
-#define MPU6050_REG_USER_CTRL 0x6A
-#define MPU6050_REG_PWR_MGMT_1 0x6B
-#define MPU6050_REG_PWR_MGMT_2 0x6C
-#define MPU6050_REG_BANK_SEL 0x6D
-#define MPU6050_REG_MEM_START_ADDR 0x6E
-#define MPU6050_REG_MEM_R_W 0x6F
-#define MPU6050_REG_DMP_CFG_1 0x70
-#define MPU6050_REG_DMP_CFG_2 0x71
-#define MPU6050_REG_FIFO_COUNTH 0x72
-#define MPU6050_REG_FIFO_COUNTL 0x73
-#define MPU6050_REG_FIFO_R_W 0x74
-#define MPU6050_REG_WHO_AM_I 0x75
-
 class mpu6050_t {
 public:
-  int8_t ok = 0;
+	// I2C ADDRESS
+	enum i2c_addrs {
+		MPU6050_ADDRESS = 0x68,
+		MPU6050_ADDRESS_AD0_LOW = 0x68,  // addr pin low (GND) [default]
+		MPU6050_ADDRESS_AD0_HIGH = 0x69  // addr pin high (VCC)
+	};
 
+	// REGISTERS
+	enum registers {
+		MPU6050_REG_XG_OFFS_TC = 0x00,
+		MPU6050_REG_YG_OFFS_TC = 0x01,
+		MPU6050_REG_ZG_OFFS_TC = 0x02,
+		MPU6050_REG_X_FINE_GAIN = 0x03,
+		MPU6050_REG_Y_FINE_GAIN = 0x04,
+		MPU6050_REG_Z_FINE_GAIN = 0x05,
+		MPU6050_REG_XA_OFFS_H = 0x06,
+		MPU6050_REG_XA_OFFS_L_TC = 0x07,
+		MPU6050_REG_YA_OFFS_H = 0x08,
+		MPU6050_REG_YA_OFFS_L_TC = 0x09,
+		MPU6050_REG_ZA_OFFS_H = 0x0A,
+		MPU6050_REG_ZA_OFFS_L_TC = 0x0B,
+		MPU6050_REG_XG_OFFS_USRH = 0x13,
+		MPU6050_REG_XG_OFFS_USRL = 0x14,
+		MPU6050_REG_YG_OFFS_USRH = 0x15,
+		MPU6050_REG_YG_OFFS_USRL = 0x16,
+		MPU6050_REG_ZG_OFFS_USRH = 0x17,
+		MPU6050_REG_ZG_OFFS_USRL = 0x18,
+		MPU6050_REG_SMPLRT_DIV = 0x19,
+		MPU6050_REG_CONFIG = 0x1A,
+		MPU6050_REG_GYRO_CONFIG = 0x1B,
+		MPU6050_REG_ACCEL_CONFIG = 0x1C,
+		MPU6050_REG_FF_THR = 0x1D,
+		MPU6050_REG_FF_DUR = 0x1E,
+		MPU6050_REG_MOT_THR = 0x1F,
+		MPU6050_REG_MOT_DUR = 0x20,
+		MPU6050_REG_ZRMOT_THR = 0x21,
+		MPU6050_REG_ZRMOT_DUR = 0x22,
+		MPU6050_REG_FIFO_EN = 0x23,
+		MPU6050_REG_I2C_MST_CTRL = 0x24,
+		MPU6050_REG_I2C_SLV0_ADDR = 0x25,
+		MPU6050_REG_I2C_SLV0_REG = 0x26,
+		MPU6050_REG_I2C_SLV0_CTRL = 0x27,
+		MPU6050_REG_I2C_SLV1_ADDR = 0x28,
+		MPU6050_REG_I2C_SLV1_REG = 0x29,
+		MPU6050_REG_I2C_SLV1_CTRL = 0x2A,
+		MPU6050_REG_I2C_SLV2_ADDR = 0x2B,
+		MPU6050_REG_I2C_SLV2_REG = 0x2C,
+		MPU6050_REG_I2C_SLV2_CTRL = 0x2D,
+		MPU6050_REG_I2C_SLV3_ADDR = 0x2E,
+		MPU6050_REG_I2C_SLV3_REG = 0x2F,
+		MPU6050_REG_I2C_SLV3_CTRL = 0x30,
+		MPU6050_REG_I2C_SLV4_ADDR = 0x31,
+		MPU6050_REG_I2C_SLV4_REG = 0x32,
+		MPU6050_REG_I2C_SLV4_DO = 0x33,
+		MPU6050_REG_I2C_SLV4_CTRL = 0x34,
+		MPU6050_REG_I2C_SLV4_DI = 0x35,
+		MPU6050_REG_I2C_MST_STATUS = 0x36,
+		MPU6050_REG_INT_PIN_CFG = 0x37,
+		MPU6050_REG_INT_ENABLE = 0x38,
+		MPU6050_REG_DMP_INT_STATUS = 0x39,
+		MPU6050_REG_INT_STATUS = 0x3A,
+		MPU6050_REG_ACCEL_XOUT_H = 0x3B,
+		MPU6050_REG_ACCEL_XOUT_L = 0x3C,
+		MPU6050_REG_ACCEL_YOUT_H = 0x3D,
+		MPU6050_REG_ACCEL_YOUT_L = 0x3E,
+		MPU6050_REG_ACCEL_ZOUT_H = 0x3F,
+		MPU6050_REG_ACCEL_ZOUT_L = 0x40,
+		MPU6050_REG_TEMP_OUT_H = 0x41,
+		MPU6050_REG_TEMP_OUT_L = 0x42,
+		MPU6050_REG_GYRO_XOUT_H = 0x43,
+		MPU6050_REG_GYRO_XOUT_L = 0x44,
+		MPU6050_REG_GYRO_YOUT_H = 0x45,
+		MPU6050_REG_GYRO_YOUT_L = 0x46,
+		MPU6050_REG_GYRO_ZOUT_H = 0x47,
+		MPU6050_REG_GYRO_ZOUT_L = 0x48,
+		MPU6050_REG_EXT_SENS_DATA_00 = 0x49,
+		MPU6050_REG_EXT_SENS_DATA_01 = 0x4A,
+		MPU6050_REG_EXT_SENS_DATA_02 = 0x4B,
+		MPU6050_REG_EXT_SENS_DATA_03 = 0x4C,
+		MPU6050_REG_EXT_SENS_DATA_04 = 0x4D,
+		MPU6050_REG_EXT_SENS_DATA_05 = 0x4E,
+		MPU6050_REG_EXT_SENS_DATA_06 = 0x4F,
+		MPU6050_REG_EXT_SENS_DATA_07 = 0x50,
+		MPU6050_REG_EXT_SENS_DATA_08 = 0x51,
+		MPU6050_REG_EXT_SENS_DATA_09 = 0x52,
+		MPU6050_REG_EXT_SENS_DATA_10 = 0x53,
+		MPU6050_REG_EXT_SENS_DATA_11 = 0x54,
+		MPU6050_REG_EXT_SENS_DATA_12 = 0x55,
+		MPU6050_REG_EXT_SENS_DATA_13 = 0x56,
+		MPU6050_REG_EXT_SENS_DATA_14 = 0x57,
+		MPU6050_REG_EXT_SENS_DATA_15 = 0x58,
+		MPU6050_REG_EXT_SENS_DATA_16 = 0x59,
+		MPU6050_REG_EXT_SENS_DATA_17 = 0x5A,
+		MPU6050_REG_EXT_SENS_DATA_18 = 0x5B,
+		MPU6050_REG_EXT_SENS_DATA_19 = 0x5C,
+		MPU6050_REG_EXT_SENS_DATA_20 = 0x5D,
+		MPU6050_REG_EXT_SENS_DATA_21 = 0x5E,
+		MPU6050_REG_EXT_SENS_DATA_22 = 0x5F,
+		MPU6050_REG_EXT_SENS_DATA_23 = 0x60,
+		MPU6050_REG_MOT_DETECT_STATUS = 0x61,
+		MPU6050_REG_I2C_SLV0_DO = 0x63,
+		MPU6050_REG_I2C_SLV1_DO = 0x64,
+		MPU6050_REG_I2C_SLV2_DO = 0x65,
+		MPU6050_REG_I2C_SLV3_DO = 0x66,
+		MPU6050_REG_I2C_MST_DELAY_CTRL = 0x67,
+		MPU6050_REG_SIGNAL_PATH_RESET = 0x68,
+		MPU6050_REG_MOT_DETECT_CTRL = 0x69,
+		MPU6050_REG_USER_CTRL = 0x6A,
+		MPU6050_REG_PWR_MGMT_1 = 0x6B,
+		MPU6050_REG_PWR_MGMT_2 = 0x6C,
+		MPU6050_REG_BANK_SEL = 0x6D,
+		MPU6050_REG_MEM_START_ADDR = 0x6E,
+		MPU6050_REG_MEM_R_W = 0x6F,
+		MPU6050_REG_DMP_CFG_1 = 0x70,
+		MPU6050_REG_DMP_CFG_2 = 0x71,
+		MPU6050_REG_FIFO_COUNTH = 0x72,
+		MPU6050_REG_FIFO_COUNTL = 0x73,
+		MPU6050_REG_FIFO_R_W = 0x74,
+		MPU6050_REG_WHO_AM_I = 0x75
+	};
+
+	// Interface
+  i2c_t &i2c;
+
+	// State
+  int8_t ok = 0;
+  float temperature = 0.0f;
+
+	// Settings
   float accel_sensitivity = 0.0f;
   float gyro_sensitivity = 0.0f;
   float accel[3] = {0.0f};
   float gyro[3] = {0.0f};
-
-  float temperature = 0.0f;
   float sample_rate = 0.0f;
 
-  mpu6050_t() {}
-
-  void setup() {
+  mpu6050_t(i2c_t &i2c_) : i2c{i2c_} {
     // Configure Digital low-pass filter
     uint8_t dlpf_cfg = 0;
     set_dplf(dlpf_cfg);
 
     // Set power management register
-    i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, 0x00);
+    i2c.write_byte(MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, 0x00);
 
     // Configure Gyroscope range
     const uint8_t gyro_range = 0;
@@ -345,7 +670,7 @@ public:
 
   /** Get MPU6050 address */
   int8_t ping() {
-    return i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_WHO_AM_I);
+    return i2c.read_byte(MPU6050_ADDRESS, MPU6050_REG_WHO_AM_I);
   }
 
   /**
@@ -376,7 +701,7 @@ public:
   * 7           RESERVED        RESERVED    8
   */
   uint8_t get_dplf() {
-    uint8_t data = i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_CONFIG);
+    uint8_t data = i2c.read_byte(MPU6050_ADDRESS, MPU6050_REG_CONFIG);
     data = (data & 0b00000111);
     return data;
   }
@@ -409,17 +734,17 @@ public:
   * 7           RESERVED        RESERVED    8
   */
   void set_dplf(const uint8_t setting) {
-    i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_CONFIG, setting);
+    i2c.write_byte(MPU6050_ADDRESS, MPU6050_REG_CONFIG, setting);
   }
 
   /** Get sample rate division */
   uint8_t get_sample_rate_div() {
-    return i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV);
+    return i2c.read_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV);
   }
 
   /** Set sample rate */
   void set_sample_rate_div(const int8_t div) {
-    i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV, div);
+    i2c.write_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV, div);
   }
 
   /** Set sample rate division */
@@ -456,12 +781,12 @@ public:
   /** Set gyro range */
   void set_gyro_range(const int8_t range) {
     uint8_t data = range << 3;
-    i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_GYRO_CONFIG, data);
+    i2c.write_byte(MPU6050_ADDRESS, MPU6050_REG_GYRO_CONFIG, data);
   }
 
   /** Get gyro range */
   uint8_t get_gyro_range() {
-    uint8_t data = i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_GYRO_CONFIG);
+    uint8_t data = i2c.read_byte(MPU6050_ADDRESS, MPU6050_REG_GYRO_CONFIG);
     data = (data >> 3) & 0b00000011;
     return data;
   }
@@ -470,12 +795,12 @@ public:
   void set_accel_range(const int8_t range) {
     // assert(range > 3 || range < 0);
     uint8_t data = range << 3;
-    i2c_write_byte(MPU6050_ADDRESS, MPU6050_REG_ACCEL_CONFIG, data);
+    i2c.write_byte(MPU6050_ADDRESS, MPU6050_REG_ACCEL_CONFIG, data);
   }
 
   /** Get accelerometer range */
   uint8_t get_accel_range() {
-    uint8_t data = i2c_read_byte(MPU6050_ADDRESS, MPU6050_REG_ACCEL_CONFIG);
+    uint8_t data = i2c.read_byte(MPU6050_ADDRESS, MPU6050_REG_ACCEL_CONFIG);
     data  = (data >> 3) & 0b00000011;
     return data;
   }
@@ -485,7 +810,7 @@ public:
     // Read data
     uint8_t data[14] = {0};
     memset(data, '\0', 14);
-    i2c_read_bytes(MPU6050_ADDRESS, MPU6050_REG_ACCEL_XOUT_H, 14, data);
+    i2c.read_bytes(MPU6050_ADDRESS, MPU6050_REG_ACCEL_XOUT_H, 14, data);
 
     // Accelerometer
     const double g = 9.81; // Gravitational constant
@@ -512,31 +837,250 @@ public:
     // last_updated = clock();
   }
 
-  void print_config() {
-    Serial.print("Accel sensitivity: ");
-    Serial.print(accel_sensitivity);
-    Serial.print("\n\r");
-
-    Serial.print("Gyro sensitivity: ");
-    Serial.print(gyro_sensitivity);
-    Serial.print("\n\r");
-
-    Serial.print("DPLF: ");
-    Serial.print(get_dplf());
-    Serial.print("\n\r");
-
-    Serial.print("Ping: ");
-    Serial.print(ping());
-    Serial.print("\n\r");
-
-    Serial.print("Sample rate div: ");
-    Serial.print(get_sample_rate_div());
-    Serial.print("\n\r");
-
-    Serial.print("Sample rate: ");
-    Serial.print(sample_rate);
-    Serial.print("\n\r");
+  void print_config(serial_t &serial) {
+    serial.printf("Ping: %d\n\r", ping());
+    serial.printf("DPLF: %d\n\r", get_dplf());
+    serial.printf("Accel sensitivity: %f\n\r", accel_sensitivity);
+    serial.printf("Gyro sensitivity: %f\n\r", gyro_sensitivity);
+    serial.printf("Sample rate div: %f\n\r", get_sample_rate_div());
+    serial.printf("Sample rate: %f\n\r", sample_rate);
   }
+};
+
+/*******************************************************************************
+ *                                  BMP280
+ ******************************************************************************/
+
+class bmp280_t {
+public:
+	// BMP280 I2C Addresses
+	enum i2c_addrs {
+		BMP280_ADDR = 0x77,     // Primary I2C Address
+		BMP280_ADDR_ALT = 0x76  // Alternate Address
+	};
+
+	// BMP280 Registers
+	enum registers {
+		BMP280_REG_DIG_T1 = 0x88,
+		BMP280_REG_DIG_T2 = 0x8A,
+		BMP280_REG_DIG_T3 = 0x8C,
+		BMP280_REG_DIG_P1 = 0x8E,
+		BMP280_REG_DIG_P2 = 0x90,
+		BMP280_REG_DIG_P3 = 0x92,
+		BMP280_REG_DIG_P4 = 0x94,
+		BMP280_REG_DIG_P5 = 0x96,
+		BMP280_REG_DIG_P6 = 0x98,
+		BMP280_REG_DIG_P7 = 0x9A,
+		BMP280_REG_DIG_P8 = 0x9C,
+		BMP280_REG_DIG_P9 = 0x9E,
+		BMP280_REG_DIG_H1 = 0xA1,
+		BMP280_REG_DIG_H2 = 0xE1,
+		BMP280_REG_DIG_H3 = 0xE3,
+		BMP280_REG_DIG_H4 = 0xE4,
+		BMP280_REG_DIG_H5 = 0xE5,
+		BMP280_REG_DIG_H6 = 0xE7,
+		BMP280_REG_CHIPID = 0xD0,
+		BMP280_REG_VERSION = 0xD1,
+		BMP280_REG_SOFTRESET = 0xE0,
+		BMP280_REG_CAL26 = 0xE1,    // R calibration stored in 0xE1-0xF0
+		BMP280_REG_CONTROLHUMID = 0xF2,
+		BMP280_REG_STATUS = 0XF3,
+		BMP280_REG_CONTROL = 0xF4,
+		BMP280_REG_CONFIG = 0xF5,
+		BMP280_REG_PRESSUREDATA = 0xF7,
+		BMP280_REG_TEMPDATA = 0xFA,
+		BMP280_REG_HUMIDDATA = 0xFD
+	};
+
+	// Sampling rates
+	enum sampling_rates {
+		BMP280_SAMPLING_NONE = 0b000,
+		BMP280_SAMPLING_X1 = 0b001,
+		BMP280_SAMPLING_X2 = 0b010,
+		BMP280_SAMPLING_X4 = 0b011,
+		BMP280_SAMPLING_X8 = 0b100,
+		BMP280_SAMPLING_X16 = 0b101
+	};
+
+	// Power modes
+	enum power_modes {
+		BMP280_MODE_SLEEP = 0b00,
+		BMP280_MODE_FORCED = 0b01,
+		BMP280_MODE_NORMAL = 0b11
+	};
+
+	// Filter values
+	enum filter_values {
+		BMP280_FILTER_OFF = 0b000,
+		BMP280_FILTER_X2 = 0b001,
+		BMP280_FILTER_X4 = 0b010,
+		BMP280_FILTER_X8 = 0b011,
+		BMP280_FILTER_X16 = 0b10
+	};
+
+	// Standby duration in ms
+	enum standby_duration{
+		BMP280_STANDBY_MS_0_5 = 0b000,
+		BMP280_STANDBY_MS_62_5 = 0b001,
+		BMP280_STANDBY_MS_125 = 0b010,
+		BMP280_STANDBY_MS_250 = 0b011,
+		BMP280_STANDBY_MS_500 = 0b100,
+		BMP280_STANDBY_MS_1000 = 0b101,
+		BMP280_STANDBY_MS_2000 = 0b110,
+		BMP280_STANDBY_MS_4000 = 0b111
+	};
+
+  // BMP280 Configuration
+  struct bmp280_config {
+    uint8_t t_sb = BMP280_STANDBY_MS_0_5;  // Standby time in normal mode
+    uint8_t filter = BMP280_FILTER_X16;    // Filter settings
+    uint8_t spi3w_en = 0; 							   // Enable 3-wire SPI
+
+    uint8_t get() { return (t_sb << 5) | (filter << 2) | spi3w_en; }
+  } config;
+
+  // BMP280 Control Measurements
+  struct bmp280_ctrl_meas {
+    uint8_t mode = BMP280_MODE_NORMAL; 		 // Device mode
+    uint8_t osrs_p = BMP280_SAMPLING_X16;  // Pressure oversampling
+    uint8_t osrs_t = BMP280_SAMPLING_X2;   // Temperature oversampling
+
+    uint8_t get() { return (osrs_t << 5) | (osrs_p << 2) | mode; }
+  } ctrl_meas;
+
+	// BMP280 Calibration Data
+	struct bmp280_calib_data_t {
+		// Temperature compensation value
+		uint16_t dig_T1 = 0;
+		int16_t dig_T2 = 0;
+		int16_t dig_T3 = 0;
+
+		// Pressure compenstation value
+		uint16_t dig_P1 = 0;
+		int16_t dig_P2 = 0;
+		int16_t dig_P3 = 0;
+		int16_t dig_P4 = 0;
+		int16_t dig_P5 = 0;
+		int16_t dig_P6 = 0;
+		int16_t dig_P7 = 0;
+		int16_t dig_P8 = 0;
+		int16_t dig_P9 = 0;
+	} calib_data;
+
+	// Interfaces
+	uint8_t sensor_addr = BMP280_ADDR_ALT;
+	i2c_t &i2c;
+	serial_t &serial;
+
+	// State
+	bool connected = false;
+	uint8_t previous_measuring = 0;
+
+  bmp280_t(i2c_t &i2c_, serial_t &serial_) : i2c{i2c_}, serial{serial_} {
+		// Verify chip id
+		uint8_t sensor_id = i2c.read_byte(sensor_addr, BMP280_REG_CHIPID);
+		if (sensor_id == 0x58) {
+			connected = true;
+		}
+
+		// Reset the device using soft-reset
+		i2c.write_byte(sensor_addr, BMP280_REG_SOFTRESET, 0xB6);
+
+		// Wait for chip to wake up.
+		delay(10);
+
+		// Get calibration data
+		get_calib_data();
+
+		// Configure sensor
+		i2c.write_byte(sensor_addr, BMP280_REG_CONFIG, config.get());
+		i2c.write_byte(sensor_addr, BMP280_REG_CONTROL, ctrl_meas.get());
+
+		// Wait
+		delay(100);
+	}
+
+	bool data_ready() {
+		uint8_t reg = i2c.read_byte(sensor_addr, BMP280_REG_STATUS);
+
+		uint8_t measuring = (reg & 0b00001000) >> 3;
+		if (measuring ^ previous_measuring) {  // Has measuring bit flipped?
+			previous_measuring = measuring;
+			if (measuring == 0) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	void get_calib_data() {
+		calib_data.dig_T1 = i2c.read_u16(sensor_addr, BMP280_REG_DIG_T1);
+		calib_data.dig_T2 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_T2);
+		calib_data.dig_T3 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_T3);
+
+		calib_data.dig_P1 = i2c.read_u16(sensor_addr, BMP280_REG_DIG_P1);
+		calib_data.dig_P2 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P2);
+		calib_data.dig_P3 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P3);
+		calib_data.dig_P4 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P4);
+		calib_data.dig_P5 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P5);
+		calib_data.dig_P6 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P6);
+		calib_data.dig_P7 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P7);
+		calib_data.dig_P8 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P8);
+		calib_data.dig_P9 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P9);
+	}
+
+	/** Returns temperature in Celcius degrees and pressure in Pa **/
+	void get_data(float &temperature, float &pressure) {
+		// Get data
+		uint8_t data[6] = {0};
+		i2c.read_bytes(sensor_addr, BMP280_REG_PRESSUREDATA, 6, data);
+
+		// Compensate for temperature
+		int32_t t_fine = 0;
+		{
+			int32_t T = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4);
+			int32_t T1 = calib_data.dig_T1;
+			int32_t T2 = calib_data.dig_T2;
+			int32_t T3 = calib_data.dig_T3;
+			int32_t var1 = ((((T >> 3) - (T1 << 1))) * T2) >> 11;
+			int32_t var2 = (((((T >> 4) - T1) * ((T >> 4) - T1)) >> 12) * (T3)) >> 14;
+			t_fine = var1 + var2;
+			temperature = ((t_fine * 5 + 128) >> 8) / 100.0f;
+		}
+
+		// Compensate for pressure
+		{
+			int32_t P = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4);
+			int64_t P1 = calib_data.dig_P1;
+			int64_t P2 = calib_data.dig_P2;
+			int64_t P3 = calib_data.dig_P3;
+			int64_t P4 = calib_data.dig_P4;
+			int64_t P5 = calib_data.dig_P5;
+			int64_t P6 = calib_data.dig_P6;
+			int64_t P7 = calib_data.dig_P7;
+			int64_t P8 = calib_data.dig_P8;
+			int64_t P9 = calib_data.dig_P9;
+
+			int64_t var1, var2 = 0;
+			var1 = ((int64_t) t_fine) - 128000;
+			var2 = var1 * var1 * P6;
+			var2 = var2 + ((var1 * P5) << 17);
+			var2 = var2 + (P4 << 35);
+			var1 = ((var1 * var1 * P3) >> 8) + ((var1 * P2) << 12);
+			var1 = (((((int64_t)1) << 47) + var1)) * P1 >> 33;
+			if (var1 == 0) {
+				pressure = -1; // avoid exception caused by division by zero
+				return;
+			}
+
+			int64_t p = 1048576 - P;
+			p = (((p << 31) - var2) * 3125) / var1;
+			var1 = (P9 * (p >> 13) * (p >> 13)) >> 25;
+			var2 = (P8 * p) >> 19;
+			pressure = ((float) (((p + var1 + var2) >> 8) + (P7 << 4))) / 256.0f;
+		}
+	}
 };
 
 /*******************************************************************************
@@ -546,37 +1090,6 @@ public:
 class sbus_t {
 public:
   sbus_t() {}
-};
-
-/*******************************************************************************
- *                                    PWM
- ******************************************************************************/
-
-class pwm_t {
-public:
-  uint8_t pin = 0;
-  uint8_t freq = 0;
-  uint32_t channel = 0;
-  /* HardwareTimer *timer = nullptr; */
-
-  pwm_t() {}
-
-  pwm_t(const uint8_t pin_, const uint8_t freq_)
-    : pin{pin_}, freq{freq_} {}
-
-  void setup() {
-    /* channel = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin), PinMap_PWM)); */
-    /* TIM_TypeDef *Instance = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin), PinMap_PWM); */
-    /* timer = new HardwareTimer(Instance); */
-    /* timer->setPWM(channel, pin, freq, 50); */
-  }
-
-  void set(const uint8_t duty_cycle) {
-    /* timer->pause(); */
-    /* timer->setPWM(channel, pin, freq, duty_cycle); */
-    /* timer->refresh(); */
-    /* timer->resume(); */
-  }
 };
 
 /*******************************************************************************
@@ -1780,9 +2293,11 @@ public:
 
     // Form actual
     float r_WB[3] = {0};
+    float q_WB[4] = {0};
+    float rpy[3] = {0.0f, 0.0f, 0.0f};
     tf_trans(T_WB, r_WB);
-    /* const float rpy[3] = quat2euler(tf_quat(T_WB)); */
-    const float rpy[3] = {0.0f, 0.0f, 0.0f};
+    tf_quat(T_WB, q_WB);
+    quat2euler(q_WB, rpy);
     const float actual[4] = {rpy[0], rpy[1], rpy[2], r_WB[2]};
 
     // Calculate yaw error
@@ -1830,86 +2345,83 @@ public:
 };
 
 /*******************************************************************************
- *                                   ZERO
+ *                                    FCU
  ******************************************************************************/
 
 class fcu_t {
 public:
-  pwm_t pwm;
-  mpu6050_t imu;
+  // Interface
+  i2c_t &i2c;
+  pwm_t &pwm;
+  gpio_t &gpio;
+  serial_t &serial;
+
+  // Ultrasound distance sensor
+  /* const int trig_pin = PA5; */
+  /* const int echo_pin = PA6; */
+  /* hcsr04_t uds{gpio, trig_pin, echo_pin}; */
+
+  // IMU
+  mpu6050_t imu{i2c};
+
+	// Humidity sensor
+
+  // Control
   att_ctrl_t att_ctrl;
 
-/* uint8_t freq = 10; */
-/* uint8_t dutycycle = 100; */
-/* pwm_t pwm; */
-
-/* uint8_t trig_pin = PA5; */
-/* uint8_t echo_pin = PA6; */
-/* hcsr04_t uds; */
-
-  fcu_t() {}
-  void setup() {
-    i2c_setup();
-    imu.setup();
-  }
+  fcu_t(i2c_t &i2c_, pwm_t &pwm_, gpio_t &gpio_, serial_t &serial_)
+    : i2c{i2c_}, pwm{pwm_}, gpio{gpio_}, serial{serial_} {}
 
   void update() {
     imu.get_data();
   }
 };
 
+
 // GLOBAL VARIABLES
-fcu_t fcu;
+auto t_prev = millis();
+i2c_t i2c;
+pwm_t pwm;
+gpio_t gpio;
+serial_t serial;
+fcu_t fcu{i2c, pwm, gpio, serial};
+bmp280_t hs{i2c, serial};
 
-void setup() {
-  fcu.setup();
+void setup() {}
 
-  Serial.begin(115200);
-  Serial.print("\n\r");
-  Serial.print("------------");
-  Serial.print("\n\r");
-
-  /* pwm_setup(&pwm, trig_pin, 10); */
-  /* hcsr04_setup(&uds, trig_pin, echo_pin); */
-}
-
-void test_distance() {
-  Serial.print("distance: ");
-  /* const float distance = hcsr04_measure(&uds); */
-  /* Serial.print(distance, 4); */
-  Serial.print(" [cm]");
-  Serial.print("\n\r");
-  delay(1 * 1e3);
-}
-
-/* void test_pwm() { */
-/*   // Change PWM dutycycle */
-/*   int duty_cycle -= 1; */
-/*   pwm_set(&pwm, duty_cycle); */
-/*  */
-/*   // Print duty_cycle */
-/*   Serial.print("duty_cycle: "); */
-/*   Serial.print(duty_cycle); */
-/*   Serial.print("\t"); */
-/*  */
-/*   // Print duration */
-/*   const float duration = pulseIn(echo_pin, LOW) * 1e-6; */
-/*   Serial.print("duration: "); */
-/*   Serial.print(duration, 4); */
-/*   Serial.print(" [s]"); */
-/*   Serial.print("\n\r"); */
-/*  */
-/*   // Reset duty_cycle */
-/*   if (duty_cycle == 1) { */
-/*     duty_cycle = 100; */
-/*     delay(5 * 1e3); */
-/*   } */
+/* void test_uds() { */
+/*   float distance = fcu.hcsr04.measure(); */
+/*   serial.printf("distance: %f [cm]\n\r", 0.0); */
+/*   gpio.delay(1 * 1e3); */
 /* } */
 
-void loop() {
+void test_imu() {
   fcu.imu.get_data();
-  Serial.print("x: "); Serial.print(fcu.imu.accel[0]); Serial.print(" ");
-  Serial.print("y: "); Serial.print(fcu.imu.accel[1]); Serial.print(" ");
-  Serial.print("z: "); Serial.print(fcu.imu.accel[2]); Serial.print(" ");
-  Serial.print("\n\r");
+  serial.printf("x: %f  ", fcu.imu.accel[0]);
+  serial.printf("y: %f  ", fcu.imu.accel[1]);
+  serial.printf("z: %f  ", fcu.imu.accel[2]);
+  serial.printf("\n\r");
+}
+
+void test_tps() {
+	if (hs.data_ready()) {
+		float temperature = 0.0f;
+		float pressure = 0.0f;
+		hs.get_data(temperature, pressure);
+
+		/* serial.printf("%f  ", temperature); */
+		/* serial.printf("%f\n\r", pressure); */
+
+		serial.printf("temperature: %f [deg]  ", temperature);
+		serial.printf("pressure: %f [Pa]", pressure);
+
+		auto t_now = millis();
+		float t_elapsed = ((float) t_now - t_prev) * 1e-3;
+		serial.printf("time elapsed: %f [s]\n\r", t_elapsed);
+		t_prev = t_now;
+	}
+}
+
+void loop() {
+	test_tps();
 }
