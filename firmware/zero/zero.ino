@@ -50,7 +50,7 @@ inline uint32_t uint32(const uint8_t *data, const size_t offset=0) {
       (data[offset + 1] << 8) | (data[offset]));
 }
 
-void euler321(const double euler[3], double C[3 * 3]) {
+void euler321(const float euler[3], float C[3 * 3]) {
   assert(euler != NULL);
   assert(C != NULL);
 
@@ -313,11 +313,10 @@ public:
  *                                   I2C
  ******************************************************************************/
 
-/* DEFINES */
-#define I2C_BUF_MAX 1024
 
 class i2c_t {
 public:
+	const uint32_t I2C_BUF_MAX = 1024;
 
   i2c_t() {
     Wire.begin();
@@ -425,6 +424,15 @@ public:
 };
 
 /*******************************************************************************
+ *                                   SBUS
+ ******************************************************************************/
+
+class sbus_t {
+public:
+  sbus_t() {}
+};
+
+/*******************************************************************************
  *                                    PWM
  ******************************************************************************/
 
@@ -484,8 +492,8 @@ public:
     // Measure echo signal
     const float duration_ms = gpio.pulse_in(echo_pin, HIGH, 1000);
     const float temperature = 20.0;
-    double sof_cm = 0.03313 + 0.0000606 * temperature;
-    double dist_cm = duration_ms / 2.0 * sof_cm;
+    float sof_cm = 0.03313 + 0.0000606 * temperature;
+    float dist_cm = duration_ms / 2.0 * sof_cm;
     if (dist_cm == 0 || dist_cm > 400) {
       return -1.0 ;
     } else {
@@ -622,18 +630,23 @@ public:
 	};
 
 	// Interface
+	uint8_t sensor_addr = MPU6050_ADDRESS;
   i2c_t &i2c;
 
 	// State
   int8_t ok = 0;
+	uint8_t read_data = 0;
   float temperature = 0.0f;
+  float accel[3] = {0.0f};
+  float gyro[3] = {0.0f};
 
 	// Settings
   float accel_sensitivity = 0.0f;
   float gyro_sensitivity = 0.0f;
-  float accel[3] = {0.0f};
-  float gyro[3] = {0.0f};
   float sample_rate = 0.0f;
+	bool enable_fifo = false;
+  bool enable_i2c_master = false;
+	bool enable_data_ready = true;
 
   mpu6050_t(i2c_t &i2c_) : i2c{i2c_} {
     // Configure Digital low-pass filter
@@ -641,10 +654,10 @@ public:
     set_dplf(dlpf_cfg);
 
     // Set power management register
-    i2c.write_byte(MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, 0x00);
+    i2c.write_byte(sensor_addr, MPU6050_REG_PWR_MGMT_1, 0x00);
 
     // Configure Gyroscope range
-    const uint8_t gyro_range = 0;
+    const uint8_t gyro_range = 0x00;
     set_gyro_range(gyro_range);
     switch (gyro_range) {
     case 0: gyro_sensitivity = 131.0; break;
@@ -654,7 +667,7 @@ public:
     }
 
     // Configure accel range
-    const uint8_t accel_range = 0;
+    const uint8_t accel_range = 0x00;
     set_accel_range(accel_range);
     switch (accel_range) {
     case 0: accel_sensitivity = 16384.0; break;
@@ -664,13 +677,24 @@ public:
     }
 
     // Configure sample rate
-    //set_sample_rate(sample_rate);
+    // set_sample_rate(sample_rate);
     sample_rate = get_sample_rate();
+
+		// Configure FIFO
+		uint8_t fifo_reg = 0x00;
+		i2c.write_byte(sensor_addr, MPU6050_REG_FIFO_EN, fifo_reg);
+
+		// Configure interrupts
+		uint8_t interrupt_reg = 0x00;
+		interrupt_reg |= (((enable_fifo) ? 1 : 0) << 4);
+		interrupt_reg |= (((enable_i2c_master) ? 1 : 0) << 3);
+		interrupt_reg |= (((enable_data_ready) ? 1 : 0) << 0);
+		i2c.write_byte(sensor_addr, MPU6050_REG_INT_ENABLE, interrupt_reg);
   }
 
-  /** Get MPU6050 address */
-  int8_t ping() {
-    return i2c.read_byte(MPU6050_ADDRESS, MPU6050_REG_WHO_AM_I);
+  /** Get MPU6050 i2c address */
+  uint8_t ping() {
+    return i2c.read_byte(sensor_addr, MPU6050_REG_WHO_AM_I);
   }
 
   /**
@@ -701,7 +725,7 @@ public:
   * 7           RESERVED        RESERVED    8
   */
   uint8_t get_dplf() {
-    uint8_t data = i2c.read_byte(MPU6050_ADDRESS, MPU6050_REG_CONFIG);
+    uint8_t data = i2c.read_byte(sensor_addr, MPU6050_REG_CONFIG);
     data = (data & 0b00000111);
     return data;
   }
@@ -734,20 +758,20 @@ public:
   * 7           RESERVED        RESERVED    8
   */
   void set_dplf(const uint8_t setting) {
-    i2c.write_byte(MPU6050_ADDRESS, MPU6050_REG_CONFIG, setting);
+    i2c.write_byte(sensor_addr, MPU6050_REG_CONFIG, setting);
   }
 
-  /** Get sample rate division */
+  /** Get sample rate division **/
   uint8_t get_sample_rate_div() {
-    return i2c.read_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV);
+    return i2c.read_byte(sensor_addr, MPU6050_REG_SMPLRT_DIV);
   }
 
-  /** Set sample rate */
+  /** Set sample rate **/
   void set_sample_rate_div(const int8_t div) {
-    i2c.write_byte(MPU6050_ADDRESS, MPU6050_REG_SMPLRT_DIV, div);
+    i2c.write_byte(sensor_addr, MPU6050_REG_SMPLRT_DIV, div);
   }
 
-  /** Set sample rate division */
+  /** Set sample rate division **/
   void set_sample_rate(float sample_rate) {
     // gyro_output_rate = 8kHz (iff DPLF_CFG: 0 or 7) or 1kHz
     uint8_t dlpf_cfg = get_dplf();
@@ -763,7 +787,7 @@ public:
     set_sample_rate_div(smplrt_div);
   }
 
-  /** Get sample rate */
+  /** Get sample rate **/
   float get_sample_rate() {
     // Get sample rate divider
     uint8_t smplrt_div = get_sample_rate_div();
@@ -778,42 +802,53 @@ public:
     return gyro_rate / (1 + smplrt_div);
   }
 
-  /** Set gyro range */
+  /** Set gyro range **/
   void set_gyro_range(const int8_t range) {
     uint8_t data = range << 3;
-    i2c.write_byte(MPU6050_ADDRESS, MPU6050_REG_GYRO_CONFIG, data);
+    i2c.write_byte(sensor_addr, MPU6050_REG_GYRO_CONFIG, data);
   }
 
-  /** Get gyro range */
+  /** Get gyro range **/
   uint8_t get_gyro_range() {
-    uint8_t data = i2c.read_byte(MPU6050_ADDRESS, MPU6050_REG_GYRO_CONFIG);
+    uint8_t data = i2c.read_byte(sensor_addr, MPU6050_REG_GYRO_CONFIG);
     data = (data >> 3) & 0b00000011;
     return data;
   }
 
-  /** Set accelerometer range */
+  /** Set accelerometer range **/
   void set_accel_range(const int8_t range) {
     // assert(range > 3 || range < 0);
     uint8_t data = range << 3;
-    i2c.write_byte(MPU6050_ADDRESS, MPU6050_REG_ACCEL_CONFIG, data);
+    i2c.write_byte(sensor_addr, MPU6050_REG_ACCEL_CONFIG, data);
   }
 
-  /** Get accelerometer range */
+  /** Get accelerometer range **/
   uint8_t get_accel_range() {
-    uint8_t data = i2c.read_byte(MPU6050_ADDRESS, MPU6050_REG_ACCEL_CONFIG);
+    uint8_t data = i2c.read_byte(sensor_addr, MPU6050_REG_ACCEL_CONFIG);
     data  = (data >> 3) & 0b00000011;
     return data;
   }
 
-  /** Get IMU data */
+	/** Check if new data is ready **/
+	bool data_ready() {
+    uint8_t status = i2c.read_byte(sensor_addr, MPU6050_REG_INT_STATUS);
+		uint8_t data_ready = (status & 0b00000001);
+		if (data_ready) {
+			return true;
+		}
+
+		return false;
+	}
+
+  /** Get IMU data **/
   void get_data() {
     // Read data
     uint8_t data[14] = {0};
     memset(data, '\0', 14);
-    i2c.read_bytes(MPU6050_ADDRESS, MPU6050_REG_ACCEL_XOUT_H, 14, data);
+    i2c.read_bytes(sensor_addr, MPU6050_REG_ACCEL_XOUT_H, 14, data);
 
     // Accelerometer
-    const double g = 9.81; // Gravitational constant
+    const float g = 9.81f; // Gravitational constant
     const int16_t raw_ax = (data[0] << 8) | data[1];
     const int16_t raw_ay = (data[2] << 8) | data[3];
     const int16_t raw_az = (data[4] << 8) | data[5];
@@ -838,7 +873,7 @@ public:
   }
 
   void print_config(serial_t &serial) {
-    serial.printf("Ping: %d\n\r", ping());
+    serial.printf("I2C addr: %d\n\r", ping());
     serial.printf("DPLF: %d\n\r", get_dplf());
     serial.printf("Accel sensitivity: %f\n\r", accel_sensitivity);
     serial.printf("Gyro sensitivity: %f\n\r", gyro_sensitivity);
@@ -970,13 +1005,12 @@ public:
 	// Interfaces
 	uint8_t sensor_addr = BMP280_ADDR_ALT;
 	i2c_t &i2c;
-	serial_t &serial;
 
 	// State
 	bool connected = false;
 	uint8_t previous_measuring = 0;
 
-  bmp280_t(i2c_t &i2c_, serial_t &serial_) : i2c{i2c_}, serial{serial_} {
+  bmp280_t(i2c_t &i2c_) : i2c{i2c_} {
 		// Verify chip id
 		uint8_t sensor_id = i2c.read_byte(sensor_addr, BMP280_REG_CHIPID);
 		if (sensor_id == 0x58) {
@@ -1000,20 +1034,6 @@ public:
 		delay(100);
 	}
 
-	bool data_ready() {
-		uint8_t reg = i2c.read_byte(sensor_addr, BMP280_REG_STATUS);
-
-		uint8_t measuring = (reg & 0b00001000) >> 3;
-		if (measuring ^ previous_measuring) {  // Has measuring bit flipped?
-			previous_measuring = measuring;
-			if (measuring == 0) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	void get_calib_data() {
 		calib_data.dig_T1 = i2c.read_u16(sensor_addr, BMP280_REG_DIG_T1);
 		calib_data.dig_T2 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_T2);
@@ -1028,6 +1048,21 @@ public:
 		calib_data.dig_P7 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P7);
 		calib_data.dig_P8 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P8);
 		calib_data.dig_P9 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P9);
+	}
+
+	bool data_ready() {
+		uint8_t reg = i2c.read_byte(sensor_addr, BMP280_REG_STATUS);
+		uint8_t measuring = (reg & 0b00001000) >> 3;
+
+		// Has measuring bit flipped?
+		if (measuring ^ previous_measuring) {
+			previous_measuring = measuring;
+			if (measuring == 0) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/** Returns temperature in Celcius degrees and pressure in Pa **/
@@ -1069,8 +1104,10 @@ public:
 			var2 = var2 + (P4 << 35);
 			var1 = ((var1 * var1 * P3) >> 8) + ((var1 * P2) << 12);
 			var1 = (((((int64_t)1) << 47) + var1)) * P1 >> 33;
+
+			// Avoid exception caused by division by zero
 			if (var1 == 0) {
-				pressure = -1; // avoid exception caused by division by zero
+				pressure = -1;
 				return;
 			}
 
@@ -1081,15 +1118,6 @@ public:
 			pressure = ((float) (((p + var1 + var2) >> 8) + (P7 << 4))) / 256.0f;
 		}
 	}
-};
-
-/*******************************************************************************
- *                                   SBUS
- ******************************************************************************/
-
-class sbus_t {
-public:
-  sbus_t() {}
 };
 
 /*******************************************************************************
@@ -2227,14 +2255,14 @@ public:
   float error_i = 0.0f;
   float error_d = 0.0f;
 
-  float k_p = 0.0f;
-  float k_i = 0.0f;
-  float k_d = 0.0f;
+  float kp = 0.0f;
+  float ki = 0.0f;
+  float kd = 0.0f;
 
   pid_ctrl_t() {}
 
-  pid_ctrl_t(const float k_p_, const float k_i_, const float k_d_)
-    : k_p{k_p_}, k_i{k_i_}, k_d{k_d_} {}
+  pid_ctrl_t(const float kp_, const float ki_, const float kd_)
+    : kp{kp_}, ki{ki_}, kd{kd_} {}
 
   float update(const float setpoint, const float actual, const float dt) {
     // Calculate errors
@@ -2242,9 +2270,9 @@ public:
     error_sum += error * dt;
 
     // Calculate output
-    error_p = k_p * error;
-    error_i = k_i * error_sum;
-    error_d = k_d * (error - error_prev) / dt;
+    error_p = kp * error;
+    error_i = ki * error_sum;
+    error_d = kd * (error - error_prev) / dt;
     const float output = error_p + error_i + error_d;
 
     error_prev = error;
@@ -2287,7 +2315,7 @@ public:
   void update(const float setpoints[4], const float T_WB[16], const float dt_) {
     // Check rate
     dt += dt_;
-    if (this->dt < 0.001f) {
+    if (dt < 0.001f) {
       return;
     }
 
@@ -2350,7 +2378,7 @@ public:
 
 class fcu_t {
 public:
-  // Interface
+  // Interfaces
   i2c_t &i2c;
   pwm_t &pwm;
   gpio_t &gpio;
@@ -2364,7 +2392,8 @@ public:
   // IMU
   mpu6050_t imu{i2c};
 
-	// Humidity sensor
+	// Temperature pressure sensor
+	bmp280_t tps{i2c};
 
   // Control
   att_ctrl_t att_ctrl;
@@ -2379,13 +2408,12 @@ public:
 
 
 // GLOBAL VARIABLES
-auto t_prev = millis();
+auto t_prev = micros();
 i2c_t i2c;
 pwm_t pwm;
 gpio_t gpio;
 serial_t serial;
 fcu_t fcu{i2c, pwm, gpio, serial};
-bmp280_t hs{i2c, serial};
 
 void setup() {}
 
@@ -2396,18 +2424,24 @@ void setup() {}
 /* } */
 
 void test_imu() {
-  fcu.imu.get_data();
-  serial.printf("x: %f  ", fcu.imu.accel[0]);
-  serial.printf("y: %f  ", fcu.imu.accel[1]);
-  serial.printf("z: %f  ", fcu.imu.accel[2]);
-  serial.printf("\n\r");
+	if (fcu.imu.data_ready()) {
+		fcu.imu.get_data();
+		serial.printf("x: %f  ", fcu.imu.accel[0]);
+		serial.printf("y: %f  ", fcu.imu.accel[1]);
+		serial.printf("z: %f  ", fcu.imu.accel[2]);
+		/* serial.printf("\n\r"); */
+
+		auto t_now = micros();
+		float t_elapsed = ((float) t_now - t_prev);
+		serial.printf("time elapsed: %f [us]\n\r", t_elapsed);
+	}
 }
 
 void test_tps() {
-	if (hs.data_ready()) {
+	if (fcu.tps.data_ready()) {
 		float temperature = 0.0f;
 		float pressure = 0.0f;
-		hs.get_data(temperature, pressure);
+		fcu.tps.get_data(temperature, pressure);
 
 		/* serial.printf("%f  ", temperature); */
 		/* serial.printf("%f\n\r", pressure); */
@@ -2415,13 +2449,18 @@ void test_tps() {
 		serial.printf("temperature: %f [deg]  ", temperature);
 		serial.printf("pressure: %f [Pa]", pressure);
 
-		auto t_now = millis();
-		float t_elapsed = ((float) t_now - t_prev) * 1e-3;
-		serial.printf("time elapsed: %f [s]\n\r", t_elapsed);
-		t_prev = t_now;
+		auto t_now = micros();
+		float t_elapsed = ((float) t_now - t_prev);
+		serial.printf("time elapsed: %f [us]\n\r", t_elapsed);
 	}
 }
 
-void loop() {
+void test_sensors() {
 	test_tps();
+	test_imu();
+	t_prev = micros();
+}
+
+void loop() {
+
 }
