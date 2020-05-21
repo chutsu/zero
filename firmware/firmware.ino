@@ -438,28 +438,46 @@ public:
 
 class pwm_t {
 public:
-  uint8_t pin = 0;
-  uint8_t freq = 0;
-  uint32_t channel = 0;
-  /* HardwareTimer *timer = nullptr; */
+  std::vector<uint8_t> pins{0, 1, 2, 3};
+  int freq;
+  int range_max;
+  float pwm_min = 0.001;  // s
+  float pwm_max = 0.002;  // s
 
-  pwm_t() {}
-
-  pwm_t(const uint8_t pin_, const uint8_t freq_)
-    : pin{pin_}, freq{freq_} {}
-
-  void setup() {
-    /* channel = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin), PinMap_PWM)); */
-    /* TIM_TypeDef *Instance = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin), PinMap_PWM); */
-    /* timer = new HardwareTimer(Instance); */
-    /* timer->setPWM(channel, pin, freq, 50); */
+  pwm_t(const std::vector<uint8_t> pins_,
+        const int16_t res=15,
+        const int freq_=37500000)
+    : pins{pins_}, freq{freq_} {
+    /* for (const auto pin : pins) { */
+    /*   analogWriteFrequency(pin, freq); */
+    /* } */
+    /*  */
+    /* switch (res) { */
+    /* case 16: range_max = 65535; */
+    /* case 15: range_max = 32767; */
+    /* case 14: range_max = 16383; */
+    /* case 13: range_max = 8191; */
+    /* case 12: range_max = 4095; */
+    /* case 11: range_max = 2047; */
+    /* case 10: range_max = 1023; */
+    /* case 9:  range_max = 511; */
+    /* case 8:  range_max = 255; */
+    /* case 7:  range_max = 127; */
+    /* case 6:  range_max = 63; */
+    /* case 5:  range_max = 31; */
+    /* case 4:  range_max = 15; */
+    /* case 3:  range_max = 7; */
+    /* case 2:  range_max = 3; */
+    /* default: range_max = 255; */
+    /* } */
+    /*  */
+    /* analogWriteResolution(res); */
   }
 
-  void set(const uint8_t duty_cycle) {
-    /* timer->pause(); */
-    /* timer->setPWM(channel, pin, freq, duty_cycle); */
-    /* timer->refresh(); */
-    /* timer->resume(); */
+  void set(const uint8_t idx, const float percentage) {
+    const float time_width = pwm_min + (pwm_max - pwm_min) * percentage;
+    const float duty_cycle = (1.0 / time_width) / freq;
+    analogWrite(pins[idx], range_max * duty_cycle);
   }
 };
 
@@ -2410,12 +2428,10 @@ public:
 // GLOBAL VARIABLES
 auto t_prev = micros();
 i2c_t i2c;
-pwm_t pwm;
+pwm_t pwm{{0, 1, 2, 3}};
 gpio_t gpio;
 serial_t serial;
 fcu_t fcu{i2c, pwm, gpio, serial};
-
-void setup() {}
 
 /* void test_uds() { */
 /*   float distance = fcu.hcsr04.measure(); */
@@ -2461,6 +2477,36 @@ void test_sensors() {
 	t_prev = micros();
 }
 
-void loop() {
+void setup() {
+  /* pinMode(0, OUTPUT); */
+  float freq = 1000;
+  float range_max = 32757;
+  float pwm_min = 0.001;  // s
+  float pwm_max = 0.002;  // s
+  float percentage = 1.0;
+  float time_width = pwm_min + ((pwm_max - pwm_min) * percentage);
+  float duty_cycle = (1.0 / time_width) / freq;
+  float val = range_max * duty_cycle;
 
+  analogWriteFrequency(0, freq);
+  analogWriteResolution(15);
+  analogWrite(0, val);
+}
+
+void loop() {
+  /* test_sensors(); */
+
+//  Serial.print("range_max: ");
+//  Serial.println(range_max);
+//  Serial.print("time_width: ");
+//  Serial.println(time_width);
+//  Serial.print("duty_cycle: ");
+//  Serial.println(duty_cycle);
+//  Serial.print("val: ");
+//  Serial.println(val);
+
+  float duration = pulseIn(1, HIGH);
+  Serial.println(duration);
+
+//  delay(1000);
 }

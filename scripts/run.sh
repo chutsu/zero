@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+ARDUINO=~/Downloads/arduino-1.8.12/arduino
 
 debug() {
   gdb \
@@ -10,11 +11,13 @@ debug() {
     --args "$1" "$2" "$3"
 }
 
+$ARDUINO --upload firmware/firmware.ino
+
 # node js/zero.js
 
 # make format_code
 # make clean
-time make
+# time make
 
 # ./build/bin/test_zero
 # ZERO-DATA
@@ -81,7 +84,7 @@ time make
 # ./build/bin/test_ba --target test_ba_jacobian
 # ./build/bin/test_ba --target test_ba_update
 # ./build/bin/test_ba --target test_ba_cost
-./build/bin/test_ba --target test_ba_solve
+# ./build/bin/test_ba --target test_ba_solve
 
 # ./build/bin/test_template
 
