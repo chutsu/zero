@@ -5,9 +5,6 @@
 #include <string.h>
 #include <assert.h>
 
-#include <vector>
-#include <string>
-
 #include <Wire.h>
 #include <Arduino.h>
 
@@ -184,15 +181,15 @@ void tf_quat(const float T[4 * 4], float q[4]) {
 /* } */
 
 /*******************************************************************************
- *                                 SERIAL
+ *                                 uart_t
  ******************************************************************************/
 
-class serial_t {
+class uart_t {
 public:
   Stream *serial_in;
   Print *serial_out;
 
-  serial_t() {
+  uart_t() {
     serial_in = &Serial;
     serial_out = &Serial;
     Serial.begin(115200);
@@ -224,10 +221,10 @@ public:
   *     int d = 65;
   *     float f = 123.4567;
   *     char* str = "Hello";
-  *     serial_t::printf(Serial, "<fmt>", d);
+  *     uart_t::printf(Serial, "<fmt>", d);
   *
   * Example:
-  *   serial_t::printf(Serial, "Sensor %d is %o and reads %1f\n", d, d, f) will
+  *   uart_t::printf(Serial, "Sensor %d is %o and reads %1f\n", d, d, f) will
   *   output "Sensor 65 is on and reads 123.5" to the serial port.
   *
   * Formatting strings <fmt>
@@ -242,6 +239,7 @@ public:
   * %x    - hexidecimal (d = 41)
   * %%    - escaped percent ("%")
   **/
+  /*
   void printf(const char* fmt, ...) {
     va_list argv;
     va_start(argv, fmt);
@@ -277,6 +275,7 @@ public:
     }
     va_end(argv);
   }
+  */
 };
 
 /*******************************************************************************
@@ -310,15 +309,16 @@ public:
 };
 
 /*******************************************************************************
- *                                   I2C
+ *                                   TWI
  ******************************************************************************/
 
 
-class i2c_t {
+class twi {
 public:
-	const uint32_t I2C_BUF_MAX = 1024;
+	const uint32_t BUF_MAX = 1024;
 
-  i2c_t() {
+  twi() {
+    Wire.setClock(400000);
     Wire.begin();
   }
 
@@ -408,19 +408,21 @@ public:
 		}
 	}
 
-	void scan_i2c_addrs(serial_t &serial) {
+  /*
+	void scan_addrs(uart_t &serial) {
 		uint8_t addrs[128] = {0};
 		uint8_t nb_addrs;
 		scan_addrs(addrs, &nb_addrs);
 
-		serial.printf("scanning i2c devices:\n\r");
-		serial.printf("nb_addrs: %d\n\r", nb_addrs);
+		serial.println("scanning i2c devices:\n\r");
+		serial.println("nb_addrs: %d\n\r", nb_addrs);
 		for (uint8_t i = 0; i < nb_addrs; i++) {
 			serial.printf("%X\n\r", addrs[i]);
 		}
 
 		delay(5000);
 	}
+	*/
 };
 
 /*******************************************************************************
@@ -438,46 +440,52 @@ public:
 
 class pwm_t {
 public:
-  std::vector<uint8_t> pins{0, 1, 2, 3};
-  int freq;
-  int range_max;
+  const uint8_t *pins = nullptr;
+  const uint8_t nb_pins = 0;
+
+  float freq;
+  float range_max;
   float pwm_min = 0.001;  // s
   float pwm_max = 0.002;  // s
 
-  pwm_t(const std::vector<uint8_t> pins_,
-        const int16_t res=15,
-        const int freq_=37500000)
-    : pins{pins_}, freq{freq_} {
-    /* for (const auto pin : pins) { */
-    /*   analogWriteFrequency(pin, freq); */
-    /* } */
-    /*  */
-    /* switch (res) { */
-    /* case 16: range_max = 65535; */
-    /* case 15: range_max = 32767; */
-    /* case 14: range_max = 16383; */
-    /* case 13: range_max = 8191; */
-    /* case 12: range_max = 4095; */
-    /* case 11: range_max = 2047; */
-    /* case 10: range_max = 1023; */
-    /* case 9:  range_max = 511; */
-    /* case 8:  range_max = 255; */
-    /* case 7:  range_max = 127; */
-    /* case 6:  range_max = 63; */
-    /* case 5:  range_max = 31; */
-    /* case 4:  range_max = 15; */
-    /* case 3:  range_max = 7; */
-    /* case 2:  range_max = 3; */
-    /* default: range_max = 255; */
-    /* } */
-    /*  */
-    /* analogWriteResolution(res); */
+  pwm_t(const uint8_t *pins_,
+        const uint8_t nb_pins_,
+        const int res=15,
+        const float freq_=1000)
+    : pins{pins_}, nb_pins{nb_pins_}, freq{freq_} {
+    /*
+    for (const auto pin : pins) {
+      analogWriteFrequency(pin, freq);
+    }
+
+    analogWriteResolution(res);
+    switch (res) {
+    case 16: range_max = 65535.0f; break;
+    case 15: range_max = 32767.0f; break;
+    case 14: range_max = 16383.0f; break;
+    case 13: range_max = 8191.0f; break;
+    case 12: range_max = 4095.0f; break;
+    case 11: range_max = 2047.0f; break;
+    case 10: range_max = 1023.0f; break;
+    case 9:  range_max = 511.0f; break;
+    case 8:  range_max = 255.0f; break;
+    case 7:  range_max = 127.0f; break;
+    case 6:  range_max = 63.0f; break;
+    case 5:  range_max = 31.0f; break;
+    case 4:  range_max = 15.0f; break;
+    case 3:  range_max = 7.0f; break;
+    case 2:  range_max = 3.0f; break;
+    default: range_max = 255.0f; break;
+    }
+    */
   }
 
-  void set(const uint8_t idx, const float percentage) {
-    const float time_width = pwm_min + (pwm_max - pwm_min) * percentage;
+  void set(const uint8_t idx, const float val) {
+    /*
+    const float time_width = pwm_min + ((pwm_max - pwm_min) * val);
     const float duty_cycle = (1.0 / time_width) / freq;
     analogWrite(pins[idx], range_max * duty_cycle);
+    */
   }
 };
 
@@ -526,8 +534,8 @@ public:
 
 class mpu6050_t {
 public:
-	// I2C ADDRESS
-	enum i2c_addrs {
+	// ADDRESSES
+	enum addresses {
 		MPU6050_ADDRESS = 0x68,
 		MPU6050_ADDRESS_AD0_LOW = 0x68,  // addr pin low (GND) [default]
 		MPU6050_ADDRESS_AD0_HIGH = 0x69  // addr pin high (VCC)
@@ -649,7 +657,7 @@ public:
 
 	// Interface
 	uint8_t sensor_addr = MPU6050_ADDRESS;
-  i2c_t &i2c;
+  twi &i2c;
 
 	// State
   int8_t ok = 0;
@@ -666,7 +674,7 @@ public:
   bool enable_i2c_master = false;
 	bool enable_data_ready = true;
 
-  mpu6050_t(i2c_t &i2c_) : i2c{i2c_} {
+  mpu6050_t(twi &i2c_) : i2c{i2c_} {
     // Configure Digital low-pass filter
     uint8_t dlpf_cfg = 0;
     set_dplf(dlpf_cfg);
@@ -820,9 +828,17 @@ public:
     return gyro_rate / (1 + smplrt_div);
   }
 
-  /** Set gyro range **/
-  void set_gyro_range(const int8_t range) {
-    uint8_t data = range << 3;
+  /**
+   * Set gyro range
+   * FS_SEL:
+   *
+   *   0: +/- 250 deg/s
+   *   1: +/- 500 deg/s
+   *   2: +/- 1000 deg/s
+   *   3: +/- 2000 deg/s
+   */
+  void set_gyro_range(const int8_t fs_sel) {
+    uint8_t data = fs_sel << 3;
     i2c.write_byte(sensor_addr, MPU6050_REG_GYRO_CONFIG, data);
   }
 
@@ -833,10 +849,17 @@ public:
     return data;
   }
 
-  /** Set accelerometer range **/
-  void set_accel_range(const int8_t range) {
-    // assert(range > 3 || range < 0);
-    uint8_t data = range << 3;
+  /**
+   * Set accelerometer range
+   * AFS_SEL:
+   *
+   *   0: +/- 2g
+   *   1: +/- 4g
+   *   2: +/- 8g
+   *   3: +/- 16g
+   */
+  void set_accel_range(const int8_t afs_sel) {
+    uint8_t data = afs_sel << 3;
     i2c.write_byte(sensor_addr, MPU6050_REG_ACCEL_CONFIG, data);
   }
 
@@ -890,13 +913,15 @@ public:
     // last_updated = clock();
   }
 
-  void print_config(serial_t &serial) {
+  void print_config(uart_t &serial) {
+    /*
     serial.printf("I2C addr: %d\n\r", ping());
     serial.printf("DPLF: %d\n\r", get_dplf());
     serial.printf("Accel sensitivity: %f\n\r", accel_sensitivity);
     serial.printf("Gyro sensitivity: %f\n\r", gyro_sensitivity);
     serial.printf("Sample rate div: %f\n\r", get_sample_rate_div());
     serial.printf("Sample rate: %f\n\r", sample_rate);
+    */
   }
 };
 
@@ -906,8 +931,8 @@ public:
 
 class bmp280_t {
 public:
-	// BMP280 I2C Addresses
-	enum i2c_addrs {
+	// BMP280 Addresses
+	enum addresses {
 		BMP280_ADDR = 0x77,     // Primary I2C Address
 		BMP280_ADDR_ALT = 0x76  // Alternate Address
 	};
@@ -1022,13 +1047,13 @@ public:
 
 	// Interfaces
 	uint8_t sensor_addr = BMP280_ADDR_ALT;
-	i2c_t &i2c;
+	twi &i2c;
 
 	// State
 	bool connected = false;
 	uint8_t previous_measuring = 0;
 
-  bmp280_t(i2c_t &i2c_) : i2c{i2c_} {
+  bmp280_t(twi &i2c_) : i2c{i2c_} {
 		// Verify chip id
 		uint8_t sensor_id = i2c.read_byte(sensor_addr, BMP280_REG_CHIPID);
 		if (sensor_id == 0x58) {
@@ -1920,7 +1945,7 @@ class ublox_t {
 public:
   int state;
   uint8_t ok;
-  /* serial_t serial; */
+  /* uart_t serial; */
 
   int sockfd;
   int conns[UBLOX_MAX_CONNS];
@@ -2397,10 +2422,10 @@ public:
 class fcu_t {
 public:
   // Interfaces
-  i2c_t &i2c;
+  twi &i2c;
   pwm_t &pwm;
   gpio_t &gpio;
-  serial_t &serial;
+  uart_t &serial;
 
   // Ultrasound distance sensor
   /* const int trig_pin = PA5; */
@@ -2416,7 +2441,7 @@ public:
   // Control
   att_ctrl_t att_ctrl;
 
-  fcu_t(i2c_t &i2c_, pwm_t &pwm_, gpio_t &gpio_, serial_t &serial_)
+  fcu_t(twi &i2c_, pwm_t &pwm_, gpio_t &gpio_, uart_t &serial_)
     : i2c{i2c_}, pwm{pwm_}, gpio{gpio_}, serial{serial_} {}
 
   void update() {
@@ -2427,10 +2452,13 @@ public:
 
 // GLOBAL VARIABLES
 auto t_prev = micros();
-i2c_t i2c;
-pwm_t pwm{{0, 1, 2, 3}};
+twi i2c;
+
+uint8_t pins[4] = {0, 1, 2, 3};
+uint8_t nb_pins = 4;
+pwm_t pwm{pins, nb_pins};
 gpio_t gpio;
-serial_t serial;
+uart_t serial;
 fcu_t fcu{i2c, pwm, gpio, serial};
 
 /* void test_uds() { */
@@ -2442,14 +2470,21 @@ fcu_t fcu{i2c, pwm, gpio, serial};
 void test_imu() {
 	if (fcu.imu.data_ready()) {
 		fcu.imu.get_data();
-		serial.printf("x: %f  ", fcu.imu.accel[0]);
-		serial.printf("y: %f  ", fcu.imu.accel[1]);
-		serial.printf("z: %f  ", fcu.imu.accel[2]);
+		/*
+		serial.printf("ax: %f  ", fcu.imu.accel[0]);
+		serial.printf("ay: %f  ", fcu.imu.accel[1]);
+		serial.printf("az: %f  ", fcu.imu.accel[2]);
+		serial.printf("gx: %f  ", fcu.imu.gyro[0]);
+		serial.printf("gy: %f  ", fcu.imu.gyro[1]);
+		serial.printf("gz: %f  ", fcu.imu.gyro[2]);
+		*/
 		/* serial.printf("\n\r"); */
 
 		auto t_now = micros();
 		float t_elapsed = ((float) t_now - t_prev);
+		/*
 		serial.printf("time elapsed: %f [us]\n\r", t_elapsed);
+		*/
 	}
 }
 
@@ -2462,51 +2497,34 @@ void test_tps() {
 		/* serial.printf("%f  ", temperature); */
 		/* serial.printf("%f\n\r", pressure); */
 
+    /*
 		serial.printf("temperature: %f [deg]  ", temperature);
 		serial.printf("pressure: %f [Pa]", pressure);
+		*/
 
 		auto t_now = micros();
 		float t_elapsed = ((float) t_now - t_prev);
+		/*
 		serial.printf("time elapsed: %f [us]\n\r", t_elapsed);
+		*/
 	}
 }
 
 void test_sensors() {
-	test_tps();
+	/* test_tps(); */
 	test_imu();
 	t_prev = micros();
 }
 
-void setup() {
-  /* pinMode(0, OUTPUT); */
-  float freq = 1000;
-  float range_max = 32757;
-  float pwm_min = 0.001;  // s
-  float pwm_max = 0.002;  // s
-  float percentage = 1.0;
-  float time_width = pwm_min + ((pwm_max - pwm_min) * percentage);
-  float duty_cycle = (1.0 / time_width) / freq;
-  float val = range_max * duty_cycle;
-
-  analogWriteFrequency(0, freq);
-  analogWriteResolution(15);
-  analogWrite(0, val);
+void test_pwm() {
+  pwm.set(0, 0.5);
+  float duration = pulseIn(1, HIGH);
+  //serial.printf("pwm width: %f [us]\n\r", duration);
 }
+
+void setup() {}
 
 void loop() {
   /* test_sensors(); */
-
-//  Serial.print("range_max: ");
-//  Serial.println(range_max);
-//  Serial.print("time_width: ");
-//  Serial.println(time_width);
-//  Serial.print("duty_cycle: ");
-//  Serial.println(duty_cycle);
-//  Serial.print("val: ");
-//  Serial.println(val);
-
-  float duration = pulseIn(1, HIGH);
-  Serial.println(duration);
-
-//  delay(1000);
+  /* test_pwm(); */
 }

@@ -11,9 +11,7 @@
 #include <sys/socket.h>
 #include <sys/poll.h>
 
-#include "core.hpp"
-#include "tcp.h"
-#include "serial.h"
+#include "zero/zero.h"
 
 /**
  * UBX Class IDs

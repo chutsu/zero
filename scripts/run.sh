@@ -11,7 +11,8 @@ debug() {
     --args "$1" "$2" "$3"
 }
 
-$ARDUINO --upload firmware/firmware.ino
+# $ARDUINO --upload firmware/firmware.ino --port /dev/ttyUSB0
+# $ARDUINO --upload firmware/firmware.ino
 
 # node js/zero.js
 

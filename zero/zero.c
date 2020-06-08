@@ -850,7 +850,6 @@ int check_jacobian(const char *jac_name,
   }
 
   // Print result
-
   if (ok == 0) {
     if (print) {
       LOG_ERROR("Bad jacobian [%s]!\n", jac_name);
@@ -1391,70 +1390,6 @@ void chol_lls_solve2(const double *A,
 /*  */
 /* 	return 1; */
 /* } */
-
-
-/******************************************************************************
- *                               NEAREST SPD
- ******************************************************************************/
-
-void nearest_spd(const double *A, const size_t n, double *A_hat) {
-  /* Symmetrize A into B */
-  /* B = (A + A') / 2.0 */
-  double *B = mat_new(n, n);
-  double *A_t = mat_new(n, n);
-  mat_transpose(A, n, n, A_t);
-  mat_add(A, A_t, B, n, n);
-  mat_scale(B, n, n, 0.5);
-
-  /* svd(B) */
-  double *U = mat_new(n, n);
-  double *s = vec_new(n);
-  double *V_t = mat_new(n, n);
-  svd(B, n, n, U, s, V_t);
-
-  /* H = V * S * V' */
-  double *S = mat_new(n, n);
-  double *V = mat_new(n, n);
-  double *VS = mat_new(n, n);
-  double *H = mat_new(n, n);
-  mat_transpose(V_t, n, n, V);
-  mat_diag_set(S, n, n, s);
-  dot(V, n, n, S, n, n, VS);
-  dot(VS, n, n, V_t, n, n, H);
-
-  /* Calculate A_hat */
-  /* A_hat = 0.5 * (B + H) */
-  mat_add(B, H, A_hat, n, n);
-  mat_scale(A_hat, n, n, 0.5);
-
-  /* Ensure symmetry */
-  double *A_hat_t = mat_new(n, n);
-  mat_transpose(A_hat, n, n, A_hat_t);
-  mat_add(A_hat, A_hat_t, A_hat, n, n);
-  mat_scale(A_hat, n, n, 0.5);
-
-  /* Cholesky Decomposition */
-  int retry_counter = 0;
-tweak : {
-  const char uplo = 'L';
-  double *a = mat_new(n, n);
-  mat_tril(A_hat, n, a);
-  int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, uplo, n, a, n);
-  if (retval != 0) {
-    retry_counter++;
-    double *I_ = mat_new(n, n);
-    eye(I_, n, n);
-    mat_scale(I_, n, n, 0.1);
-    mat_add(A_hat, I_, A_hat, n, n);
-
-    if (retry_counter == 10) {
-      fprintf(stderr, "Failed to tweak matrix!\n");
-      return;
-    }
-    goto tweak;
-  }
-}
-}
 
 /******************************************************************************
  *                               TRANSFORMS
