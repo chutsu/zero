@@ -38,8 +38,8 @@ inline uint16_t uint16(const uint8_t *data, const size_t offset=0) {
 }
 
 inline int32_t int32(const uint8_t *data, const size_t offset=0) {
-	return (int32_t)((data[offset + 3] << 24) | (data[offset + 2] << 16) |
-			(data[offset + 1] << 8) | (data[offset]));
+  return (int32_t)((data[offset + 3] << 24) | (data[offset + 2] << 16) |
+      (data[offset + 1] << 8) | (data[offset]));
 }
 
 inline uint32_t uint32(const uint8_t *data, const size_t offset=0) {
@@ -315,7 +315,7 @@ public:
 
 class twi {
 public:
-	const uint32_t BUF_MAX = 1024;
+  const uint32_t BUF_MAX = 1024;
 
   twi() {
     Wire.setClock(400000);
@@ -349,33 +349,33 @@ public:
     }
   }
 
-	uint8_t read_u8(const uint8_t dev_addr, const uint8_t reg_addr) {
-		return read_byte(dev_addr, reg_addr);
-	}
+  uint8_t read_u8(const uint8_t dev_addr, const uint8_t reg_addr) {
+    return read_byte(dev_addr, reg_addr);
+  }
 
-	int8_t read_s8(const uint8_t dev_addr, const uint8_t reg_addr) {
-		return read_byte(dev_addr, reg_addr);
-	}
+  int8_t read_s8(const uint8_t dev_addr, const uint8_t reg_addr) {
+    return read_byte(dev_addr, reg_addr);
+  }
 
-	uint16_t read_u16(const uint8_t dev_addr, const uint8_t reg_addr) {
-		uint8_t bytes[2] = {0};
-		read_bytes(dev_addr, reg_addr, 2, bytes);
+  uint16_t read_u16(const uint8_t dev_addr, const uint8_t reg_addr) {
+    uint8_t bytes[2] = {0};
+    read_bytes(dev_addr, reg_addr, 2, bytes);
     return uint16(bytes);
-	}
+  }
 
-	int16_t read_s16(const uint8_t dev_addr, const uint8_t reg_addr) {
-		return read_u16(dev_addr, reg_addr);
-	}
+  int16_t read_s16(const uint8_t dev_addr, const uint8_t reg_addr) {
+    return read_u16(dev_addr, reg_addr);
+  }
 
-	uint32_t read_u32(const uint8_t dev_addr, const uint8_t reg_addr) {
-		uint8_t bytes[4] = {0};
-		read_bytes(dev_addr, reg_addr, 4, bytes);
+  uint32_t read_u32(const uint8_t dev_addr, const uint8_t reg_addr) {
+    uint8_t bytes[4] = {0};
+    read_bytes(dev_addr, reg_addr, 4, bytes);
     return uint32(bytes);
-	}
+  }
 
-	int32_t read_s32(const uint8_t dev_addr, const uint8_t reg_addr) {
-		return read_u32(dev_addr, reg_addr);
-	}
+  int32_t read_s32(const uint8_t dev_addr, const uint8_t reg_addr) {
+    return read_u32(dev_addr, reg_addr);
+  }
 
   void write_byte(const uint8_t dev_addr,
                   const uint8_t reg_addr,
@@ -396,33 +396,33 @@ public:
     Wire.endTransmission();
   }
 
-	void scan_addrs(uint8_t *addrs, uint8_t *nb_addrs) {
-		*nb_addrs = 0;
+  void scan_addrs(uint8_t *addrs, uint8_t *nb_addrs) {
+    *nb_addrs = 0;
 
-		for (uint8_t addr = 1; addr < 127; addr++) {
-			Wire.beginTransmission(addr);
-			if (Wire.endTransmission() == 0) {
-				addrs[*nb_addrs] = addr;
-				*nb_addrs += 1;
-			}
-		}
-	}
+    for (uint8_t addr = 1; addr < 127; addr++) {
+      Wire.beginTransmission(addr);
+      if (Wire.endTransmission() == 0) {
+        addrs[*nb_addrs] = addr;
+        *nb_addrs += 1;
+      }
+    }
+  }
 
   /*
-	void scan_addrs(uart_t &serial) {
-		uint8_t addrs[128] = {0};
-		uint8_t nb_addrs;
-		scan_addrs(addrs, &nb_addrs);
+  void scan_addrs(uart_t &serial) {
+    uint8_t addrs[128] = {0};
+    uint8_t nb_addrs;
+    scan_addrs(addrs, &nb_addrs);
 
-		serial.println("scanning i2c devices:\n\r");
-		serial.println("nb_addrs: %d\n\r", nb_addrs);
-		for (uint8_t i = 0; i < nb_addrs; i++) {
-			serial.printf("%X\n\r", addrs[i]);
-		}
+    serial.println("scanning i2c devices:\n\r");
+    serial.println("nb_addrs: %d\n\r", nb_addrs);
+    for (uint8_t i = 0; i < nb_addrs; i++) {
+      serial.printf("%X\n\r", addrs[i]);
+    }
 
-		delay(5000);
-	}
-	*/
+    delay(5000);
+  }
+  */
 };
 
 /*******************************************************************************
@@ -534,145 +534,145 @@ public:
 
 class mpu6050_t {
 public:
-	// ADDRESSES
-	enum addresses {
-		MPU6050_ADDRESS = 0x68,
-		MPU6050_ADDRESS_AD0_LOW = 0x68,  // addr pin low (GND) [default]
-		MPU6050_ADDRESS_AD0_HIGH = 0x69  // addr pin high (VCC)
-	};
+  // ADDRESSES
+  enum addresses {
+    MPU6050_ADDRESS = 0x68,
+    MPU6050_ADDRESS_AD0_LOW = 0x68,  // addr pin low (GND) [default]
+    MPU6050_ADDRESS_AD0_HIGH = 0x69  // addr pin high (VCC)
+  };
 
-	// REGISTERS
-	enum registers {
-		MPU6050_REG_XG_OFFS_TC = 0x00,
-		MPU6050_REG_YG_OFFS_TC = 0x01,
-		MPU6050_REG_ZG_OFFS_TC = 0x02,
-		MPU6050_REG_X_FINE_GAIN = 0x03,
-		MPU6050_REG_Y_FINE_GAIN = 0x04,
-		MPU6050_REG_Z_FINE_GAIN = 0x05,
-		MPU6050_REG_XA_OFFS_H = 0x06,
-		MPU6050_REG_XA_OFFS_L_TC = 0x07,
-		MPU6050_REG_YA_OFFS_H = 0x08,
-		MPU6050_REG_YA_OFFS_L_TC = 0x09,
-		MPU6050_REG_ZA_OFFS_H = 0x0A,
-		MPU6050_REG_ZA_OFFS_L_TC = 0x0B,
-		MPU6050_REG_XG_OFFS_USRH = 0x13,
-		MPU6050_REG_XG_OFFS_USRL = 0x14,
-		MPU6050_REG_YG_OFFS_USRH = 0x15,
-		MPU6050_REG_YG_OFFS_USRL = 0x16,
-		MPU6050_REG_ZG_OFFS_USRH = 0x17,
-		MPU6050_REG_ZG_OFFS_USRL = 0x18,
-		MPU6050_REG_SMPLRT_DIV = 0x19,
-		MPU6050_REG_CONFIG = 0x1A,
-		MPU6050_REG_GYRO_CONFIG = 0x1B,
-		MPU6050_REG_ACCEL_CONFIG = 0x1C,
-		MPU6050_REG_FF_THR = 0x1D,
-		MPU6050_REG_FF_DUR = 0x1E,
-		MPU6050_REG_MOT_THR = 0x1F,
-		MPU6050_REG_MOT_DUR = 0x20,
-		MPU6050_REG_ZRMOT_THR = 0x21,
-		MPU6050_REG_ZRMOT_DUR = 0x22,
-		MPU6050_REG_FIFO_EN = 0x23,
-		MPU6050_REG_I2C_MST_CTRL = 0x24,
-		MPU6050_REG_I2C_SLV0_ADDR = 0x25,
-		MPU6050_REG_I2C_SLV0_REG = 0x26,
-		MPU6050_REG_I2C_SLV0_CTRL = 0x27,
-		MPU6050_REG_I2C_SLV1_ADDR = 0x28,
-		MPU6050_REG_I2C_SLV1_REG = 0x29,
-		MPU6050_REG_I2C_SLV1_CTRL = 0x2A,
-		MPU6050_REG_I2C_SLV2_ADDR = 0x2B,
-		MPU6050_REG_I2C_SLV2_REG = 0x2C,
-		MPU6050_REG_I2C_SLV2_CTRL = 0x2D,
-		MPU6050_REG_I2C_SLV3_ADDR = 0x2E,
-		MPU6050_REG_I2C_SLV3_REG = 0x2F,
-		MPU6050_REG_I2C_SLV3_CTRL = 0x30,
-		MPU6050_REG_I2C_SLV4_ADDR = 0x31,
-		MPU6050_REG_I2C_SLV4_REG = 0x32,
-		MPU6050_REG_I2C_SLV4_DO = 0x33,
-		MPU6050_REG_I2C_SLV4_CTRL = 0x34,
-		MPU6050_REG_I2C_SLV4_DI = 0x35,
-		MPU6050_REG_I2C_MST_STATUS = 0x36,
-		MPU6050_REG_INT_PIN_CFG = 0x37,
-		MPU6050_REG_INT_ENABLE = 0x38,
-		MPU6050_REG_DMP_INT_STATUS = 0x39,
-		MPU6050_REG_INT_STATUS = 0x3A,
-		MPU6050_REG_ACCEL_XOUT_H = 0x3B,
-		MPU6050_REG_ACCEL_XOUT_L = 0x3C,
-		MPU6050_REG_ACCEL_YOUT_H = 0x3D,
-		MPU6050_REG_ACCEL_YOUT_L = 0x3E,
-		MPU6050_REG_ACCEL_ZOUT_H = 0x3F,
-		MPU6050_REG_ACCEL_ZOUT_L = 0x40,
-		MPU6050_REG_TEMP_OUT_H = 0x41,
-		MPU6050_REG_TEMP_OUT_L = 0x42,
-		MPU6050_REG_GYRO_XOUT_H = 0x43,
-		MPU6050_REG_GYRO_XOUT_L = 0x44,
-		MPU6050_REG_GYRO_YOUT_H = 0x45,
-		MPU6050_REG_GYRO_YOUT_L = 0x46,
-		MPU6050_REG_GYRO_ZOUT_H = 0x47,
-		MPU6050_REG_GYRO_ZOUT_L = 0x48,
-		MPU6050_REG_EXT_SENS_DATA_00 = 0x49,
-		MPU6050_REG_EXT_SENS_DATA_01 = 0x4A,
-		MPU6050_REG_EXT_SENS_DATA_02 = 0x4B,
-		MPU6050_REG_EXT_SENS_DATA_03 = 0x4C,
-		MPU6050_REG_EXT_SENS_DATA_04 = 0x4D,
-		MPU6050_REG_EXT_SENS_DATA_05 = 0x4E,
-		MPU6050_REG_EXT_SENS_DATA_06 = 0x4F,
-		MPU6050_REG_EXT_SENS_DATA_07 = 0x50,
-		MPU6050_REG_EXT_SENS_DATA_08 = 0x51,
-		MPU6050_REG_EXT_SENS_DATA_09 = 0x52,
-		MPU6050_REG_EXT_SENS_DATA_10 = 0x53,
-		MPU6050_REG_EXT_SENS_DATA_11 = 0x54,
-		MPU6050_REG_EXT_SENS_DATA_12 = 0x55,
-		MPU6050_REG_EXT_SENS_DATA_13 = 0x56,
-		MPU6050_REG_EXT_SENS_DATA_14 = 0x57,
-		MPU6050_REG_EXT_SENS_DATA_15 = 0x58,
-		MPU6050_REG_EXT_SENS_DATA_16 = 0x59,
-		MPU6050_REG_EXT_SENS_DATA_17 = 0x5A,
-		MPU6050_REG_EXT_SENS_DATA_18 = 0x5B,
-		MPU6050_REG_EXT_SENS_DATA_19 = 0x5C,
-		MPU6050_REG_EXT_SENS_DATA_20 = 0x5D,
-		MPU6050_REG_EXT_SENS_DATA_21 = 0x5E,
-		MPU6050_REG_EXT_SENS_DATA_22 = 0x5F,
-		MPU6050_REG_EXT_SENS_DATA_23 = 0x60,
-		MPU6050_REG_MOT_DETECT_STATUS = 0x61,
-		MPU6050_REG_I2C_SLV0_DO = 0x63,
-		MPU6050_REG_I2C_SLV1_DO = 0x64,
-		MPU6050_REG_I2C_SLV2_DO = 0x65,
-		MPU6050_REG_I2C_SLV3_DO = 0x66,
-		MPU6050_REG_I2C_MST_DELAY_CTRL = 0x67,
-		MPU6050_REG_SIGNAL_PATH_RESET = 0x68,
-		MPU6050_REG_MOT_DETECT_CTRL = 0x69,
-		MPU6050_REG_USER_CTRL = 0x6A,
-		MPU6050_REG_PWR_MGMT_1 = 0x6B,
-		MPU6050_REG_PWR_MGMT_2 = 0x6C,
-		MPU6050_REG_BANK_SEL = 0x6D,
-		MPU6050_REG_MEM_START_ADDR = 0x6E,
-		MPU6050_REG_MEM_R_W = 0x6F,
-		MPU6050_REG_DMP_CFG_1 = 0x70,
-		MPU6050_REG_DMP_CFG_2 = 0x71,
-		MPU6050_REG_FIFO_COUNTH = 0x72,
-		MPU6050_REG_FIFO_COUNTL = 0x73,
-		MPU6050_REG_FIFO_R_W = 0x74,
-		MPU6050_REG_WHO_AM_I = 0x75
-	};
+  // REGISTERS
+  enum registers {
+    MPU6050_REG_XG_OFFS_TC = 0x00,
+    MPU6050_REG_YG_OFFS_TC = 0x01,
+    MPU6050_REG_ZG_OFFS_TC = 0x02,
+    MPU6050_REG_X_FINE_GAIN = 0x03,
+    MPU6050_REG_Y_FINE_GAIN = 0x04,
+    MPU6050_REG_Z_FINE_GAIN = 0x05,
+    MPU6050_REG_XA_OFFS_H = 0x06,
+    MPU6050_REG_XA_OFFS_L_TC = 0x07,
+    MPU6050_REG_YA_OFFS_H = 0x08,
+    MPU6050_REG_YA_OFFS_L_TC = 0x09,
+    MPU6050_REG_ZA_OFFS_H = 0x0A,
+    MPU6050_REG_ZA_OFFS_L_TC = 0x0B,
+    MPU6050_REG_XG_OFFS_USRH = 0x13,
+    MPU6050_REG_XG_OFFS_USRL = 0x14,
+    MPU6050_REG_YG_OFFS_USRH = 0x15,
+    MPU6050_REG_YG_OFFS_USRL = 0x16,
+    MPU6050_REG_ZG_OFFS_USRH = 0x17,
+    MPU6050_REG_ZG_OFFS_USRL = 0x18,
+    MPU6050_REG_SMPLRT_DIV = 0x19,
+    MPU6050_REG_CONFIG = 0x1A,
+    MPU6050_REG_GYRO_CONFIG = 0x1B,
+    MPU6050_REG_ACCEL_CONFIG = 0x1C,
+    MPU6050_REG_FF_THR = 0x1D,
+    MPU6050_REG_FF_DUR = 0x1E,
+    MPU6050_REG_MOT_THR = 0x1F,
+    MPU6050_REG_MOT_DUR = 0x20,
+    MPU6050_REG_ZRMOT_THR = 0x21,
+    MPU6050_REG_ZRMOT_DUR = 0x22,
+    MPU6050_REG_FIFO_EN = 0x23,
+    MPU6050_REG_I2C_MST_CTRL = 0x24,
+    MPU6050_REG_I2C_SLV0_ADDR = 0x25,
+    MPU6050_REG_I2C_SLV0_REG = 0x26,
+    MPU6050_REG_I2C_SLV0_CTRL = 0x27,
+    MPU6050_REG_I2C_SLV1_ADDR = 0x28,
+    MPU6050_REG_I2C_SLV1_REG = 0x29,
+    MPU6050_REG_I2C_SLV1_CTRL = 0x2A,
+    MPU6050_REG_I2C_SLV2_ADDR = 0x2B,
+    MPU6050_REG_I2C_SLV2_REG = 0x2C,
+    MPU6050_REG_I2C_SLV2_CTRL = 0x2D,
+    MPU6050_REG_I2C_SLV3_ADDR = 0x2E,
+    MPU6050_REG_I2C_SLV3_REG = 0x2F,
+    MPU6050_REG_I2C_SLV3_CTRL = 0x30,
+    MPU6050_REG_I2C_SLV4_ADDR = 0x31,
+    MPU6050_REG_I2C_SLV4_REG = 0x32,
+    MPU6050_REG_I2C_SLV4_DO = 0x33,
+    MPU6050_REG_I2C_SLV4_CTRL = 0x34,
+    MPU6050_REG_I2C_SLV4_DI = 0x35,
+    MPU6050_REG_I2C_MST_STATUS = 0x36,
+    MPU6050_REG_INT_PIN_CFG = 0x37,
+    MPU6050_REG_INT_ENABLE = 0x38,
+    MPU6050_REG_DMP_INT_STATUS = 0x39,
+    MPU6050_REG_INT_STATUS = 0x3A,
+    MPU6050_REG_ACCEL_XOUT_H = 0x3B,
+    MPU6050_REG_ACCEL_XOUT_L = 0x3C,
+    MPU6050_REG_ACCEL_YOUT_H = 0x3D,
+    MPU6050_REG_ACCEL_YOUT_L = 0x3E,
+    MPU6050_REG_ACCEL_ZOUT_H = 0x3F,
+    MPU6050_REG_ACCEL_ZOUT_L = 0x40,
+    MPU6050_REG_TEMP_OUT_H = 0x41,
+    MPU6050_REG_TEMP_OUT_L = 0x42,
+    MPU6050_REG_GYRO_XOUT_H = 0x43,
+    MPU6050_REG_GYRO_XOUT_L = 0x44,
+    MPU6050_REG_GYRO_YOUT_H = 0x45,
+    MPU6050_REG_GYRO_YOUT_L = 0x46,
+    MPU6050_REG_GYRO_ZOUT_H = 0x47,
+    MPU6050_REG_GYRO_ZOUT_L = 0x48,
+    MPU6050_REG_EXT_SENS_DATA_00 = 0x49,
+    MPU6050_REG_EXT_SENS_DATA_01 = 0x4A,
+    MPU6050_REG_EXT_SENS_DATA_02 = 0x4B,
+    MPU6050_REG_EXT_SENS_DATA_03 = 0x4C,
+    MPU6050_REG_EXT_SENS_DATA_04 = 0x4D,
+    MPU6050_REG_EXT_SENS_DATA_05 = 0x4E,
+    MPU6050_REG_EXT_SENS_DATA_06 = 0x4F,
+    MPU6050_REG_EXT_SENS_DATA_07 = 0x50,
+    MPU6050_REG_EXT_SENS_DATA_08 = 0x51,
+    MPU6050_REG_EXT_SENS_DATA_09 = 0x52,
+    MPU6050_REG_EXT_SENS_DATA_10 = 0x53,
+    MPU6050_REG_EXT_SENS_DATA_11 = 0x54,
+    MPU6050_REG_EXT_SENS_DATA_12 = 0x55,
+    MPU6050_REG_EXT_SENS_DATA_13 = 0x56,
+    MPU6050_REG_EXT_SENS_DATA_14 = 0x57,
+    MPU6050_REG_EXT_SENS_DATA_15 = 0x58,
+    MPU6050_REG_EXT_SENS_DATA_16 = 0x59,
+    MPU6050_REG_EXT_SENS_DATA_17 = 0x5A,
+    MPU6050_REG_EXT_SENS_DATA_18 = 0x5B,
+    MPU6050_REG_EXT_SENS_DATA_19 = 0x5C,
+    MPU6050_REG_EXT_SENS_DATA_20 = 0x5D,
+    MPU6050_REG_EXT_SENS_DATA_21 = 0x5E,
+    MPU6050_REG_EXT_SENS_DATA_22 = 0x5F,
+    MPU6050_REG_EXT_SENS_DATA_23 = 0x60,
+    MPU6050_REG_MOT_DETECT_STATUS = 0x61,
+    MPU6050_REG_I2C_SLV0_DO = 0x63,
+    MPU6050_REG_I2C_SLV1_DO = 0x64,
+    MPU6050_REG_I2C_SLV2_DO = 0x65,
+    MPU6050_REG_I2C_SLV3_DO = 0x66,
+    MPU6050_REG_I2C_MST_DELAY_CTRL = 0x67,
+    MPU6050_REG_SIGNAL_PATH_RESET = 0x68,
+    MPU6050_REG_MOT_DETECT_CTRL = 0x69,
+    MPU6050_REG_USER_CTRL = 0x6A,
+    MPU6050_REG_PWR_MGMT_1 = 0x6B,
+    MPU6050_REG_PWR_MGMT_2 = 0x6C,
+    MPU6050_REG_BANK_SEL = 0x6D,
+    MPU6050_REG_MEM_START_ADDR = 0x6E,
+    MPU6050_REG_MEM_R_W = 0x6F,
+    MPU6050_REG_DMP_CFG_1 = 0x70,
+    MPU6050_REG_DMP_CFG_2 = 0x71,
+    MPU6050_REG_FIFO_COUNTH = 0x72,
+    MPU6050_REG_FIFO_COUNTL = 0x73,
+    MPU6050_REG_FIFO_R_W = 0x74,
+    MPU6050_REG_WHO_AM_I = 0x75
+  };
 
-	// Interface
-	uint8_t sensor_addr = MPU6050_ADDRESS;
+  // Interface
+  uint8_t sensor_addr = MPU6050_ADDRESS;
   twi &i2c;
 
-	// State
+  // State
   int8_t ok = 0;
-	uint8_t read_data = 0;
+  uint8_t read_data = 0;
   float temperature = 0.0f;
   float accel[3] = {0.0f};
   float gyro[3] = {0.0f};
 
-	// Settings
+  // Settings
   float accel_sensitivity = 0.0f;
   float gyro_sensitivity = 0.0f;
   float sample_rate = 0.0f;
-	bool enable_fifo = false;
+  bool enable_fifo = false;
   bool enable_i2c_master = false;
-	bool enable_data_ready = true;
+  bool enable_data_ready = true;
 
   mpu6050_t(twi &i2c_) : i2c{i2c_} {
     // Configure Digital low-pass filter
@@ -706,16 +706,16 @@ public:
     // set_sample_rate(sample_rate);
     sample_rate = get_sample_rate();
 
-		// Configure FIFO
-		uint8_t fifo_reg = 0x00;
-		i2c.write_byte(sensor_addr, MPU6050_REG_FIFO_EN, fifo_reg);
+    // Configure FIFO
+    uint8_t fifo_reg = 0x00;
+    i2c.write_byte(sensor_addr, MPU6050_REG_FIFO_EN, fifo_reg);
 
-		// Configure interrupts
-		uint8_t interrupt_reg = 0x00;
-		interrupt_reg |= (((enable_fifo) ? 1 : 0) << 4);
-		interrupt_reg |= (((enable_i2c_master) ? 1 : 0) << 3);
-		interrupt_reg |= (((enable_data_ready) ? 1 : 0) << 0);
-		i2c.write_byte(sensor_addr, MPU6050_REG_INT_ENABLE, interrupt_reg);
+    // Configure interrupts
+    uint8_t interrupt_reg = 0x00;
+    interrupt_reg |= (((enable_fifo) ? 1 : 0) << 4);
+    interrupt_reg |= (((enable_i2c_master) ? 1 : 0) << 3);
+    interrupt_reg |= (((enable_data_ready) ? 1 : 0) << 0);
+    i2c.write_byte(sensor_addr, MPU6050_REG_INT_ENABLE, interrupt_reg);
   }
 
   /** Get MPU6050 i2c address */
@@ -870,16 +870,16 @@ public:
     return data;
   }
 
-	/** Check if new data is ready **/
-	bool data_ready() {
+  /** Check if new data is ready **/
+  bool data_ready() {
     uint8_t status = i2c.read_byte(sensor_addr, MPU6050_REG_INT_STATUS);
-		uint8_t data_ready = (status & 0b00000001);
-		if (data_ready) {
-			return true;
-		}
+    uint8_t data_ready = (status & 0b00000001);
+    if (data_ready) {
+      return true;
+    }
 
-		return false;
-	}
+    return false;
+  }
 
   /** Get IMU data **/
   void get_data() {
@@ -931,236 +931,236 @@ public:
 
 class bmp280_t {
 public:
-	// BMP280 Addresses
-	enum addresses {
-		BMP280_ADDR = 0x77,     // Primary I2C Address
-		BMP280_ADDR_ALT = 0x76  // Alternate Address
-	};
+  // BMP280 Addresses
+  enum addresses {
+    BMP280_ADDR = 0x77,     // Primary I2C Address
+    BMP280_ADDR_ALT = 0x76  // Alternate Address
+  };
 
-	// BMP280 Registers
-	enum registers {
-		BMP280_REG_DIG_T1 = 0x88,
-		BMP280_REG_DIG_T2 = 0x8A,
-		BMP280_REG_DIG_T3 = 0x8C,
-		BMP280_REG_DIG_P1 = 0x8E,
-		BMP280_REG_DIG_P2 = 0x90,
-		BMP280_REG_DIG_P3 = 0x92,
-		BMP280_REG_DIG_P4 = 0x94,
-		BMP280_REG_DIG_P5 = 0x96,
-		BMP280_REG_DIG_P6 = 0x98,
-		BMP280_REG_DIG_P7 = 0x9A,
-		BMP280_REG_DIG_P8 = 0x9C,
-		BMP280_REG_DIG_P9 = 0x9E,
-		BMP280_REG_DIG_H1 = 0xA1,
-		BMP280_REG_DIG_H2 = 0xE1,
-		BMP280_REG_DIG_H3 = 0xE3,
-		BMP280_REG_DIG_H4 = 0xE4,
-		BMP280_REG_DIG_H5 = 0xE5,
-		BMP280_REG_DIG_H6 = 0xE7,
-		BMP280_REG_CHIPID = 0xD0,
-		BMP280_REG_VERSION = 0xD1,
-		BMP280_REG_SOFTRESET = 0xE0,
-		BMP280_REG_CAL26 = 0xE1,    // R calibration stored in 0xE1-0xF0
-		BMP280_REG_CONTROLHUMID = 0xF2,
-		BMP280_REG_STATUS = 0XF3,
-		BMP280_REG_CONTROL = 0xF4,
-		BMP280_REG_CONFIG = 0xF5,
-		BMP280_REG_PRESSUREDATA = 0xF7,
-		BMP280_REG_TEMPDATA = 0xFA,
-		BMP280_REG_HUMIDDATA = 0xFD
-	};
+  // BMP280 Registers
+  enum registers {
+    BMP280_REG_DIG_T1 = 0x88,
+    BMP280_REG_DIG_T2 = 0x8A,
+    BMP280_REG_DIG_T3 = 0x8C,
+    BMP280_REG_DIG_P1 = 0x8E,
+    BMP280_REG_DIG_P2 = 0x90,
+    BMP280_REG_DIG_P3 = 0x92,
+    BMP280_REG_DIG_P4 = 0x94,
+    BMP280_REG_DIG_P5 = 0x96,
+    BMP280_REG_DIG_P6 = 0x98,
+    BMP280_REG_DIG_P7 = 0x9A,
+    BMP280_REG_DIG_P8 = 0x9C,
+    BMP280_REG_DIG_P9 = 0x9E,
+    BMP280_REG_DIG_H1 = 0xA1,
+    BMP280_REG_DIG_H2 = 0xE1,
+    BMP280_REG_DIG_H3 = 0xE3,
+    BMP280_REG_DIG_H4 = 0xE4,
+    BMP280_REG_DIG_H5 = 0xE5,
+    BMP280_REG_DIG_H6 = 0xE7,
+    BMP280_REG_CHIPID = 0xD0,
+    BMP280_REG_VERSION = 0xD1,
+    BMP280_REG_SOFTRESET = 0xE0,
+    BMP280_REG_CAL26 = 0xE1,    // R calibration stored in 0xE1-0xF0
+    BMP280_REG_CONTROLHUMID = 0xF2,
+    BMP280_REG_STATUS = 0XF3,
+    BMP280_REG_CONTROL = 0xF4,
+    BMP280_REG_CONFIG = 0xF5,
+    BMP280_REG_PRESSUREDATA = 0xF7,
+    BMP280_REG_TEMPDATA = 0xFA,
+    BMP280_REG_HUMIDDATA = 0xFD
+  };
 
-	// Sampling rates
-	enum sampling_rates {
-		BMP280_SAMPLING_NONE = 0b000,
-		BMP280_SAMPLING_X1 = 0b001,
-		BMP280_SAMPLING_X2 = 0b010,
-		BMP280_SAMPLING_X4 = 0b011,
-		BMP280_SAMPLING_X8 = 0b100,
-		BMP280_SAMPLING_X16 = 0b101
-	};
+  // Sampling rates
+  enum sampling_rates {
+    BMP280_SAMPLING_NONE = 0b000,
+    BMP280_SAMPLING_X1 = 0b001,
+    BMP280_SAMPLING_X2 = 0b010,
+    BMP280_SAMPLING_X4 = 0b011,
+    BMP280_SAMPLING_X8 = 0b100,
+    BMP280_SAMPLING_X16 = 0b101
+  };
 
-	// Power modes
-	enum power_modes {
-		BMP280_MODE_SLEEP = 0b00,
-		BMP280_MODE_FORCED = 0b01,
-		BMP280_MODE_NORMAL = 0b11
-	};
+  // Power modes
+  enum power_modes {
+    BMP280_MODE_SLEEP = 0b00,
+    BMP280_MODE_FORCED = 0b01,
+    BMP280_MODE_NORMAL = 0b11
+  };
 
-	// Filter values
-	enum filter_values {
-		BMP280_FILTER_OFF = 0b000,
-		BMP280_FILTER_X2 = 0b001,
-		BMP280_FILTER_X4 = 0b010,
-		BMP280_FILTER_X8 = 0b011,
-		BMP280_FILTER_X16 = 0b10
-	};
+  // Filter values
+  enum filter_values {
+    BMP280_FILTER_OFF = 0b000,
+    BMP280_FILTER_X2 = 0b001,
+    BMP280_FILTER_X4 = 0b010,
+    BMP280_FILTER_X8 = 0b011,
+    BMP280_FILTER_X16 = 0b10
+  };
 
-	// Standby duration in ms
-	enum standby_duration{
-		BMP280_STANDBY_MS_0_5 = 0b000,
-		BMP280_STANDBY_MS_62_5 = 0b001,
-		BMP280_STANDBY_MS_125 = 0b010,
-		BMP280_STANDBY_MS_250 = 0b011,
-		BMP280_STANDBY_MS_500 = 0b100,
-		BMP280_STANDBY_MS_1000 = 0b101,
-		BMP280_STANDBY_MS_2000 = 0b110,
-		BMP280_STANDBY_MS_4000 = 0b111
-	};
+  // Standby duration in ms
+  enum standby_duration{
+    BMP280_STANDBY_MS_0_5 = 0b000,
+    BMP280_STANDBY_MS_62_5 = 0b001,
+    BMP280_STANDBY_MS_125 = 0b010,
+    BMP280_STANDBY_MS_250 = 0b011,
+    BMP280_STANDBY_MS_500 = 0b100,
+    BMP280_STANDBY_MS_1000 = 0b101,
+    BMP280_STANDBY_MS_2000 = 0b110,
+    BMP280_STANDBY_MS_4000 = 0b111
+  };
 
   // BMP280 Configuration
   struct bmp280_config {
     uint8_t t_sb = BMP280_STANDBY_MS_0_5;  // Standby time in normal mode
     uint8_t filter = BMP280_FILTER_X16;    // Filter settings
-    uint8_t spi3w_en = 0; 							   // Enable 3-wire SPI
+    uint8_t spi3w_en = 0;                  // Enable 3-wire SPI
 
     uint8_t get() { return (t_sb << 5) | (filter << 2) | spi3w_en; }
   } config;
 
   // BMP280 Control Measurements
   struct bmp280_ctrl_meas {
-    uint8_t mode = BMP280_MODE_NORMAL; 		 // Device mode
+    uint8_t mode = BMP280_MODE_NORMAL;      // Device mode
     uint8_t osrs_p = BMP280_SAMPLING_X16;  // Pressure oversampling
     uint8_t osrs_t = BMP280_SAMPLING_X2;   // Temperature oversampling
 
     uint8_t get() { return (osrs_t << 5) | (osrs_p << 2) | mode; }
   } ctrl_meas;
 
-	// BMP280 Calibration Data
-	struct bmp280_calib_data_t {
-		// Temperature compensation value
-		uint16_t dig_T1 = 0;
-		int16_t dig_T2 = 0;
-		int16_t dig_T3 = 0;
+  // BMP280 Calibration Data
+  struct bmp280_calib_data_t {
+    // Temperature compensation value
+    uint16_t dig_T1 = 0;
+    int16_t dig_T2 = 0;
+    int16_t dig_T3 = 0;
 
-		// Pressure compenstation value
-		uint16_t dig_P1 = 0;
-		int16_t dig_P2 = 0;
-		int16_t dig_P3 = 0;
-		int16_t dig_P4 = 0;
-		int16_t dig_P5 = 0;
-		int16_t dig_P6 = 0;
-		int16_t dig_P7 = 0;
-		int16_t dig_P8 = 0;
-		int16_t dig_P9 = 0;
-	} calib_data;
+    // Pressure compenstation value
+    uint16_t dig_P1 = 0;
+    int16_t dig_P2 = 0;
+    int16_t dig_P3 = 0;
+    int16_t dig_P4 = 0;
+    int16_t dig_P5 = 0;
+    int16_t dig_P6 = 0;
+    int16_t dig_P7 = 0;
+    int16_t dig_P8 = 0;
+    int16_t dig_P9 = 0;
+  } calib_data;
 
-	// Interfaces
-	uint8_t sensor_addr = BMP280_ADDR_ALT;
-	twi &i2c;
+  // Interfaces
+  uint8_t sensor_addr = BMP280_ADDR_ALT;
+  twi &i2c;
 
-	// State
-	bool connected = false;
-	uint8_t previous_measuring = 0;
+  // State
+  bool connected = false;
+  uint8_t previous_measuring = 0;
 
   bmp280_t(twi &i2c_) : i2c{i2c_} {
-		// Verify chip id
-		uint8_t sensor_id = i2c.read_byte(sensor_addr, BMP280_REG_CHIPID);
-		if (sensor_id == 0x58) {
-			connected = true;
-		}
+    // Verify chip id
+    uint8_t sensor_id = i2c.read_byte(sensor_addr, BMP280_REG_CHIPID);
+    if (sensor_id == 0x58) {
+      connected = true;
+    }
 
-		// Reset the device using soft-reset
-		i2c.write_byte(sensor_addr, BMP280_REG_SOFTRESET, 0xB6);
+    // Reset the device using soft-reset
+    i2c.write_byte(sensor_addr, BMP280_REG_SOFTRESET, 0xB6);
 
-		// Wait for chip to wake up.
-		delay(10);
+    // Wait for chip to wake up.
+    delay(10);
 
-		// Get calibration data
-		get_calib_data();
+    // Get calibration data
+    get_calib_data();
 
-		// Configure sensor
-		i2c.write_byte(sensor_addr, BMP280_REG_CONFIG, config.get());
-		i2c.write_byte(sensor_addr, BMP280_REG_CONTROL, ctrl_meas.get());
+    // Configure sensor
+    i2c.write_byte(sensor_addr, BMP280_REG_CONFIG, config.get());
+    i2c.write_byte(sensor_addr, BMP280_REG_CONTROL, ctrl_meas.get());
 
-		// Wait
-		delay(100);
-	}
+    // Wait
+    delay(100);
+  }
 
-	void get_calib_data() {
-		calib_data.dig_T1 = i2c.read_u16(sensor_addr, BMP280_REG_DIG_T1);
-		calib_data.dig_T2 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_T2);
-		calib_data.dig_T3 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_T3);
+  void get_calib_data() {
+    calib_data.dig_T1 = i2c.read_u16(sensor_addr, BMP280_REG_DIG_T1);
+    calib_data.dig_T2 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_T2);
+    calib_data.dig_T3 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_T3);
 
-		calib_data.dig_P1 = i2c.read_u16(sensor_addr, BMP280_REG_DIG_P1);
-		calib_data.dig_P2 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P2);
-		calib_data.dig_P3 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P3);
-		calib_data.dig_P4 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P4);
-		calib_data.dig_P5 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P5);
-		calib_data.dig_P6 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P6);
-		calib_data.dig_P7 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P7);
-		calib_data.dig_P8 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P8);
-		calib_data.dig_P9 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P9);
-	}
+    calib_data.dig_P1 = i2c.read_u16(sensor_addr, BMP280_REG_DIG_P1);
+    calib_data.dig_P2 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P2);
+    calib_data.dig_P3 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P3);
+    calib_data.dig_P4 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P4);
+    calib_data.dig_P5 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P5);
+    calib_data.dig_P6 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P6);
+    calib_data.dig_P7 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P7);
+    calib_data.dig_P8 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P8);
+    calib_data.dig_P9 = i2c.read_s16(sensor_addr, BMP280_REG_DIG_P9);
+  }
 
-	bool data_ready() {
-		uint8_t reg = i2c.read_byte(sensor_addr, BMP280_REG_STATUS);
-		uint8_t measuring = (reg & 0b00001000) >> 3;
+  bool data_ready() {
+    uint8_t reg = i2c.read_byte(sensor_addr, BMP280_REG_STATUS);
+    uint8_t measuring = (reg & 0b00001000) >> 3;
 
-		// Has measuring bit flipped?
-		if (measuring ^ previous_measuring) {
-			previous_measuring = measuring;
-			if (measuring == 0) {
-				return true;
-			}
-		}
+    // Has measuring bit flipped?
+    if (measuring ^ previous_measuring) {
+      previous_measuring = measuring;
+      if (measuring == 0) {
+        return true;
+      }
+    }
 
-		return false;
-	}
+    return false;
+  }
 
-	/** Returns temperature in Celcius degrees and pressure in Pa **/
-	void get_data(float &temperature, float &pressure) {
-		// Get data
-		uint8_t data[6] = {0};
-		i2c.read_bytes(sensor_addr, BMP280_REG_PRESSUREDATA, 6, data);
+  /** Returns temperature in Celcius degrees and pressure in Pa **/
+  void get_data(float &temperature, float &pressure) {
+    // Get data
+    uint8_t data[6] = {0};
+    i2c.read_bytes(sensor_addr, BMP280_REG_PRESSUREDATA, 6, data);
 
-		// Compensate for temperature
-		int32_t t_fine = 0;
-		{
-			int32_t T = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4);
-			int32_t T1 = calib_data.dig_T1;
-			int32_t T2 = calib_data.dig_T2;
-			int32_t T3 = calib_data.dig_T3;
-			int32_t var1 = ((((T >> 3) - (T1 << 1))) * T2) >> 11;
-			int32_t var2 = (((((T >> 4) - T1) * ((T >> 4) - T1)) >> 12) * (T3)) >> 14;
-			t_fine = var1 + var2;
-			temperature = ((t_fine * 5 + 128) >> 8) / 100.0f;
-		}
+    // Compensate for temperature
+    int32_t t_fine = 0;
+    {
+      int32_t T = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4);
+      int32_t T1 = calib_data.dig_T1;
+      int32_t T2 = calib_data.dig_T2;
+      int32_t T3 = calib_data.dig_T3;
+      int32_t var1 = ((((T >> 3) - (T1 << 1))) * T2) >> 11;
+      int32_t var2 = (((((T >> 4) - T1) * ((T >> 4) - T1)) >> 12) * (T3)) >> 14;
+      t_fine = var1 + var2;
+      temperature = ((t_fine * 5 + 128) >> 8) / 100.0f;
+    }
 
-		// Compensate for pressure
-		{
-			int32_t P = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4);
-			int64_t P1 = calib_data.dig_P1;
-			int64_t P2 = calib_data.dig_P2;
-			int64_t P3 = calib_data.dig_P3;
-			int64_t P4 = calib_data.dig_P4;
-			int64_t P5 = calib_data.dig_P5;
-			int64_t P6 = calib_data.dig_P6;
-			int64_t P7 = calib_data.dig_P7;
-			int64_t P8 = calib_data.dig_P8;
-			int64_t P9 = calib_data.dig_P9;
+    // Compensate for pressure
+    {
+      int32_t P = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4);
+      int64_t P1 = calib_data.dig_P1;
+      int64_t P2 = calib_data.dig_P2;
+      int64_t P3 = calib_data.dig_P3;
+      int64_t P4 = calib_data.dig_P4;
+      int64_t P5 = calib_data.dig_P5;
+      int64_t P6 = calib_data.dig_P6;
+      int64_t P7 = calib_data.dig_P7;
+      int64_t P8 = calib_data.dig_P8;
+      int64_t P9 = calib_data.dig_P9;
 
-			int64_t var1, var2 = 0;
-			var1 = ((int64_t) t_fine) - 128000;
-			var2 = var1 * var1 * P6;
-			var2 = var2 + ((var1 * P5) << 17);
-			var2 = var2 + (P4 << 35);
-			var1 = ((var1 * var1 * P3) >> 8) + ((var1 * P2) << 12);
-			var1 = (((((int64_t)1) << 47) + var1)) * P1 >> 33;
+      int64_t var1, var2 = 0;
+      var1 = ((int64_t) t_fine) - 128000;
+      var2 = var1 * var1 * P6;
+      var2 = var2 + ((var1 * P5) << 17);
+      var2 = var2 + (P4 << 35);
+      var1 = ((var1 * var1 * P3) >> 8) + ((var1 * P2) << 12);
+      var1 = (((((int64_t)1) << 47) + var1)) * P1 >> 33;
 
-			// Avoid exception caused by division by zero
-			if (var1 == 0) {
-				pressure = -1;
-				return;
-			}
+      // Avoid exception caused by division by zero
+      if (var1 == 0) {
+        pressure = -1;
+        return;
+      }
 
-			int64_t p = 1048576 - P;
-			p = (((p << 31) - var2) * 3125) / var1;
-			var1 = (P9 * (p >> 13) * (p >> 13)) >> 25;
-			var2 = (P8 * p) >> 19;
-			pressure = ((float) (((p + var1 + var2) >> 8) + (P7 << 4))) / 256.0f;
-		}
-	}
+      int64_t p = 1048576 - P;
+      p = (((p << 31) - var2) * 3125) / var1;
+      var1 = (P9 * (p >> 13) * (p >> 13)) >> 25;
+      var2 = (P8 * p) >> 19;
+      pressure = ((float) (((p + var1 + var2) >> 8) + (P7 << 4))) / 256.0f;
+    }
+  }
 };
 
 /*******************************************************************************
@@ -2435,8 +2435,8 @@ public:
   // IMU
   mpu6050_t imu{i2c};
 
-	// Temperature pressure sensor
-	bmp280_t tps{i2c};
+  // Temperature pressure sensor
+  bmp280_t tps{i2c};
 
   // Control
   att_ctrl_t att_ctrl;
@@ -2468,52 +2468,52 @@ fcu_t fcu{i2c, pwm, gpio, serial};
 /* } */
 
 void test_imu() {
-	if (fcu.imu.data_ready()) {
-		fcu.imu.get_data();
-		/*
-		serial.printf("ax: %f  ", fcu.imu.accel[0]);
-		serial.printf("ay: %f  ", fcu.imu.accel[1]);
-		serial.printf("az: %f  ", fcu.imu.accel[2]);
-		serial.printf("gx: %f  ", fcu.imu.gyro[0]);
-		serial.printf("gy: %f  ", fcu.imu.gyro[1]);
-		serial.printf("gz: %f  ", fcu.imu.gyro[2]);
-		*/
-		/* serial.printf("\n\r"); */
+  if (fcu.imu.data_ready()) {
+    fcu.imu.get_data();
+    /*
+    serial.printf("ax: %f  ", fcu.imu.accel[0]);
+    serial.printf("ay: %f  ", fcu.imu.accel[1]);
+    serial.printf("az: %f  ", fcu.imu.accel[2]);
+    serial.printf("gx: %f  ", fcu.imu.gyro[0]);
+    serial.printf("gy: %f  ", fcu.imu.gyro[1]);
+    serial.printf("gz: %f  ", fcu.imu.gyro[2]);
+    */
+    /* serial.printf("\n\r"); */
 
-		auto t_now = micros();
-		float t_elapsed = ((float) t_now - t_prev);
-		/*
-		serial.printf("time elapsed: %f [us]\n\r", t_elapsed);
-		*/
-	}
+    auto t_now = micros();
+    float t_elapsed = ((float) t_now - t_prev);
+    /*
+    serial.printf("time elapsed: %f [us]\n\r", t_elapsed);
+    */
+  }
 }
 
 void test_tps() {
-	if (fcu.tps.data_ready()) {
-		float temperature = 0.0f;
-		float pressure = 0.0f;
-		fcu.tps.get_data(temperature, pressure);
+  if (fcu.tps.data_ready()) {
+    float temperature = 0.0f;
+    float pressure = 0.0f;
+    fcu.tps.get_data(temperature, pressure);
 
-		/* serial.printf("%f  ", temperature); */
-		/* serial.printf("%f\n\r", pressure); */
+    /* serial.printf("%f  ", temperature); */
+    /* serial.printf("%f\n\r", pressure); */
 
     /*
-		serial.printf("temperature: %f [deg]  ", temperature);
-		serial.printf("pressure: %f [Pa]", pressure);
-		*/
+    serial.printf("temperature: %f [deg]  ", temperature);
+    serial.printf("pressure: %f [Pa]", pressure);
+    */
 
-		auto t_now = micros();
-		float t_elapsed = ((float) t_now - t_prev);
-		/*
-		serial.printf("time elapsed: %f [us]\n\r", t_elapsed);
-		*/
-	}
+    auto t_now = micros();
+    float t_elapsed = ((float) t_now - t_prev);
+    /*
+    serial.printf("time elapsed: %f [us]\n\r", t_elapsed);
+    */
+  }
 }
 
 void test_sensors() {
-	/* test_tps(); */
-	test_imu();
-	t_prev = micros();
+  /* test_tps(); */
+  test_imu();
+  t_prev = micros();
 }
 
 void test_pwm() {
