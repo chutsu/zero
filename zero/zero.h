@@ -13,7 +13,7 @@ extern "C" {
 #include <time.h>
 #include <assert.h>
 
-#include <lapacke.h>
+/* #include <lapacke.h> */
 
 #define MAX_LINE_LENGTH 9046
 

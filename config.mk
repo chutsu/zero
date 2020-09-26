@@ -22,13 +22,14 @@ CC=gcc \
 CFLAGS=-I$(INC_DIR)
 LIBS=-L$(BLD_DIR) \
 	-lzero \
-	-llapacke \
-	-llapack \
-	-lgfortran \
-	-lgsl \
-	-lblas \
 	-lpthread \
 	-lm
+
+	# -lblas \
+	# -llapacke \
+	# -llapack \
+	# -lgfortran \
+	# -lgsl \
 
 # ARCHIVER SETTTINGS
 AR = ar

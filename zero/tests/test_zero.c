@@ -393,41 +393,41 @@ int test_check_jacobian() {
   return 0;
 }
 
-int test_svd() {
-  double A[M * N];
-  double A_orig[M * N];
-  for (int i = 0; i < (M * N); i++) {
-    A[i] = randf(0.0, 1.0);
-    A_orig[i] = A[i];
-  }
-
-  struct timespec t = tic();
-  double U[M * M];
-  double d[N];
-  double V_t[N * N];
-  int retval = svd(A, M, N, U, d, V_t);
-  printf("time taken: %fs\n", toc(&t));
-  if (retval != 0) {
-    printf("The algorithm computing SVD failed to converge.\n");
-    exit(1);
-  }
-
-  /* A = U * S * V_t */
-  double S[N * N];
-  mat_diag_set(S, N, N, d);
-
-  double US[M * N];
-  double USV[M * M];
-  dot(U, M, N, S, N, N, US);
-  dot(US, M, N, V_t, N, N, USV);
-
-  print_matrix("A", A_orig, M, N);
-  printf("\n");
-  print_matrix("USV'", USV, M, N);
-  MU_CHECK(mat_equals(A_orig, USV, M, N, 1e-5) == 0);
-
-  return 0;
-}
+/* int test_svd() { */
+/*   double A[M * N]; */
+/*   double A_orig[M * N]; */
+/*   for (int i = 0; i < (M * N); i++) { */
+/*     A[i] = randf(0.0, 1.0); */
+/*     A_orig[i] = A[i]; */
+/*   } */
+/*  */
+/*   struct timespec t = tic(); */
+/*   double U[M * M]; */
+/*   double d[N]; */
+/*   double V_t[N * N]; */
+/*   int retval = svd(A, M, N, U, d, V_t); */
+/*   printf("time taken: %fs\n", toc(&t)); */
+/*   if (retval != 0) { */
+/*     printf("The algorithm computing SVD failed to converge.\n"); */
+/*     exit(1); */
+/*   } */
+/*  */
+/*   #<{(| A = U * S * V_t |)}># */
+/*   double S[N * N]; */
+/*   mat_diag_set(S, N, N, d); */
+/*  */
+/*   double US[M * N]; */
+/*   double USV[M * M]; */
+/*   dot(U, M, N, S, N, N, US); */
+/*   dot(US, M, N, V_t, N, N, USV); */
+/*  */
+/*   print_matrix("A", A_orig, M, N); */
+/*   printf("\n"); */
+/*   print_matrix("USV'", USV, M, N); */
+/*   MU_CHECK(mat_equals(A_orig, USV, M, N, 1e-5) == 0); */
+/*  */
+/*   return 0; */
+/* } */
 
 int test_svdcomp() {
   double A[M * N];
@@ -466,29 +466,29 @@ int test_svdcomp() {
   return 0;
 }
 
-int test_pinv() {
-  double A[M * N];
-  double A_orig[M * N];
-  for (int i = 0; i < (M * N); i++) {
-    A[i] = randf(0.0, 1.0);
-    A_orig[i] = A[i];
-  }
-
-  struct timespec t = tic();
-  double A_inv[M * N];
-  int retval = pinv(A, M, N, A_inv);
-  printf("time taken: %fs\n", toc(&t));
-  MU_CHECK(retval == 0);
-
-  double AiA[M * N];
-  dot(A_inv, M, N, A_orig, M, N, AiA);
-
-  double Imn[M * N];
-  eye(Imn, M, N);
-  MU_CHECK(mat_equals(AiA, Imn, M, N, 1e-5) == 0);
-
-  return 0;
-}
+/* int test_pinv() { */
+/*   double A[M * N]; */
+/*   double A_orig[M * N]; */
+/*   for (int i = 0; i < (M * N); i++) { */
+/*     A[i] = randf(0.0, 1.0); */
+/*     A_orig[i] = A[i]; */
+/*   } */
+/*  */
+/*   struct timespec t = tic(); */
+/*   double A_inv[M * N]; */
+/*   int retval = pinv(A, M, N, A_inv); */
+/*   printf("time taken: %fs\n", toc(&t)); */
+/*   MU_CHECK(retval == 0); */
+/*  */
+/*   double AiA[M * N]; */
+/*   dot(A_inv, M, N, A_orig, M, N, AiA); */
+/*  */
+/*   double Imn[M * N]; */
+/*   eye(Imn, M, N); */
+/*   MU_CHECK(mat_equals(AiA, Imn, M, N, 1e-5) == 0); */
+/*  */
+/*   return 0; */
+/* } */
 
 int test_cholesky() {
   /* clang-format off */
@@ -551,41 +551,41 @@ int test_chol_lls_solve() {
   return 0;
 }
 
-int test_chol_lls_solve2() {
-  /* clang-format off */
-  const int m = 3;
-  double A[9] = {
-    2.0, -1.0, 0.0,
-    -1.0, 2.0, -1.0,
-    0.0, -1.0, 1.0
-  };
-  double b[3] = {1.0, 0.0, 0.0};
-  double x[3] = {0.0, 0.0, 0.0};
-  /* clang-format on */
-
-  /* #<{(| clang-format off |)}># */
-  /* int m = 4; */
-  /* double A[16] = { */
-  /*   4.16, -3.12, 0.56, -0.10, */
-  /*   -3.12, 5.03, -0.83, 1.18, */
-  /*   0.56, -0.83, 0.76, 0.34, */
-  /*   -0.10, 1.18,  0.34, 1.18 */
-  /* }; */
-  /* double b[4] = {1.0, 0.0, 0.0, 0.0}; */
-  /* double x[4] = {0.0, 0.0, 0.0, 0.0}; */
-  /* #<{(| clang-format on |)}># */
-
-  struct timespec t = tic();
-  chol_lls_solve2(A, b, x, m);
-  printf("time taken: [%fs]\n", toc(&t));
-  print_vector("x", x, m);
-
-  /* MU_CHECK(fltcmp(x[0], 1.0) == 0); */
-  /* MU_CHECK(fltcmp(x[1], 1.0) == 0); */
-  /* MU_CHECK(fltcmp(x[2], 1.0) == 0); */
-
-  return 0;
-}
+/* int test_chol_lls_solve2() { */
+/*   #<{(| clang-format off |)}># */
+/*   const int m = 3; */
+/*   double A[9] = { */
+/*     2.0, -1.0, 0.0, */
+/*     -1.0, 2.0, -1.0, */
+/*     0.0, -1.0, 1.0 */
+/*   }; */
+/*   double b[3] = {1.0, 0.0, 0.0}; */
+/*   double x[3] = {0.0, 0.0, 0.0}; */
+/*   #<{(| clang-format on |)}># */
+/*  */
+/*   #<{(| #<{(| clang-format off |)}># |)}># */
+/*   #<{(| int m = 4; |)}># */
+/*   #<{(| double A[16] = { |)}># */
+/*   #<{(|   4.16, -3.12, 0.56, -0.10, |)}># */
+/*   #<{(|   -3.12, 5.03, -0.83, 1.18, |)}># */
+/*   #<{(|   0.56, -0.83, 0.76, 0.34, |)}># */
+/*   #<{(|   -0.10, 1.18,  0.34, 1.18 |)}># */
+/*   #<{(| }; |)}># */
+/*   #<{(| double b[4] = {1.0, 0.0, 0.0, 0.0}; |)}># */
+/*   #<{(| double x[4] = {0.0, 0.0, 0.0, 0.0}; |)}># */
+/*   #<{(| #<{(| clang-format on |)}># |)}># */
+/*  */
+/*   struct timespec t = tic(); */
+/*   chol_lls_solve2(A, b, x, m); */
+/*   printf("time taken: [%fs]\n", toc(&t)); */
+/*   print_vector("x", x, m); */
+/*  */
+/*   #<{(| MU_CHECK(fltcmp(x[0], 1.0) == 0); |)}># */
+/*   #<{(| MU_CHECK(fltcmp(x[1], 1.0) == 0); |)}># */
+/*   #<{(| MU_CHECK(fltcmp(x[2], 1.0) == 0); |)}># */
+/*  */
+/*   return 0; */
+/* } */
 
 /* int test_chol_Axb() { */
 /*   #<{(| clang-format off |)}># */
@@ -1088,14 +1088,14 @@ void test_suite() {
   MU_ADD_TEST(test_check_jacobian);
 
   /* SVD */
-  MU_ADD_TEST(test_svd);
+  /* MU_ADD_TEST(test_svd); */
   MU_ADD_TEST(test_svdcomp);
-  MU_ADD_TEST(test_pinv);
+  /* MU_ADD_TEST(test_pinv); */
 
   /* CHOL */
   MU_ADD_TEST(test_cholesky);
   MU_ADD_TEST(test_chol_lls_solve);
-  MU_ADD_TEST(test_chol_lls_solve2);
+  /* MU_ADD_TEST(test_chol_lls_solve2); */
   /* MU_ADD_TEST(test_chol_Axb); */
 
   /* TRANSFORMS */

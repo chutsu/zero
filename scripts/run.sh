@@ -18,7 +18,7 @@ debug() {
 
 # make format_code
 # make clean
-# time make
+time make
 
 # ./build/bin/test_zero
 # ZERO-DATA

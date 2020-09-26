@@ -2,9 +2,6 @@
 #define BA_H
 
 #include <string.h>
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_linalg.h>
 
 #include "zero/zero.h"
 
@@ -525,36 +522,36 @@ void ba_update(ba_data_t *data,
   free(E_t);
 
   /* Use Cholesky on [H dx = g] to solve for dx */
-  /* double *dx = vec_new(E_cols); */
-  /* chol_lls_solve(H_damped, g, dx, E_cols); */
-  /* chol_lls_solve2(H_damped, g, dx, E_cols); */
-  /* free(H); */
-  /* free(H_hat); */
-  /* free(g); */
-
   double *dx = vec_new(E_cols);
-  {
-    gsl_matrix *A =  gsl_matrix_alloc(E_cols, E_cols);
-    int idx = 0;
-    for (int i = 0; i < E_cols; i++) {
-      for (int j = 0; j < E_cols; j++) {
-        gsl_matrix_set(A, i, j, H_damped[idx]);
-        idx++;
-      }
-    }
+  chol_lls_solve(H_damped, g, dx, E_cols);
+  /* chol_lls_solve2(H_damped, g, dx, E_cols); */
+  free(H);
+  /* free(H_hat); */
+  free(g);
 
-    gsl_vector *b =  gsl_vector_alloc(E_cols);
-    for (int i = 0; i < E_cols; i++) {
-      gsl_vector_set(b, i, g[i]);
-    }
-
-    gsl_vector *x =  gsl_vector_alloc(E_cols);
-    gsl_linalg_cholesky_decomp1(A);
-    gsl_linalg_cholesky_solve(A, b, x);
-    for (int i = 0; i < E_cols; i++) {
-      dx[i] = gsl_vector_get(x, i);
-    }
-  }
+  /* double *dx = vec_new(E_cols); */
+  /* { */
+  /*   gsl_matrix *A =  gsl_matrix_alloc(E_cols, E_cols); */
+  /*   int idx = 0; */
+  /*   for (int i = 0; i < E_cols; i++) { */
+  /*     for (int j = 0; j < E_cols; j++) { */
+  /*       gsl_matrix_set(A, i, j, H_damped[idx]); */
+  /*       idx++; */
+  /*     } */
+  /*   } */
+  /*  */
+  /*   gsl_vector *b =  gsl_vector_alloc(E_cols); */
+  /*   for (int i = 0; i < E_cols; i++) { */
+  /*     gsl_vector_set(b, i, g[i]); */
+  /*   } */
+  /*  */
+  /*   gsl_vector *x =  gsl_vector_alloc(E_cols); */
+  /*   gsl_linalg_cholesky_decomp1(A); */
+  /*   gsl_linalg_cholesky_solve(A, b, x); */
+  /*   for (int i = 0; i < E_cols; i++) { */
+  /*     dx[i] = gsl_vector_get(x, i); */
+  /*   } */
+  /* } */
 
   /* Update camera poses */
   for (int k = 0; k < data->nb_frames; k++) {

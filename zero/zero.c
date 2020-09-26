@@ -801,11 +801,20 @@ void dot(const double *A,
 }
 
 void skew(const double x[3], double A[3 * 3]) {
-	// clang-format off
-  A[0] = 0.0;   A[1] = -x[2]; A[2] = x[1];
-  A[3] = x[2];  A[4] = 0.0;   A[5] = -x[0];
-  A[6] = -x[1]; A[7] = x[0];  A[8] = 0.0;
-	// clang-format on
+  /* First row */
+  A[0] = 0.0;
+  A[1] = -x[2];
+  A[2] = x[1];
+
+  /* Second row */
+  A[3] = x[2];
+  A[4] = 0.0;
+  A[5] = -x[0];
+
+  /* Third row */
+  A[6] = -x[1];
+  A[7] = x[0];
+  A[8] = 0.0;
 }
 
 void fwdsubs(const double *L, const double *b, double *y, const size_t n) {
@@ -875,36 +884,36 @@ int check_jacobian(const char *jac_name,
  *                                  SVD
  ******************************************************************************/
 
-int svd(double *A, int m, int n, double *U, double *s, double *V_t) {
-  const int lda = n;
-  const int ldu = m;
-  const int ldvt = n;
-  const char jobu = 'A';
-  const char jobvt = 'A';
-  const int superb_size = (m < n) ? m : n;
-  double *superb = malloc(sizeof(double) * (superb_size - 1));
-  int retval = LAPACKE_dgesvd(LAPACK_ROW_MAJOR,
-                              jobu,
-                              jobvt,
-                              m,
-                              n,
-                              A,
-                              lda,
-                              s,
-                              U,
-                              ldu,
-                              V_t,
-                              ldvt,
-                              superb);
-  if (retval > 0) {
-    return -1;
-  }
-
-  /* Clean up */
-  free(superb);
-
-  return 0;
-}
+/* int svd(double *A, int m, int n, double *U, double *s, double *V_t) { */
+/*   const int lda = n; */
+/*   const int ldu = m; */
+/*   const int ldvt = n; */
+/*   const char jobu = 'A'; */
+/*   const char jobvt = 'A'; */
+/*   const int superb_size = (m < n) ? m : n; */
+/*   double *superb = malloc(sizeof(double) * (superb_size - 1)); */
+/*   int retval = LAPACKE_dgesvd(LAPACK_ROW_MAJOR, */
+/*                               jobu, */
+/*                               jobvt, */
+/*                               m, */
+/*                               n, */
+/*                               A, */
+/*                               lda, */
+/*                               s, */
+/*                               U, */
+/*                               ldu, */
+/*                               V_t, */
+/*                               ldvt, */
+/*                               superb); */
+/*   if (retval > 0) { */
+/*     return -1; */
+/*   } */
+/*  */
+/*   #<{(| Clean up |)}># */
+/*   free(superb); */
+/*  */
+/*   return 0; */
+/* } */
 
 /**
  * svdcomp - SVD decomposition routine.
@@ -1159,52 +1168,52 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
   return 0;
 }
 
-int pinv(double *A, const int m, const int n, double *A_inv) {
-  /* Decompose A with SVD */
-  double *U = malloc(sizeof(double) * m * n);
-  double *d = malloc(sizeof(double) * n);
-  double *V_t = malloc(sizeof(double) * n * n);
-  if (svd(A, m, n, U, d, V_t) != 0) {
-    return -1;
-  }
-
-  /* Form reciprocal singular matrix S_inv from singular vector d */
-  double *S_inv = malloc(sizeof(double) * n * n);
-  zeros(S_inv, n, n);
-  int mat_index = 0;
-  int vec_index = 0;
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
-      if (i == j) {
-        S_inv[mat_index] = 1.0 / d[vec_index];
-        vec_index++;
-      }
-      mat_index++;
-    }
-  }
-
-  /* pinv(H) = V S^-1 U' */
-  double *V = malloc(sizeof(double) * n * n);
-  mat_transpose(V_t, n, n, V);
-
-  double *U_t = malloc(sizeof(double) * n * n);
-  mat_transpose(U, n, n, U_t);
-
-  double *VSi = malloc(sizeof(double) * n * n);
-  dot(V, n, n, S_inv, n, n, VSi);
-  dot(VSi, n, n, U_t, n, n, A_inv);
-
-  /* Clean up */
-  free(U);
-  free(U_t);
-  free(d);
-  free(S_inv);
-  free(V);
-  free(V_t);
-  free(VSi);
-
-  return 0;
-}
+/* int pinv(double *A, const int m, const int n, double *A_inv) { */
+/*   #<{(| Decompose A with SVD |)}># */
+/*   double *U = malloc(sizeof(double) * m * n); */
+/*   double *d = malloc(sizeof(double) * n); */
+/*   double *V_t = malloc(sizeof(double) * n * n); */
+/*   if (svd(A, m, n, U, d, V_t) != 0) { */
+/*     return -1; */
+/*   } */
+/*  */
+/*   #<{(| Form reciprocal singular matrix S_inv from singular vector d |)}># */
+/*   double *S_inv = malloc(sizeof(double) * n * n); */
+/*   zeros(S_inv, n, n); */
+/*   int mat_index = 0; */
+/*   int vec_index = 0; */
+/*   for (int i = 0; i < n; i++) { */
+/*     for (int j = 0; j < n; j++) { */
+/*       if (i == j) { */
+/*         S_inv[mat_index] = 1.0 / d[vec_index]; */
+/*         vec_index++; */
+/*       } */
+/*       mat_index++; */
+/*     } */
+/*   } */
+/*  */
+/*   #<{(| pinv(H) = V S^-1 U' |)}># */
+/*   double *V = malloc(sizeof(double) * n * n); */
+/*   mat_transpose(V_t, n, n, V); */
+/*  */
+/*   double *U_t = malloc(sizeof(double) * n * n); */
+/*   mat_transpose(U, n, n, U_t); */
+/*  */
+/*   double *VSi = malloc(sizeof(double) * n * n); */
+/*   dot(V, n, n, S_inv, n, n, VSi); */
+/*   dot(VSi, n, n, U_t, n, n, A_inv); */
+/*  */
+/*   #<{(| Clean up |)}># */
+/*   free(U); */
+/*   free(U_t); */
+/*   free(d); */
+/*   free(S_inv); */
+/*   free(V); */
+/*   free(V_t); */
+/*   free(VSi); */
+/*  */
+/*   return 0; */
+/* } */
 
 /******************************************************************************
  *                                  CHOL
@@ -1288,33 +1297,33 @@ void chol_lls_solve(const double *A,
   free(Lt);
 }
 
-void chol_lls_solve2(const double *A,
-                     const double *b,
-                     double *x,
-                     const size_t m) {
-  /* Cholesky Decomposition */
-  const char uplo = 'L';
-  double *a = mat_new(m, m);
-  /* mat_triu(A, n, a); */
-  mat_copy(A, m, m, a);
-
-  print_matrix("a", a, m, m);
-  int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, uplo, m, a, m);
-  if (retval != 0) {
-    fprintf(stderr, "Failed to decompose A using Cholesky Decomposition!\n");
-  }
-  print_matrix("a", a, m, m);
-
-  /* Solve Ax = b using Cholesky decomposed A from above */
-  vec_copy(b, m, x);
-  print_vector("b", b, m);
-  retval = LAPACKE_dpotrs(LAPACK_ROW_MAJOR, uplo, m, m, a, m, x, m);
-  if (retval != 0) {
-    fprintf(stderr, "Failed to solve Ax = b!\n");
-  }
-
-  /* free(a); */
-}
+/* void chol_lls_solve2(const double *A, */
+/*                      const double *b, */
+/*                      double *x, */
+/*                      const size_t m) { */
+/*   #<{(| Cholesky Decomposition |)}># */
+/*   const char uplo = 'L'; */
+/*   double *a = mat_new(m, m); */
+/*   #<{(| mat_triu(A, n, a); |)}># */
+/*   mat_copy(A, m, m, a); */
+/*  */
+/*   print_matrix("a", a, m, m); */
+/*   int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, uplo, m, a, m); */
+/*   if (retval != 0) { */
+/*     fprintf(stderr, "Failed to decompose A using Cholesky Decomposition!\n"); */
+/*   } */
+/*   print_matrix("a", a, m, m); */
+/*  */
+/*   #<{(| Solve Ax = b using Cholesky decomposed A from above |)}># */
+/*   vec_copy(b, m, x); */
+/*   print_vector("b", b, m); */
+/*   retval = LAPACKE_dpotrs(LAPACK_ROW_MAJOR, uplo, m, m, a, m, x, m); */
+/*   if (retval != 0) { */
+/*     fprintf(stderr, "Failed to solve Ax = b!\n"); */
+/*   } */
+/*  */
+/*   #<{(| free(a); |)}># */
+/* } */
 
 /* int chol_Axb(double *A, double *B, double *x, int m, int iscolmaj) { */
 /* 	static double *buf=NULL; */
