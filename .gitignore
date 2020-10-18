@@ -5,6 +5,11 @@ tags
 build
 
 deps/OpenBLAS
+deps/SuiteSparse
+deps/bin
+deps/include
+deps/lib
+deps/share
 
 *.bin
 *.elf
