@@ -18,5 +18,8 @@ format_code:
 zero:
 	@make -s -C zero
 
+benchmarks:
+	@make -s -C zero/benchmarks
+
 tests:
 	@make -s -C zero/tests

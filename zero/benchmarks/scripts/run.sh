@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-make clean
+# make clean
 make
 
 # ldd ./bin/bench_matmul-blas

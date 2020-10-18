@@ -13,13 +13,11 @@ extern "C" {
 #include <time.h>
 #include <assert.h>
 
-/* #include <lapacke.h> */
+#ifdef USE_LAPACK
+#include <lapacke.h>
+#endif
 
 #define MAX_LINE_LENGTH 9046
-
-#define F77_FUNC(func)    func
-extern int F77_FUNC(dpotrf)(char *uplo, int *n, double *a, int *lda, int *info); /* block version of dpotf2 */
-extern int F77_FUNC(dpotrs)(char *uplo, int *n, int *nrhs, double *a, int *lda, double *b, int *ldb, int *info);
 
 /******************************************************************************
  *                                LOGGING
@@ -184,22 +182,18 @@ int pinv(double *A, const int m, const int n, double *A_inv);
  *                                  CHOL
  ******************************************************************************/
 
-double *cholesky(const double *A, const size_t n);
+double *chol(const double *A, const size_t n);
 void chol_lls_solve(const double *A,
                     const double *b,
                     double *x,
                     const size_t n);
+
+#ifdef USE_LAPACK
 void chol_lls_solve2(const double *A,
                      const double *b,
                      double *x,
                      const size_t n);
-int chol_Axb(double *A, double *B, double *x, int m, int iscolmaj);
-
-/******************************************************************************
- *                               NEAREST SPD
- ******************************************************************************/
-
-void nearest_spd(const double *A, const size_t n, double *A_hat);
+#endif
 
 /******************************************************************************
  *                                   TIME
@@ -211,6 +205,7 @@ typedef uint64_t timestamp_t;
  *                                TRANSFORMS
  ******************************************************************************/
 
+void tf(const double C[3 * 3], const double r[3], double T[4 * 4]);
 void tf_rot_set(double T[4 * 4], const double C[3 * 3]);
 void tf_trans_set(double T[4 * 4], const double r[3]);
 void tf_trans_get(const double T[4 * 4], double r[3]);

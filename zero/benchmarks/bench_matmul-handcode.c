@@ -33,7 +33,7 @@ int main() {
     double *C = (double *) malloc(sizeof(double) * m * m);
 
     // Hand coded dot()
-    sleep(0.1);
+    sleep(1);
     struct timespec t = tic();
     dot(A, m, m, B, m, m, C);
     printf("matrix_size: %ld\tdot(): %fs\n", m, toc(&t));

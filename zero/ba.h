@@ -436,23 +436,25 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
       /* -- Form jacobians */
       double J_K[2 * 2] = {0};
       double J_P[2 * 3] = {0};
-      double J_C[3 * 3] = {0};
-      double J_r[3 * 3] = {0};
+      double J_h[2 * 3] = {0};
       J_intrinsics_point(data->cam_K, J_K);
       J_project(p_C, J_P);
-      J_camera_rotation(q_WC, r_WC, p_W, J_C);
-      J_camera_translation(q_WC, J_r);
-      /* -- J_cam_rot = -1 * J_K * J_P * J_C; */
-      double J_KP[2 * 3] = {0};
+      dot(J_K, 2, 2, J_P, 2, 3, J_h);
+
+      /* -- J_cam_rot = -1 * J_h * J_C; */
+      double J_C[3 * 3] = {0};
       double J_cam_rot[2 * 3] = {0};
-      dot(J_K, 2, 2, J_P, 2, 3, J_KP);
-      dot(J_KP, 2, 3, J_C, 3, 3, J_cam_rot);
+      J_camera_rotation(q_WC, r_WC, p_W, J_C);
+      dot(J_h, 2, 3, J_C, 3, 3, J_cam_rot);
       mat_scale(J_cam_rot, 2, 3, -1);
-      /* -- J_cam_pos = -1 * J_K * J_P * J_r; */
+
+      /* -- J_cam_pos = -1 * J_h * J_r; */
+      double J_r[3 * 3] = {0};
       double J_cam_pos[2 * 3] = {0};
-      dot(J_K, 2, 2, J_P, 2, 3, J_KP);
-      dot(J_KP, 2, 3, J_r, 3, 3, J_cam_pos);
+      J_camera_translation(q_WC, J_r);
+      dot(J_h, 2, 3, J_r, 3, 3, J_cam_pos);
       mat_scale(J_cam_pos, 2, 3, -1);
+
       /* -- Fill in the big jacobian */
       mat_block_set(J, *J_cols, rs, cs, re, cs + 2, J_cam_rot);
       mat_block_set(J, *J_cols, rs, cs + 3, re, ce, J_cam_pos);
@@ -464,9 +466,9 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
       /* -- Form jacobians */
       double J_p[3 * 3] = {0};
       J_target_point(q_WC, J_p);
-      /* -- J_point = -1 * J_K * J_P * J_target_point(q_WC); */
+      /* -- J_point = -1 * J_h * J_target_point(q_WC); */
       double J_point[2 * 3] = {0};
-      dot(J_KP, 2, 3, J_p, 3, 3, J_point);
+      dot(J_h, 2, 3, J_p, 3, 3, J_point);
       mat_scale(J_point, 2, 3, -1);
       /* -- Fill in the big jacobian */
       mat_block_set(J, *J_cols, rs, cs, re, ce, J_point);
@@ -479,80 +481,7 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
   return J;
 }
 
-void ba_update(ba_data_t *data,
-               double *e,
-               int e_size, double
-               *E,
-               int E_rows,
-               int E_cols) {
-  assert(e_size == E_rows);
-  /* Form weight matrix */
-  /* W = diag(repmat(sigma, data->nb_measurements, 1)); */
-
-  /* Solve Gauss-Newton system [H dx = g]: Solve for dx */
-	/* -- Calculate L.H.S of Gauss-Newton */
-  /* H = (E' * W * E); */
-  double *E_t = mat_new(E_cols, E_rows);
-  double *H = mat_new(E_cols, E_cols);
-  mat_transpose(E, E_rows, E_cols, E_t);
-  dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
-
-  /* -- Apply damping */
-	/* H = H + lambda * I */
-  double *damp_term = mat_new(E_cols, E_cols);
-  double *H_damped = mat_new(E_cols, E_cols);
-  eye(damp_term, E_cols, E_cols);
-  mat_scale(damp_term, E_cols, E_cols, 1e-6);
-  mat_add(H, damp_term, H_damped, E_cols, E_cols);
-
-	/* H = H + lambda * H_diag */
-  /* double *h_diag = vec_new(E_cols); */
-  /* double *H_diag = mat_new(E_cols, E_cols); */
-  /* double *H_damped = mat_new(E_cols, E_cols); */
-  /* mat_diag_get(H, E_cols, E_cols, h_diag); */
-  /* mat_diag_set(H_diag, E_cols, E_cols, h_diag); */
-  /* mat_scale(H_diag, E_cols, E_cols, 1000.0); */
-  /* mat_add(H, H_diag, H_damped, E_cols, E_cols); */
-
-	/* -- Calculate R.H.S of Gauss-Newton */
-  /* g = -E' * W * e; */
-  double *g = vec_new(E_cols);
-  mat_scale(E_t, E_cols, E_rows, -1.0);
-  dot(E_t, E_cols, E_rows, e, e_size, 1, g);
-  free(E_t);
-
-  /* Use Cholesky on [H dx = g] to solve for dx */
-  double *dx = vec_new(E_cols);
-  chol_lls_solve(H_damped, g, dx, E_cols);
-  /* chol_lls_solve2(H_damped, g, dx, E_cols); */
-  free(H);
-  /* free(H_hat); */
-  free(g);
-
-  /* double *dx = vec_new(E_cols); */
-  /* { */
-  /*   gsl_matrix *A =  gsl_matrix_alloc(E_cols, E_cols); */
-  /*   int idx = 0; */
-  /*   for (int i = 0; i < E_cols; i++) { */
-  /*     for (int j = 0; j < E_cols; j++) { */
-  /*       gsl_matrix_set(A, i, j, H_damped[idx]); */
-  /*       idx++; */
-  /*     } */
-  /*   } */
-  /*  */
-  /*   gsl_vector *b =  gsl_vector_alloc(E_cols); */
-  /*   for (int i = 0; i < E_cols; i++) { */
-  /*     gsl_vector_set(b, i, g[i]); */
-  /*   } */
-  /*  */
-  /*   gsl_vector *x =  gsl_vector_alloc(E_cols); */
-  /*   gsl_linalg_cholesky_decomp1(A); */
-  /*   gsl_linalg_cholesky_solve(A, b, x); */
-  /*   for (int i = 0; i < E_cols; i++) { */
-  /*     dx[i] = gsl_vector_get(x, i); */
-  /*   } */
-  /* } */
-
+void ba_update(ba_data_t *data, double *dx) {
   /* Update camera poses */
   for (int k = 0; k < data->nb_frames; k++) {
     const int s = k * 6;
@@ -586,9 +515,6 @@ void ba_update(ba_data_t *data,
     data->points[i][1] += dp_W[1];
     data->points[i][2] += dp_W[2];
   }
-
-  /* Clean up */
-  free(dx);
 }
 
 double ba_cost(const double *e, const int length) {
@@ -599,34 +525,78 @@ double ba_cost(const double *e, const int length) {
 }
 
 void ba_solve(ba_data_t *data) {
-  int max_iter = 1000;
-  double cost_prev = 0.0;
+  int max_iter = 200;
+  double lambda = 1e-4;
+
+  int e_size = 0;
+  double *e = ba_residuals(data, &e_size);
+  double cost_prev = ba_cost(e, e_size);
+  free(e);
 
   for (int iter = 0; iter < max_iter; iter++) {
-    /* Residuals */
-    int e_size = 0;
-    double *e = ba_residuals(data, &e_size);
-
     /* Jacobians */
     int E_rows = 0;
     int E_cols = 0;
     double *E = ba_jacobian(data, &E_rows, &E_cols);
 
-    /* Update and calculate cost */
-    ba_update(data, e, e_size, E, E_rows, E_cols);
-    const double cost = ba_cost(e, e_size);
-    printf("iter: %d\t cost: %.4e\n", iter, cost);
-    /* printf("iter: %d\t cost: %f\n", iter, cost); */
+    /* Solve Gauss-Newton system [H dx = g]: Solve for dx */
+    /* -- Calculate L.H.S of Gauss-Newton: H = (E' * W * E); */
+    double *E_t = mat_new(E_cols, E_rows);
+    double *H = mat_new(E_cols, E_cols);
+    mat_transpose(E, E_rows, E_cols, E_t);
+    dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
+    /* -- Apply Levenberg-Marquardt damping: H = H + lambda * H_diag */
+    for (int i = 0; i < E_cols; i++) {
+      H[(i * E_cols) + i] += lambda * H[(i * E_cols) + i];
+    }
+    /* -- Calculate R.H.S of Gauss-Newton: g = -E' * W * e; */
+    double *g = vec_new(E_cols);
+    mat_scale(E_t, E_cols, E_rows, -1.0);
+    e = ba_residuals(data, &e_size);
+    dot(E_t, E_cols, E_rows, e, e_size, 1, g);
     free(e);
     free(E);
+    free(E_t);
+    /* -- Solve linear system: H * dx = g */
+    double *dx = vec_new(E_cols);
+    chol_lls_solve(H, g, dx, E_cols);
+    /* chol_lls_solve2(H, g, dx, E_cols); */
+    free(H);
+    free(g);
+
+    /* Update */
+    ba_update(data, dx);
+
+    /* Calculate cost */
+    e = ba_residuals(data, &e_size);
+    double cost = ba_cost(e, e_size);
+    const double dcost = cost - cost_prev;
+    free(e);
+    printf("iter: [%d]  ", iter);
+    printf("lambda: %.2e  ", lambda);
+    printf("cost: %.4e  ", cost);
+    printf("dcost: %.2e\n", dcost);
 
     /* Termination criteria */
-    double cost_diff = fabs(cost - cost_prev);
-    if (cost_diff < 1.0e-6) {
+    if (fabs(dcost) < 1.0e-6) {
       printf("Done!\n");
       break;
     }
-    cost_prev = cost;
+
+    /* Update lambda */
+    if (dcost < 0) {
+      lambda /= 10.0;
+      cost_prev = cost;
+
+    } else {
+      lambda *= 10.0;
+
+      /* Restore previous state because update failed */
+      for (int i = 0; i < E_cols; i++) dx[i] *= -1;
+      ba_update(data, dx);
+    }
+
+    free(dx);
   }
 }
 

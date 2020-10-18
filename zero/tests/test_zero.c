@@ -490,7 +490,7 @@ int test_svdcomp() {
 /*   return 0; */
 /* } */
 
-int test_cholesky() {
+int test_chol() {
   /* clang-format off */
   const int n = 3;
   double A[9] = {
@@ -501,7 +501,7 @@ int test_cholesky() {
   /* clang-format on */
 
   struct timespec t = tic();
-  double *L = cholesky(A, n);
+  double *L = chol(A, n);
   printf("time taken: [%fs]\n", toc(&t));
 
   double Lt[9] = {0};
@@ -509,7 +509,8 @@ int test_cholesky() {
   mat_transpose(L, n, n, Lt);
   dot(L, n, n, Lt, n, n, LLt);
 
-  int debug = 0;
+  int debug = 1;
+  /* int debug = 0; */
   if (debug) {
     print_matrix("L", L, n, n);
     printf("\n");
@@ -551,61 +552,53 @@ int test_chol_lls_solve() {
   return 0;
 }
 
-/* int test_chol_lls_solve2() { */
-/*   #<{(| clang-format off |)}># */
-/*   const int m = 3; */
-/*   double A[9] = { */
-/*     2.0, -1.0, 0.0, */
-/*     -1.0, 2.0, -1.0, */
-/*     0.0, -1.0, 1.0 */
-/*   }; */
-/*   double b[3] = {1.0, 0.0, 0.0}; */
-/*   double x[3] = {0.0, 0.0, 0.0}; */
-/*   #<{(| clang-format on |)}># */
-/*  */
-/*   #<{(| #<{(| clang-format off |)}># |)}># */
-/*   #<{(| int m = 4; |)}># */
-/*   #<{(| double A[16] = { |)}># */
-/*   #<{(|   4.16, -3.12, 0.56, -0.10, |)}># */
-/*   #<{(|   -3.12, 5.03, -0.83, 1.18, |)}># */
-/*   #<{(|   0.56, -0.83, 0.76, 0.34, |)}># */
-/*   #<{(|   -0.10, 1.18,  0.34, 1.18 |)}># */
-/*   #<{(| }; |)}># */
-/*   #<{(| double b[4] = {1.0, 0.0, 0.0, 0.0}; |)}># */
-/*   #<{(| double x[4] = {0.0, 0.0, 0.0, 0.0}; |)}># */
-/*   #<{(| #<{(| clang-format on |)}># |)}># */
-/*  */
-/*   struct timespec t = tic(); */
-/*   chol_lls_solve2(A, b, x, m); */
-/*   printf("time taken: [%fs]\n", toc(&t)); */
-/*   print_vector("x", x, m); */
-/*  */
-/*   #<{(| MU_CHECK(fltcmp(x[0], 1.0) == 0); |)}># */
-/*   #<{(| MU_CHECK(fltcmp(x[1], 1.0) == 0); |)}># */
-/*   #<{(| MU_CHECK(fltcmp(x[2], 1.0) == 0); |)}># */
-/*  */
-/*   return 0; */
-/* } */
+#ifdef USE_LAPACK
+int test_chol_lls_solve2() {
+  /* #<{(| clang-format off |)}># */
+  /* const int m = 3; */
+  /* const double A[9] = { */
+  /*   2.0, -1.0, 0.0, */
+  /*   -1.0, 2.0, -1.0, */
+  /*   0.0, -1.0, 1.0 */
+  /* }; */
+  /* const double b[3] = {1.0, 0.0, 0.0}; */
+  /* double x[3] = {0.0, 0.0, 0.0}; */
+  /* #<{(| clang-format on |)}># */
 
-/* int test_chol_Axb() { */
-/*   #<{(| clang-format off |)}># */
-/*   const int m = 3; */
-/*   double A[9] = { */
-/*     2.0, -1.0, 0.0, */
-/*     -1.0, 2.0, -1.0, */
-/*     0.0, -1.0, 1.0 */
-/*   }; */
-/*   double b[3] = {1.0, 0.0, 0.0}; */
-/*   double x[3] = {0.0, 0.0, 0.0}; */
-/*   #<{(| clang-format on |)}># */
-/*  */
-/*   struct timespec t = tic(); */
-/*   chol_Axb(A, b, x, m, 0); */
-/*   printf("time taken: [%fs]\n", toc(&t)); */
-/*   print_vector("x", x, m); */
-/*  */
-/*   return 0; */
-/* } */
+  /* double a[9] = { 1.0, .6, .3, .6, 1., .5, .3, .5, 1 }; */
+  /* print_matrix("a", a, 3, 3); */
+  /* int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', 3, a, 3); */
+  /* if (retval != 0) { */
+  /*   fprintf(stderr, "Failed to decompose A using Cholesky Decomposition!\n"); */
+  /* } */
+  /* print_matrix("a", a, 3, 3); */
+  /* mat_save("/tmp/A.csv", A, m, m); */
+
+  /* clang-format off */
+  int m = 4;
+  double A[16] = {
+    4.16, -3.12, 0.56, -0.10,
+    -3.12, 5.03, -0.83, 1.18,
+    0.56, -0.83, 0.76, 0.34,
+    -0.10, 1.18,  0.34, 1.18
+  };
+  double b[4] = {1.0, 0.0, 0.0, 0.0};
+  double x[4] = {0.0, 0.0, 0.0, 0.0};
+  /* clang-format on */
+
+  struct timespec t = tic();
+  chol_lls_solve2(A, b, x, m);
+  /* OCTAVE_SCRIPT("scripts/plot_matrix.m /tmp/A.csv"); */
+  printf("time taken: [%fs]\n", toc(&t));
+  print_vector("x", x, m);
+
+  /* MU_CHECK(fltcmp(x[0], 1.0) == 0); */
+  /* MU_CHECK(fltcmp(x[1], 1.0) == 0); */
+  /* MU_CHECK(fltcmp(x[2], 1.0) == 0); */
+
+  return 0;
+}
+#endif
 
 int test_tf_rot_set() {
   double C[9];
@@ -1093,10 +1086,11 @@ void test_suite() {
   /* MU_ADD_TEST(test_pinv); */
 
   /* CHOL */
-  MU_ADD_TEST(test_cholesky);
+  MU_ADD_TEST(test_chol);
   MU_ADD_TEST(test_chol_lls_solve);
-  /* MU_ADD_TEST(test_chol_lls_solve2); */
-  /* MU_ADD_TEST(test_chol_Axb); */
+#ifdef USE_LAPACK
+  MU_ADD_TEST(test_chol_lls_solve2);
+#endif
 
   /* TRANSFORMS */
   MU_ADD_TEST(test_tf_rot_set);

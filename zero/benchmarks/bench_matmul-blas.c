@@ -39,7 +39,7 @@ int main() {
     double *C = (double *) malloc(sizeof(double) * m * m);
 
     /* CBLAS dot() */
-    sleep(0.1);
+    sleep(1);
     struct timespec t = tic();
     dot_cblas(A, m, m, B, m, m, C);
     printf("matrix_size: %ld\tdot_cblas(): %fs\n", m, toc(&t));

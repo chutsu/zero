@@ -5,28 +5,24 @@ DEP_DIR=$(PWD)/dep
 TESTS_DIR=$(PWD)/tests
 
 # COMPILER SETTINGS
-CC=gcc \
+CC=tcc
+
+CFLAGS= \
 	-Wall \
 	-O3 \
-	-march=native \
-	-fopenmp \
 	-D_DEFAULT_SOURCE \
-	-D_POSIX_C_SOURCE=199309L
-	# -g
-	# -DNDEBUG \
-	-O3 \
-	# -march=native \
-	# -fopenmp \
-	# -D_DEFAULT_SOURCE \
-	# -D_POSIX_C_SOURCE=199309L
-CFLAGS=-I$(INC_DIR)
+	-D_POSIX_C_SOURCE=199309L \
+	-I$(INC_DIR)
+
 LIBS=-L$(BLD_DIR) \
 	-lzero \
 	-lpthread \
-	-lm
+	-lm \
+	-llapack \
+	-L/usr/X11R6/lib -lX11 \
+	-lGL -lGLU
 
 	# -lblas \
-	# -llapacke \
 	# -llapack \
 	# -lgfortran \
 	# -lgsl \

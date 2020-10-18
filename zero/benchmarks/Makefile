@@ -3,13 +3,13 @@ CXX := g++
 CFLAGS:= -Wall -O3 -march=native -fopenmp
 INCS := -I/usr/include/eigen3
 LIBS := \
-	../deps/OpenBLAS/build/lib/libopenblas.a \
+	../../deps/OpenBLAS/libopenblas.a \
 	-lm -lpthread -lgfortran -lm -lpthread -lgfortran
 
 .PHONY: all dirs
-# all: dirs bench_matmul bench_svd
 all: dirs bench_matmul
-# all: dirs bench_svd
+# all: dirs bench_matmul bench_svd-jacobi
+# all: dirs bench_svd-lapacke
 
 dirs:
 	@mkdir -p bin

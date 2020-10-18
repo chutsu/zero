@@ -17,10 +17,10 @@
 #define RIGHT 1
 
 void swap_rows(double * i_mat, int row1, int row2, int n) {
-    i_mat[row1 * n + row1] = 0.0;
-    i_mat[row1 * n + row2] = 1.0;
-    i_mat[row2 * n + row2] = 0.0;
-    i_mat[row2 * n + row1] = 1.0;
+  i_mat[row1 * n + row1] = 0.0;
+  i_mat[row1 * n + row2] = 1.0;
+  i_mat[row2 * n + row2] = 0.0;
+  i_mat[row2 * n + row1] = 1.0;
 }
 
 void multiply(double * m1, double * m2, double * new_matrix, int n) {
@@ -90,7 +90,7 @@ void print_matrix(double *m, int rows, int columns) {
     int row, column;
     for (row=0; row<rows; row++) {
         for (column=0; column<columns; column++) {
-            printf("[%d, %d]: %.17f\t", row, column, m[row*rows+column]);
+            printf("[%d, %d]: %.4f\t", row, column, m[row*rows+column]);
         }
         printf("\n");
     }

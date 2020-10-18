@@ -1,12 +1,14 @@
-.PHONY: all gcc_arm
+default: OpenBLAS SuiteSparse
+.PHONY: OpenBLAS SuiteSparse
 
-all: openblas
+OpenBLAS:
+	@echo "[Installing OpenBLAS]"
+	@bash openblas.bash
 
-openblas:
-	@echo "[Installing openblas]"
-	@git clone https://github.com/xianyi/OpenBLAS \
-		&& cd OpenBLAS \
-		&& make > /dev/null
+SuiteSparse:
+	@echo "[Installing SuiteSparse]"
+	@bash SuiteSparse.bash
 
 clean:
-	@rm -rf openblas
+	@rm -rf OpenBLAS
+	@rm -rf SuiteSparse

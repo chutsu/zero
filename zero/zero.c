@@ -14,7 +14,6 @@ int csv_rows(const char *fp) {
   /* Load file */
   FILE *infile = fopen(fp, "r");
   if (infile == NULL) {
-    fclose(infile);
     return -1;
   }
 
@@ -37,7 +36,6 @@ int csv_cols(const char *fp) {
   /* Load file */
   FILE *infile = fopen(fp, "r");
   if (infile == NULL) {
-    fclose(infile);
     return -1;
   }
 
@@ -116,6 +114,8 @@ char **csv_fields(const char *fp, int *nb_fields) {
 }
 
 double **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
+  assert(fp != NULL);
+
   /* Obtain number of rows and columns in csv data */
   *nb_rows = csv_rows(fp);
   *nb_cols = csv_cols(fp);
@@ -381,7 +381,7 @@ void print_matrix(const char *prefix,
   printf("%s:\n", prefix);
   for (size_t i = 0; i < m; i++) {
     for (size_t j = 0; j < n; j++) {
-      printf("%.12f\t", data[idx]);
+      printf("%.4f\t", data[idx]);
       idx++;
     }
     printf("\n");
@@ -396,7 +396,7 @@ void print_vector(const char *prefix, const double *data, const size_t length) {
   size_t idx = 0;
   printf("%s: ", prefix);
   for (size_t i = 0; i < length; i++) {
-    printf("%f\t", data[idx]);
+    printf("%.4f\t", data[idx]);
     idx++;
   }
   printf("\n");
@@ -492,7 +492,7 @@ int mat_save(const char *save_path, const double *A, const int m, const int n) {
   int idx = 0;
   for (int i = 0; i < m; i++) {
     for (int j = 0; j < n; j++) {
-      fprintf(csv_file, "%f", A[idx]);
+      fprintf(csv_file, "%e", A[idx]);
       idx++;
       if ((j + 1) != n) {
         fprintf(csv_file, ",");
@@ -932,7 +932,7 @@ int check_jacobian(const char *jac_name,
  *   V = returns the right orthogonal transformation matrix
  */
 int svdcomp(double *A, int m, int n, double *w, double *V) {
-  assert(m < n);
+  /* assert(m < n); */
   int flag, i, its, j, jj, k, l, nm;
   double c, f, h, s, x, y, z;
   double anorm = 0.0, g = 0.0, scale = 0.0;
@@ -945,28 +945,36 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
     rv1[i] = scale * g;
     g = s = scale = 0.0;
     if (i < m) {
-      for (k = i; k < m; k++)
+      for (k = i; k < m; k++) {
         scale += fabs(A[k * n + i]);
+      }
+
       if (scale) {
         for (k = i; k < m; k++) {
           A[k * n + i] = (A[k * n + i] / scale);
           s += (A[k * n + i] * A[k * n + i]);
         }
+
         f = A[i * n + i];
         g = -SIGN(sqrt(s), f);
         h = f * g - s;
         A[i * n + i] = (f - g);
+
         if (i != n - 1) {
           for (j = l; j < n; j++) {
-            for (s = 0.0, k = i; k < m; k++)
+            for (s = 0.0, k = i; k < m; k++) {
               s += (A[k * n + i] * A[k * n + j]);
+            }
             f = s / h;
-            for (k = i; k < m; k++)
+            for (k = i; k < m; k++) {
               A[k * n + j] += (f * A[k * n + i]);
+            }
           }
         }
-        for (k = i; k < m; k++)
+
+        for (k = i; k < m; k++) {
           A[k * n + i] = (A[k * n + i] * scale);
+        }
       }
     }
     w[i] = (scale * g);
@@ -974,25 +982,33 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
     /* right-hand reduction */
     g = s = scale = 0.0;
     if (i < m && i != n - 1) {
-      for (k = l; k < n; k++)
+      for (k = l; k < n; k++) {
         scale += fabs(A[i * n + k]);
+      }
+
       if (scale) {
         for (k = l; k < n; k++) {
           A[i * n + k] = (A[i * n + k] / scale);
           s += (A[i * n + k] * A[i * n + k]);
         }
+
         f = A[i * n + l];
         g = -SIGN(sqrt(s), f);
         h = f * g - s;
         A[i * n + l] = (f - g);
-        for (k = l; k < n; k++)
+
+        for (k = l; k < n; k++) {
           rv1[k] = A[i * n + k] / h;
+        }
+
         if (i != m - 1) {
           for (j = l; j < m; j++) {
-            for (s = 0.0, k = l; k < n; k++)
+            for (s = 0.0, k = l; k < n; k++) {
               s += (A[j * n + k] * A[i * n + k]);
-            for (k = l; k < n; k++)
+            }
+            for (k = l; k < n; k++) {
               A[j * n + k] += (s * rv1[k]);
+            }
           }
         }
         for (k = l; k < n; k++)
@@ -1019,8 +1035,9 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
           }
         }
       }
-      for (j = l; j < n; j++)
+      for (j = l; j < n; j++) {
         V[i * n + j] = V[j * n + i] = 0.0;
+      }
     }
     V[i * n + i] = 1.0;
     g = rv1[i];
@@ -1219,7 +1236,7 @@ int svdcomp(double *A, int m, int n, double *w, double *V) {
  *                                  CHOL
  ******************************************************************************/
 
-double *cholesky(const double *A, const size_t n) {
+double *chol(const double *A, const size_t n) {
   assert(A != NULL);
   assert(n > 0);
   double *L = calloc(n * n, sizeof(double));
@@ -1256,7 +1273,7 @@ void chol_lls_solve(const double *A,
   double *y = calloc(n, sizeof(double));
 
   /* Cholesky decomposition */
-  double *L = cholesky(A, n);
+  double *L = chol(A, n);
   mat_transpose(L, n, n, Lt);
 
   /* Forward substitution */
@@ -1297,112 +1314,50 @@ void chol_lls_solve(const double *A,
   free(Lt);
 }
 
-/* void chol_lls_solve2(const double *A, */
-/*                      const double *b, */
-/*                      double *x, */
-/*                      const size_t m) { */
-/*   #<{(| Cholesky Decomposition |)}># */
-/*   const char uplo = 'L'; */
-/*   double *a = mat_new(m, m); */
-/*   #<{(| mat_triu(A, n, a); |)}># */
-/*   mat_copy(A, m, m, a); */
-/*  */
-/*   print_matrix("a", a, m, m); */
-/*   int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, uplo, m, a, m); */
-/*   if (retval != 0) { */
-/*     fprintf(stderr, "Failed to decompose A using Cholesky Decomposition!\n"); */
-/*   } */
-/*   print_matrix("a", a, m, m); */
-/*  */
-/*   #<{(| Solve Ax = b using Cholesky decomposed A from above |)}># */
-/*   vec_copy(b, m, x); */
-/*   print_vector("b", b, m); */
-/*   retval = LAPACKE_dpotrs(LAPACK_ROW_MAJOR, uplo, m, m, a, m, x, m); */
-/*   if (retval != 0) { */
-/*     fprintf(stderr, "Failed to solve Ax = b!\n"); */
-/*   } */
-/*  */
-/*   #<{(| free(a); |)}># */
-/* } */
+#ifdef USE_LAPACK
+void chol_lls_solve2(const double *A,
+                     const double *b,
+                     double *x,
+                     const size_t m) {
+  /* Cholesky Decomposition */
+  int info = 0;
+  int lda = m;
+  int n = m;
+  char uplo = 'L';
+  double *a = mat_new(m, m);
+  mat_copy(A, m, m, a);
+  dpotrf_(&uplo, &n, a, &lda, &info);
+  if (info != 0) {
+    fprintf(stderr, "Failed to decompose A using Cholesky Decomposition!\n");
+  }
 
-/* int chol_Axb(double *A, double *B, double *x, int m, int iscolmaj) { */
-/* 	static double *buf=NULL; */
-/* 	static int buf_sz=0; */
-/*  */
-/* 	double *a; */
-/* 	int a_sz, tot_sz; */
-/* 	register int i, j; */
-/* 	int info, nrhs=1; */
-/*  */
-/* 	if (A == NULL){ */
-/* 		if (buf) free(buf); */
-/* 		buf=NULL; */
-/* 		buf_sz=0; */
-/*  */
-/* 		return 1; */
-/* 	} */
-/*  */
-/* 	#<{(| Calculate required memory size |)}># */
-/* 	a_sz=(iscolmaj)? 0 : m*m; */
-/* 	tot_sz=a_sz; */
-/*  */
-/* 	if(tot_sz>buf_sz){ #<{(| insufficient memory, allocate a "big" memory chunk at once |)}># */
-/* 		if(buf) free(buf); #<{(| free previously allocated memory |)}># */
-/*  */
-/* 		buf_sz=tot_sz; */
-/* 		buf=(double *)malloc(buf_sz*sizeof(double)); */
-/* 		if(!buf){ */
-/* 			fprintf(stderr, "memory allocation in sba_Axb_Chol() failed!\n"); */
-/* 			exit(1); */
-/* 		} */
-/* 	} */
-/*  */
-/* 	if(!iscolmaj){ */
-/* 		a=buf; */
-/*  */
-/* 		#<{(| store A into a and B into x; A is assumed to be symmetric, hence */
-/* 			* the column and row major order representations are the same */
-/* 			|)}># */
-/* 		for(i=0; i<m; ++i){ */
-/* 			a[i]=A[i]; */
-/* 			x[i]=B[i]; */
-/* 		} */
-/* 		for(j=m*m; i<j; ++i) // copy remaining rows; note that i is not re-initialized */
-/* 			a[i]=A[i]; */
-/* 	} */
-/* 	else{ #<{(| no copying is necessary for A |)}># */
-/* 		a=A; */
-/* 		for(i=0; i<m; ++i) */
-/* 			x[i]=B[i]; */
-/* 	} */
-/*  */
-/*   #<{(| Cholesky decomposition of A |)}># */
-/*   F77_FUNC(dpotrf)("U", (int *)&m, a, (int *)&m, (int *)&info); */
-/*   if(info!=0){ */
-/*     if(info<0){ */
-/*       fprintf(stderr, "LAPACK error: illegal value for argument %d of dpotf2/dpotrf in sba_Axb_Chol()\n", -info); */
-/*       exit(1); */
-/*     } */
-/*     else{ */
-/*       fprintf(stderr, "LAPACK error: the leading minor of order %d is not positive definite,\nthe factorization could not be completed for dpotf2/dpotrf in sba_Axb_Chol()\n", info); */
-/*       return 0; */
-/*     } */
-/*   } */
-/*  */
-/*   #<{(| below are two alternative ways for solving the linear system: |)}># */
-/*   #<{(| use the computed Cholesky in one lapack call |)}># */
-/*   F77_FUNC(dpotrs)("U", (int *)&m, (int *)&nrhs, a, (int *)&m, x, (int *)&m, &info); */
-/*   if(info<0){ */
-/*     fprintf(stderr, "LAPACK error: illegal value for argument %d of dpotrs in sba_Axb_Chol()\n", -info); */
-/*     exit(1); */
-/*   } */
-/*  */
-/* 	return 1; */
-/* } */
+  /* Solve Ax = b using Cholesky decomposed A from above */
+  vec_copy(b, m, x);
+  int nhrs = 1;
+  int ldb = m;
+  dpotrs_(&uplo, &n, &nhrs, a, &lda, x, &ldb, &info);
+  if (info != 0) {
+    fprintf(stderr, "Failed to solve Ax = b!\n");
+  }
+
+  free(a);
+}
+#endif
 
 /******************************************************************************
  *                               TRANSFORMS
  ******************************************************************************/
+
+void tf(const double C[3 * 3], const double r[3], double T[4 * 4]) {
+  assert(C != NULL);
+  assert(r != NULL);
+  assert(T != NULL);
+
+  T[0] = C[0]; T[1] = C[1]; T[2] = C[2];  T[3] = r[0];
+  T[4] = C[3]; T[5] = C[4]; T[6] = C[5];  T[7] = r[1];
+  T[8] = C[6]; T[9] = C[7]; T[10] = C[8]; T[11] = r[2];
+  T[12] = 0.0; T[13] = 0.0; T[14] = 0.0;  T[15] = 1.0;
+}
 
 void tf_rot_set(double T[4 * 4], const double C[3 * 3]) {
   assert(T != NULL);
@@ -1609,9 +1564,9 @@ void euler321(const double euler[3], double C[3 * 3]) {
   assert(euler != NULL);
   assert(C != NULL);
 
-  const float phi = euler[0];
-  const float theta = euler[1];
-  const float psi = euler[2];
+  const double phi = euler[0];
+  const double theta = euler[1];
+  const double psi = euler[2];
 
   /* 1st row */
   C[0] = cos(psi) * cos(theta);
