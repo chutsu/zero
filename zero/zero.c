@@ -280,23 +280,6 @@ float randf(float a, float b) {
   return a + r;
 }
 
-struct timespec tic() {
-  struct timespec time_start;
-  clock_gettime(CLOCK_MONOTONIC, &time_start);
-  return time_start;
-}
-
-float toc(struct timespec *tic) {
-  struct timespec toc;
-  float time_elasped;
-
-  clock_gettime(CLOCK_MONOTONIC, &toc);
-  time_elasped = (toc.tv_sec - tic->tv_sec);
-  time_elasped += (toc.tv_nsec - tic->tv_nsec) / 1000000000.0;
-
-  return time_elasped;
-}
-
 double deg2rad(const double d) { return d * (M_PI / 180.0); }
 
 double rad2deg(const double r) { return r * (180.0 / M_PI); }
@@ -465,8 +448,10 @@ int mat_cmp(const double *A, const double *B, const size_t m, const size_t n) {
   return 0;
 }
 
-int mat_equals(const double *A, const double *B,
-               const size_t m, const size_t n,
+int mat_equals(const double *A,
+               const double *B,
+               const size_t m,
+               const size_t n,
                const double thresh) {
   size_t index = 0;
 
@@ -840,16 +825,16 @@ void bwdsubs(const double *U, const double *y, double *x, const size_t n) {
 int check_jacobian(const char *jac_name,
                    const double *fdiff,
                    const double *jac,
-									 const size_t m,
-									 const size_t n,
+                   const size_t m,
+                   const size_t n,
                    const double threshold,
-									 const int print) {
+                   const int print) {
   int retval = 0;
   int ok = 1;
-	double *delta = mat_new(m, n);
-	mat_sub(fdiff, jac, delta, m, n);
+  double *delta = mat_new(m, n);
+  mat_sub(fdiff, jac, delta, m, n);
 
-  // Check if any of the values are beyond the threshold
+  /* Check if any of the values are beyond the threshold */
   for (size_t i = 0; i < m; i++) {
     for (size_t j = 0; j < n; j++) {
       if (fabs(mat_val(delta, n, i, j)) >= threshold) {
@@ -858,16 +843,16 @@ int check_jacobian(const char *jac_name,
     }
   }
 
-  // Print result
+  /* Print result */
   if (ok == 0) {
     if (print) {
       LOG_ERROR("Bad jacobian [%s]!\n", jac_name);
-			print_matrix("analytical jac", jac, m, n);
-			printf("\n");
-			print_matrix("num diff jac", fdiff, m, n);
-			printf("\n");
-			print_matrix("difference matrix", delta, m, n);
-			printf("\n");
+      print_matrix("analytical jac", jac, m, n);
+      printf("\n");
+      print_matrix("num diff jac", fdiff, m, n);
+      printf("\n");
+      print_matrix("difference matrix", delta, m, n);
+      printf("\n");
     }
     retval = -1;
   } else {
@@ -878,6 +863,35 @@ int check_jacobian(const char *jac_name,
   }
 
   return retval;
+}
+
+void dot_cblas(const double *A,
+               const size_t A_m,
+               const size_t A_n,
+               const double *B,
+               const size_t B_m,
+               const size_t B_n,
+               double *C) {
+  UNUSED(B_m);
+  assert(A != NULL && B != NULL && C != NULL);
+  assert(A_m > 0 && A_n > 0 && B_m > 0 && B_n > 0);
+  assert(A_n == B_m);
+
+  cblas_dgemm(CblasRowMajor, /* Matrix data arrangement */
+              CblasNoTrans,  /* Transpose A */
+              CblasNoTrans,  /* Transpose B */
+              A_m,           /* Number of rows in A and C */
+              B_n,           /* Number of cols in B and C */
+              A_n,           /* Number of cols in A */
+              1.0,           /* Scaling factor for the product of A and B */
+              A,             /* Matrix A */
+              A_n,           /* First dimension of A */
+              B,             /* Matrix B */
+              B_n,           /* First dimension of B */
+              0.0,           /* Scale factor for C */
+              C,             /* Output */
+              B_n            /* First dimension of C */
+  );
 }
 
 /******************************************************************************
@@ -1264,10 +1278,7 @@ double *chol(const double *A, const size_t n) {
   return L;
 }
 
-void chol_lls_solve(const double *A,
-                    const double *b,
-                    double *x,
-                    const size_t n) {
+void chol_solve(const double *A, const double *b, double *x, const size_t n) {
   /* Allocate memory */
   double *Lt = calloc(n * n, sizeof(double));
   double *y = calloc(n, sizeof(double));
@@ -1310,15 +1321,13 @@ void chol_lls_solve(const double *A,
   }
 
   /* Clean up */
+  free(y);
   free(L);
   free(Lt);
 }
 
 #ifdef USE_LAPACK
-void chol_lls_solve2(const double *A,
-                     const double *b,
-                     double *x,
-                     const size_t m) {
+void chol_solve2(const double *A, const double *b, double *x, const size_t m) {
   /* Cholesky Decomposition */
   int info = 0;
   int lda = m;
@@ -1345,18 +1354,87 @@ void chol_lls_solve2(const double *A,
 #endif
 
 /******************************************************************************
+ *                                   TIME
+ ******************************************************************************/
+
+struct timespec tic() {
+  struct timespec time_start;
+  clock_gettime(CLOCK_MONOTONIC, &time_start);
+  return time_start;
+}
+
+float toc(struct timespec *tic) {
+  struct timespec toc;
+  float time_elasped;
+
+  clock_gettime(CLOCK_MONOTONIC, &toc);
+  time_elasped = (toc.tv_sec - tic->tv_sec);
+  time_elasped += (toc.tv_nsec - tic->tv_nsec) / 1000000000.0;
+
+  return time_elasped;
+}
+
+float mtoc(struct timespec *tic) { return toc(tic) * 1000.0; }
+
+float time_now() {
+  struct timeval t;
+  gettimeofday(&t, NULL);
+  return ((float) t.tv_sec + ((float) t.tv_usec) / 1000000.0);
+}
+
+/******************************************************************************
  *                               TRANSFORMS
  ******************************************************************************/
 
-void tf(const double C[3 * 3], const double r[3], double T[4 * 4]) {
-  assert(C != NULL);
-  assert(r != NULL);
+void tf(const double params[7], double T[4 * 4]) {
+  assert(params != NULL);
   assert(T != NULL);
 
-  T[0] = C[0]; T[1] = C[1]; T[2] = C[2];  T[3] = r[0];
-  T[4] = C[3]; T[5] = C[4]; T[6] = C[5];  T[7] = r[1];
-  T[8] = C[6]; T[9] = C[7]; T[10] = C[8]; T[11] = r[2];
-  T[12] = 0.0; T[13] = 0.0; T[14] = 0.0;  T[15] = 1.0;
+  const double q[4] = {params[0], params[1], params[2], params[3]};
+  const double r[3] = {params[4], params[5], params[6]};
+
+  double C[3 * 3] = {0};
+  quat2rot(q, C);
+
+  T[0] = C[0];
+  T[1] = C[1];
+  T[2] = C[2];
+  T[3] = r[0];
+
+  T[4] = C[3];
+  T[5] = C[4];
+  T[6] = C[5];
+  T[7] = r[1];
+
+  T[8] = C[6];
+  T[9] = C[7];
+  T[10] = C[8];
+  T[11] = r[2];
+
+  T[12] = 0.0;
+  T[13] = 0.0;
+  T[14] = 0.0;
+  T[15] = 1.0;
+}
+
+void tf_params(const double T[4 * 4], double params[7]) {
+  double C[3 * 3] = {0};
+  tf_rot_get(T, C);
+
+  double r[3] = {0};
+  tf_trans_get(T, r);
+
+  double q[4] = {0};
+  rot2quat(C, q);
+
+  params[0] = q[0];
+  params[1] = q[1];
+  params[2] = q[2];
+  params[3] = q[3];
+
+  params[4] = r[0];
+  params[5] = r[1];
+  params[6] = r[2];
 }
 
 void tf_rot_set(double T[4 * 4], const double C[3 * 3]) {
@@ -1405,9 +1483,11 @@ void tf_rot_get(const double T[4 * 4], double C[3 * 3]) {
   C[0] = T[0];
   C[1] = T[1];
   C[2] = T[2];
+
   C[3] = T[4];
   C[4] = T[5];
   C[5] = T[6];
+
   C[6] = T[8];
   C[7] = T[9];
   C[8] = T[10];
@@ -1473,34 +1553,34 @@ void tf_hpoint(const double T[4 * 4], const double hp[4], double retval[4]) {
 }
 
 void tf_perturb_rot(double T[4 * 4], const double step_size, const int i) {
-	/* Build perturb drvec */
-	double drvec[3] = {0};
-	drvec[i] = step_size;
+  /* Build perturb drvec */
+  double drvec[3] = {0};
+  drvec[i] = step_size;
 
-	/* Decompose transform to rotation and translation */
-	double C[3 * 3] = {0};
-	tf_rot_get(T, C);
+  /* Decompose transform to rotation and translation */
+  double C[3 * 3] = {0};
+  tf_rot_get(T, C);
 
-	/* Perturb rotation */
-	double C_rvec[3 * 3] = {0};
-	double C_diff[3 * 3] = {0};
-	rvec2rot(drvec, 1e-8, C_rvec);
-	dot(C_rvec, 3, 3, C, 3, 3, C_diff);
+  /* Perturb rotation */
+  double C_rvec[3 * 3] = {0};
+  double C_diff[3 * 3] = {0};
+  rvec2rot(drvec, 1e-8, C_rvec);
+  dot(C_rvec, 3, 3, C, 3, 3, C_diff);
   tf_rot_set(T, C_diff);
 }
 
 void tf_perturb_trans(double T[4 * 4], const double step_size, const int i) {
-	/* Build perturb dr */
-	double dr[3] = {0};
-	dr[i] = step_size;
+  /* Build perturb dr */
+  double dr[3] = {0};
+  dr[i] = step_size;
 
-	/* Decompose transform get translation */
-	double r[3] = {0};
-	tf_trans_get(T, r);
+  /* Decompose transform get translation */
+  double r[3] = {0};
+  tf_trans_get(T, r);
 
-	/* Perturb translation */
+  /* Perturb translation */
   const double r_diff[3] = {r[0] + dr[0], r[1] + dr[1], r[2] + dr[2]};
-	tf_trans_set(T, r_diff);
+  tf_trans_set(T, r_diff);
 }
 
 void rvec2rot(const double *rvec, const double eps, double *R) {
@@ -1510,23 +1590,22 @@ void rvec2rot(const double *rvec, const double eps, double *R) {
 
   /* Check if rotation is too small */
   if (theta < eps) {
-		R[0] = 1.0;
-		R[1] = -rvec[2];
-		R[2] = rvec[1];
+    R[0] = 1.0;
+    R[1] = -rvec[2];
+    R[2] = rvec[1];
 
     R[3] = rvec[2];
-		R[4] = 1.0;
-		R[5] = -rvec[0];
+    R[4] = 1.0;
+    R[5] = -rvec[0];
 
     R[6] = -rvec[1];
-		R[7] = rvec[0],
-		R[8] = 1.0;
-		return;
+    R[7] = rvec[0], R[8] = 1.0;
+    return;
   }
 
   /* Convert rvec to rotation matrix */
   double rvec_normed[3] = {rvec[0], rvec[1], rvec[2]};
-	vec_scale(rvec_normed, 3, 1 / theta);
+  vec_scale(rvec_normed, 3, 1 / theta);
   const double x = rvec_normed[0];
   const double y = rvec_normed[1];
   const double z = rvec_normed[2];
@@ -1548,16 +1627,16 @@ void rvec2rot(const double *rvec, const double eps, double *R) {
   const double zxC = z * xC;
 
   R[0] = x * xC + c;
-	R[1] = xyC - zs;
-	R[2] =  zxC + ys;
+  R[1] = xyC - zs;
+  R[2] = zxC + ys;
 
   R[3] = xyC + zs;
-	R[4] = y * yC + c;
-	R[5] = yzC - xs;
+  R[4] = y * yC + c;
+  R[5] = yzC - xs;
 
-	R[6] = zxC - ys;
-	R[7] = yzC + xs;
-	R[8] = z * zC + c;
+  R[6] = zxC - ys;
+  R[7] = yzC + xs;
+  R[8] = z * zC + c;
 }
 
 void euler321(const double euler[3], double C[3 * 3]) {
@@ -1745,134 +1824,6 @@ void quatdelta(const double dalpha[3], double dq[4]) {
   dq[1] = vector[0];
   dq[2] = vector[1];
   dq[3] = vector[2];
-}
-
-/******************************************************************************
- *                                   POSE
- ******************************************************************************/
-
-void pose_init(pose_t *pose,
-               const timestamp_t ts,
-               const double q[4],
-               const double r[3]) {
-  assert(pose != NULL);
-  assert(q != NULL);
-  assert(r != NULL);
-
-  pose->ts = ts;
-  pose_set_quat(pose, q);
-  pose_set_trans(pose, r);
-}
-
-void pose_set_quat(pose_t *pose, const double q[4]) {
-  assert(pose != NULL);
-  assert(q != NULL);
-
-  pose->q[0] = q[0];
-  pose->q[1] = q[1];
-  pose->q[2] = q[2];
-  pose->q[3] = q[3];
-}
-
-void pose_set_trans(pose_t *pose, const double r[3]) {
-  assert(pose != NULL);
-  assert(r != NULL);
-
-  pose->r[0] = r[0];
-  pose->r[1] = r[1];
-  pose->r[2] = r[2];
-}
-
-void pose_get_quat(const pose_t *pose, double q[4]) {
-  assert(pose != NULL);
-  assert(q != NULL);
-
-  q[0] = pose->q[0];
-  q[1] = pose->q[1];
-  q[2] = pose->q[2];
-  q[3] = pose->q[3];
-}
-
-void pose_get_trans(const pose_t *pose, double r[3]) {
-  assert(pose != NULL);
-  assert(r != NULL);
-
-  r[0] = pose->r[0];
-  r[1] = pose->r[1];
-  r[2] = pose->r[2];
-}
-
-void pose_print(const char *prefix, const pose_t *pose) {
-  assert(prefix != NULL);
-  assert(pose != NULL);
-
-  if (prefix) {
-    printf("[%s] ", prefix);
-  }
-  printf("q: (%f, %f, %f, %f)", pose->q[0], pose->q[1], pose->q[2], pose->q[3]);
-  printf("\t");
-  printf("r: (%f, %f, %f)\n", pose->r[0], pose->r[1], pose->r[2]);
-}
-
-void pose2tf(const pose_t *pose, double T[4 * 4]) {
-  assert(pose != NULL);
-  assert(T != NULL);
-
-  double C[3 * 3] = {0};
-  quat2rot(pose->q, C);
-
-  eye(T, 4, 4);
-  tf_rot_set(T, C);
-  tf_trans_set(T, pose->r);
-}
-
-pose_t *load_poses(const char *csv_path, int *nb_poses) {
-  assert(csv_path != NULL);
-  assert(nb_poses != NULL);
-
-  FILE *csv_file = fopen(csv_path, "r");
-  char line[MAX_LINE_LENGTH] = {0};
-  *nb_poses = csv_rows(csv_path);
-  pose_t *poses = malloc(sizeof(pose_t) * *nb_poses);
-
-  int pose_idx = 0;
-  while (fgets(line, MAX_LINE_LENGTH, csv_file) != NULL) {
-    if (line[0] == '#') {
-      continue;
-    }
-
-    char entry[MAX_LINE_LENGTH] = {0};
-    double data[7] = {0};
-    int index = 0;
-    for (size_t i = 0; i < strlen(line); i++) {
-      char c = line[i];
-      if (c == ' ') {
-        continue;
-      }
-
-      if (c == ',' || c == '\n') {
-        data[index] = strtod(entry, NULL);
-        memset(entry, '\0', sizeof(char) * 100);
-        index++;
-      } else {
-        entry[strlen(entry)] = c;
-      }
-    }
-
-    poses[pose_idx].q[0] = data[0];
-    poses[pose_idx].q[1] = data[1];
-    poses[pose_idx].q[2] = data[2];
-    poses[pose_idx].q[3] = data[3];
-
-    poses[pose_idx].r[0] = data[4];
-    poses[pose_idx].r[1] = data[5];
-    poses[pose_idx].r[2] = data[6];
-
-    pose_idx++;
-  }
-  fclose(csv_file);
-
-  return poses;
 }
 
 /*****************************************************************************

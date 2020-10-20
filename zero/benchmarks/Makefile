@@ -1,10 +1,10 @@
 CC := gcc
 CXX := g++
-CFLAGS:= -Wall -O3 -march=native -fopenmp
+CFLAGS:= -Wall -O3 -march=native -fopenmp -pg
 INCS := -I/usr/include/eigen3
 LIBS := \
 	../../deps/OpenBLAS/libopenblas.a \
-	-lm -lpthread -lgfortran -lm -lpthread -lgfortran
+	-lm -lpthread -lgfortran -lm
 
 .PHONY: all dirs
 all: dirs bench_matmul

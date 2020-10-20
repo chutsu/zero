@@ -18,7 +18,7 @@ debug() {
 
 # python3 scripts/tf_point.py
 
-# make format_code
+make format_code
 make clean
 time make
 
@@ -88,7 +88,7 @@ cd ./build/bin
 # ./test_ba --target test_ba_jacobian
 # ./test_ba --target test_ba_update
 # ./test_ba --target test_ba_cost
-# ./test_ba --target test_ba_solve
+# time ./test_ba --target test_ba_solve
 
 ./test_gui
 

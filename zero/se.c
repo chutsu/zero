@@ -14,13 +14,8 @@ void landmark_init(struct landmark_t *landmark) {
   landmark->meta.type = NOT_SET;
   landmark->meta.ts = NOT_SET;
   landmark->meta.param_id = NOT_SET;
-
 }
 
-void extrinsic_init(struct extrinsic_t *extrinsic) {
+void extrinsic_init(struct extrinsic_t *extrinsic) {}
 
-}
-
-void camera_init(struct camera_t *camera) {
-
-}
+void camera_init(struct camera_t *camera) {}

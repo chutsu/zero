@@ -358,16 +358,13 @@ int test_check_jacobian() {
 
   // Positive test
   {
-    const double fdiff[6] = {
-      0.0, 1.0, 2.0,
-      3.0, 4.0, 5.0
-    };
-    const double jac[6] = {
-      0.0, 1.0, 2.0,
-      3.0, 4.0, 5.0
-    };
+    const double fdiff[6] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
+    const double jac[6] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
     int retval = check_jacobian("test_check_jacobian",
-                                fdiff, jac, m, n,
+                                fdiff,
+                                jac,
+                                m,
+                                n,
                                 threshold,
                                 print);
     MU_CHECK(retval == 0);
@@ -375,16 +372,13 @@ int test_check_jacobian() {
 
   // Negative test
   {
-    const double fdiff[6] = {
-      0.0, 1.0, 2.0,
-      3.0, 4.0, 5.0
-    };
-    const double jac[6] = {
-      0.0, 1.0, 2.0,
-      3.1, 4.0, 5.0
-    };
+    const double fdiff[6] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
+    const double jac[6] = {0.0, 1.0, 2.0, 3.1, 4.0, 5.0};
     int retval = check_jacobian("test_check_jacobian",
-                                fdiff, jac, m, n,
+                                fdiff,
+                                jac,
+                                m,
+                                n,
                                 threshold,
                                 print);
     MU_CHECK(retval == -1);
@@ -528,7 +522,7 @@ int test_chol() {
   return 0;
 }
 
-int test_chol_lls_solve() {
+int test_chol_solve() {
   /* clang-format off */
   const int n = 3;
   double A[9] = {
@@ -541,7 +535,7 @@ int test_chol_lls_solve() {
   /* clang-format on */
 
   struct timespec t = tic();
-  chol_lls_solve(A, b, x, n);
+  chol_solve(A, b, x, n);
   printf("time taken: [%fs]\n", toc(&t));
   print_vector("x", x, n);
 
@@ -553,7 +547,7 @@ int test_chol_lls_solve() {
 }
 
 #ifdef USE_LAPACK
-int test_chol_lls_solve2() {
+int test_chol_solve2() {
   /* #<{(| clang-format off |)}># */
   /* const int m = 3; */
   /* const double A[9] = { */
@@ -569,7 +563,8 @@ int test_chol_lls_solve2() {
   /* print_matrix("a", a, 3, 3); */
   /* int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', 3, a, 3); */
   /* if (retval != 0) { */
-  /*   fprintf(stderr, "Failed to decompose A using Cholesky Decomposition!\n"); */
+  /*   fprintf(stderr, "Failed to decompose A using Cholesky Decomposition!\n");
+   */
   /* } */
   /* print_matrix("a", a, 3, 3); */
   /* mat_save("/tmp/A.csv", A, m, m); */
@@ -587,7 +582,7 @@ int test_chol_lls_solve2() {
   /* clang-format on */
 
   struct timespec t = tic();
-  chol_lls_solve2(A, b, x, m);
+  chol_solve2(A, b, x, m);
   /* OCTAVE_SCRIPT("scripts/plot_matrix.m /tmp/A.csv"); */
   printf("time taken: [%fs]\n", toc(&t));
   print_vector("x", x, m);
@@ -838,17 +833,17 @@ int test_tf_perturb_rot() {
                      0.0, 0.0, 0.0, 1.0};
   /* clang-format on */
 
-	/* Perturb rotation */
-	const double step_size = 1e-2;
-	tf_perturb_rot(T, step_size, 0);
-	print_matrix("T", T, 4, 4);
+  /* Perturb rotation */
+  const double step_size = 1e-2;
+  tf_perturb_rot(T, step_size, 0);
+  print_matrix("T", T, 4, 4);
 
-	/* Assert */
-	MU_CHECK(fltcmp(T[0], 1.0) == 0);
-	MU_CHECK(fltcmp(T[5], 1.0) != 0);
-	MU_CHECK(fltcmp(T[10], 1.0) != 0);
+  /* Assert */
+  MU_CHECK(fltcmp(T[0], 1.0) == 0);
+  MU_CHECK(fltcmp(T[5], 1.0) != 0);
+  MU_CHECK(fltcmp(T[10], 1.0) != 0);
 
-	return 0;
+  return 0;
 }
 
 int test_tf_perturb_trans() {
@@ -860,17 +855,17 @@ int test_tf_perturb_trans() {
                      0.0, 0.0, 0.0, 1.0};
   /* clang-format on */
 
-	/* Perturb translation */
-	const double step_size = 1e-2;
-	tf_perturb_trans(T, step_size, 0);
-	print_matrix("T", T, 4, 4);
+  /* Perturb translation */
+  const double step_size = 1e-2;
+  tf_perturb_trans(T, step_size, 0);
+  print_matrix("T", T, 4, 4);
 
-	/* Assert */
-	MU_CHECK(fltcmp(T[3], 1.01) == 0);
-	MU_CHECK(fltcmp(T[7], 2.0) == 0);
-	MU_CHECK(fltcmp(T[11], 3.0) == 0);
+  /* Assert */
+  MU_CHECK(fltcmp(T[3], 1.01) == 0);
+  MU_CHECK(fltcmp(T[7], 2.0) == 0);
+  MU_CHECK(fltcmp(T[11], 3.0) == 0);
 
-	return 0;
+  return 0;
 }
 
 int test_euler321() {
@@ -941,114 +936,114 @@ int test_quat2rot() {
   return 0;
 }
 
-int test_pose_init() {
-  pose_t pose;
-
-  timestamp_t ts = 0;
-  double q[4] = {1.0, 2.0, 3.0, 4.0};
-  double r[3] = {1.0, 2.0, 3.0};
-  pose_init(&pose, ts, q, r);
-
-  MU_CHECK(pose.ts == 0);
-  MU_CHECK(fltcmp(pose.q[0], 1.0) == 0);
-  MU_CHECK(fltcmp(pose.q[1], 2.0) == 0);
-  MU_CHECK(fltcmp(pose.q[2], 3.0) == 0);
-  MU_CHECK(fltcmp(pose.q[3], 4.0) == 0);
-  MU_CHECK(fltcmp(pose.r[0], 1.0) == 0);
-  MU_CHECK(fltcmp(pose.r[1], 2.0) == 0);
-  MU_CHECK(fltcmp(pose.r[2], 3.0) == 0);
-
-  return 0;
-}
-
-int test_pose_set_get_quat() {
-  pose_t pose;
-
-  double q[4] = {1.0, 2.0, 3.0, 4.0};
-  pose_set_quat(&pose, q);
-
-  double q_got[4] = {1.0, 2.0, 3.0, 4.0};
-  pose_get_quat(&pose, q_got);
-
-  MU_CHECK(fltcmp(pose.q[0], 1.0) == 0);
-  MU_CHECK(fltcmp(pose.q[1], 2.0) == 0);
-  MU_CHECK(fltcmp(pose.q[2], 3.0) == 0);
-  MU_CHECK(fltcmp(pose.q[3], 4.0) == 0);
-
-  MU_CHECK(fltcmp(q_got[0], 1.0) == 0);
-  MU_CHECK(fltcmp(q_got[1], 2.0) == 0);
-  MU_CHECK(fltcmp(q_got[2], 3.0) == 0);
-  MU_CHECK(fltcmp(q_got[3], 4.0) == 0);
-
-  return 0;
-}
-
-int test_pose_set_get_trans() {
-  pose_t pose;
-
-  double r[3] = {1.0, 2.0, 3.0};
-  pose_set_trans(&pose, r);
-
-  double r_got[3] = {1.0, 2.0, 3.0};
-  pose_get_trans(&pose, r_got);
-
-  MU_CHECK(fltcmp(pose.r[0], 1.0) == 0);
-  MU_CHECK(fltcmp(pose.r[1], 2.0) == 0);
-  MU_CHECK(fltcmp(pose.r[2], 3.0) == 0);
-
-  MU_CHECK(fltcmp(r_got[0], 1.0) == 0);
-  MU_CHECK(fltcmp(r_got[1], 2.0) == 0);
-  MU_CHECK(fltcmp(r_got[2], 3.0) == 0);
-
-  return 0;
-}
-
-int test_pose_print() {
-  pose_t pose;
-
-  timestamp_t ts = 0;
-  double q[4] = {1.0, 0.0, 0.0, 0.0};
-  double r[3] = {0.0, 0.0, 0.0};
-  pose_init(&pose, ts, q, r);
-  pose_print("pose", &pose);
-
-  return 0;
-}
-
-int test_pose2tf() {
-  pose_t pose;
-
-  timestamp_t ts = 0;
-  double q[4] = {1.0, 0.0, 0.0, 0.0};
-  double r[3] = {1.0, 2.0, 3.0};
-  pose_init(&pose, ts, q, r);
-
-  double T[4 * 4] = {0};
-  pose2tf(&pose, T);
-  /* print_matrix("T", T, 4, 4); */
-
-  MU_CHECK(fltcmp(T[0], 1.0) == 0);
-  MU_CHECK(fltcmp(T[5], 1.0) == 0);
-  MU_CHECK(fltcmp(T[10], 1.0) == 0);
-
-  MU_CHECK(fltcmp(T[3], 1.0) == 0);
-  MU_CHECK(fltcmp(T[7], 2.0) == 0);
-  MU_CHECK(fltcmp(T[11], 3.0) == 0);
-
-  return 0;
-}
-
-int test_load_poses() {
-  int nb_poses = 0;
-  pose_t *poses = load_poses(TEST_POSES_CSV, &nb_poses);
-
-  for (int i = 0; i < nb_poses; i++) {
-    pose_print("pose", &poses[i]);
-  }
-  free(poses);
-
-  return 0;
-}
+/* int test_pose_init() { */
+/*   pose_t pose; */
+/*  */
+/*   timestamp_t ts = 0; */
+/*   double q[4] = {1.0, 2.0, 3.0, 4.0}; */
+/*   double r[3] = {1.0, 2.0, 3.0}; */
+/*   pose_init(&pose, ts, q, r); */
+/*  */
+/*   MU_CHECK(pose.ts == 0); */
+/*   MU_CHECK(fltcmp(pose.q[0], 1.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.q[1], 2.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.q[2], 3.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.q[3], 4.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.r[0], 1.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.r[1], 2.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.r[2], 3.0) == 0); */
+/*  */
+/*   return 0; */
+/* } */
+/*  */
+/* int test_pose_set_get_quat() { */
+/*   pose_t pose; */
+/*  */
+/*   double q[4] = {1.0, 2.0, 3.0, 4.0}; */
+/*   pose_set_quat(&pose, q); */
+/*  */
+/*   double q_got[4] = {1.0, 2.0, 3.0, 4.0}; */
+/*   pose_get_quat(&pose, q_got); */
+/*  */
+/*   MU_CHECK(fltcmp(pose.q[0], 1.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.q[1], 2.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.q[2], 3.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.q[3], 4.0) == 0); */
+/*  */
+/*   MU_CHECK(fltcmp(q_got[0], 1.0) == 0); */
+/*   MU_CHECK(fltcmp(q_got[1], 2.0) == 0); */
+/*   MU_CHECK(fltcmp(q_got[2], 3.0) == 0); */
+/*   MU_CHECK(fltcmp(q_got[3], 4.0) == 0); */
+/*  */
+/*   return 0; */
+/* } */
+/*  */
+/* int test_pose_set_get_trans() { */
+/*   pose_t pose; */
+/*  */
+/*   double r[3] = {1.0, 2.0, 3.0}; */
+/*   pose_set_trans(&pose, r); */
+/*  */
+/*   double r_got[3] = {1.0, 2.0, 3.0}; */
+/*   pose_get_trans(&pose, r_got); */
+/*  */
+/*   MU_CHECK(fltcmp(pose.r[0], 1.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.r[1], 2.0) == 0); */
+/*   MU_CHECK(fltcmp(pose.r[2], 3.0) == 0); */
+/*  */
+/*   MU_CHECK(fltcmp(r_got[0], 1.0) == 0); */
+/*   MU_CHECK(fltcmp(r_got[1], 2.0) == 0); */
+/*   MU_CHECK(fltcmp(r_got[2], 3.0) == 0); */
+/*  */
+/*   return 0; */
+/* } */
+/*  */
+/* int test_pose_print() { */
+/*   pose_t pose; */
+/*  */
+/*   timestamp_t ts = 0; */
+/*   double q[4] = {1.0, 0.0, 0.0, 0.0}; */
+/*   double r[3] = {0.0, 0.0, 0.0}; */
+/*   pose_init(&pose, ts, q, r); */
+/*   pose_print("pose", &pose); */
+/*  */
+/*   return 0; */
+/* } */
+/*  */
+/* int test_pose2tf() { */
+/*   pose_t pose; */
+/*  */
+/*   timestamp_t ts = 0; */
+/*   double q[4] = {1.0, 0.0, 0.0, 0.0}; */
+/*   double r[3] = {1.0, 2.0, 3.0}; */
+/*   pose_init(&pose, ts, q, r); */
+/*  */
+/*   double T[4 * 4] = {0}; */
+/*   pose2tf(&pose, T); */
+/*   #<{(| print_matrix("T", T, 4, 4); |)}># */
+/*  */
+/*   MU_CHECK(fltcmp(T[0], 1.0) == 0); */
+/*   MU_CHECK(fltcmp(T[5], 1.0) == 0); */
+/*   MU_CHECK(fltcmp(T[10], 1.0) == 0); */
+/*  */
+/*   MU_CHECK(fltcmp(T[3], 1.0) == 0); */
+/*   MU_CHECK(fltcmp(T[7], 2.0) == 0); */
+/*   MU_CHECK(fltcmp(T[11], 3.0) == 0); */
+/*  */
+/*   return 0; */
+/* } */
+/*  */
+/* int test_load_poses() { */
+/*   int nb_poses = 0; */
+/*   pose_t *poses = load_poses(TEST_POSES_CSV, &nb_poses); */
+/*  */
+/*   for (int i = 0; i < nb_poses; i++) { */
+/*     pose_print("pose", &poses[i]); */
+/*   } */
+/*   free(poses); */
+/*  */
+/*   return 0; */
+/* } */
 
 void test_suite() {
   /* DATA */
@@ -1087,9 +1082,9 @@ void test_suite() {
 
   /* CHOL */
   MU_ADD_TEST(test_chol);
-  MU_ADD_TEST(test_chol_lls_solve);
+  MU_ADD_TEST(test_chol_solve);
 #ifdef USE_LAPACK
-  MU_ADD_TEST(test_chol_lls_solve2);
+  MU_ADD_TEST(test_chol_solve2);
 #endif
 
   /* TRANSFORMS */
@@ -1101,20 +1096,20 @@ void test_suite() {
   MU_ADD_TEST(test_tf_inv);
   MU_ADD_TEST(test_tf_point);
   MU_ADD_TEST(test_tf_hpoint);
-	MU_ADD_TEST(test_tf_perturb_rot);
-	MU_ADD_TEST(test_tf_perturb_trans);
+  MU_ADD_TEST(test_tf_perturb_rot);
+  MU_ADD_TEST(test_tf_perturb_trans);
   MU_ADD_TEST(test_euler321);
   MU_ADD_TEST(test_rot2quat);
   MU_ADD_TEST(test_quat2euler);
   MU_ADD_TEST(test_quat2rot);
 
-  /* POSE */
-  MU_ADD_TEST(test_pose_init);
-  MU_ADD_TEST(test_pose_set_get_quat);
-  MU_ADD_TEST(test_pose_set_get_trans);
-  MU_ADD_TEST(test_pose_print);
-  MU_ADD_TEST(test_pose2tf);
-  MU_ADD_TEST(test_load_poses);
+  /* #<{(| POSE |)}># */
+  /* MU_ADD_TEST(test_pose_init); */
+  /* MU_ADD_TEST(test_pose_set_get_quat); */
+  /* MU_ADD_TEST(test_pose_set_get_trans); */
+  /* MU_ADD_TEST(test_pose_print); */
+  /* MU_ADD_TEST(test_pose2tf); */
+  /* MU_ADD_TEST(test_load_poses); */
 }
 
 MU_RUN_TESTS(test_suite);

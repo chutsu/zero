@@ -5,27 +5,20 @@ DEP_DIR=$(PWD)/dep
 TESTS_DIR=$(PWD)/tests
 
 # COMPILER SETTINGS
-CC=tcc
+# CC=tcc
+CC=gcc
 
-CFLAGS= \
-	-Wall \
-	-O3 \
-	-D_DEFAULT_SOURCE \
-	-D_POSIX_C_SOURCE=199309L \
-	-I$(INC_DIR)
+CFLAGS= -O3 -Wall -I$(INC_DIR)
 
 LIBS=-L$(BLD_DIR) \
 	-lzero \
+	-lgsl \
+	-lblas \
+	-llapack \
 	-lpthread \
 	-lm \
-	-llapack \
 	-L/usr/X11R6/lib -lX11 \
 	-lGL -lGLU
-
-	# -lblas \
-	# -llapack \
-	# -lgfortran \
-	# -lgsl \
 
 # ARCHIVER SETTTINGS
 AR = ar

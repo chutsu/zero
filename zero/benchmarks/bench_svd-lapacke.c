@@ -33,7 +33,7 @@ int svd(double *A, int m, int n, double *U, double *s, double *V_t) {
 }
 
 int main() {
-  for (size_t k = 10; k <= 1000; k+=10) {
+  for (size_t k = 10; k <= 1000; k += 10) {
     size_t m = k;
     double *A = create_random_sq_matrix(m);
     double *U = malloc(sizeof(double) * m * m);

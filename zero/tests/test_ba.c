@@ -10,140 +10,137 @@
 #define STEP_SIZE 1e-8
 #define THRESHOLD 1e-3
 
-static void project(const double *K,
-										const double *T_WC,
-										const double *p_W,
-										double *z) {
-	/* Invert camera pose to T_CW */
-	double T_CW[4 * 4] = {0};
-	tf_inv(T_WC, T_CW);
+static void
+project(const double *K, const double *T_WC, const double *p_W, double *z) {
+  /* Invert camera pose to T_CW */
+  double T_CW[4 * 4] = {0};
+  tf_inv(T_WC, T_CW);
 
-	/* Transform point from world frame to camera frame */
-	double p_C[3] = {0};
-	tf_point(T_CW, p_W, p_C);
+  /* Transform point from world frame to camera frame */
+  double p_C[3] = {0};
+  tf_point(T_CW, p_W, p_C);
 
-	/* Project */
-	const double x = p_C[0] / p_C[2];
-	const double y = p_C[1] / p_C[2];
+  /* Project */
+  const double x = p_C[0] / p_C[2];
+  const double y = p_C[1] / p_C[2];
 
-	/* Scale and center */
-	const double fx = K[0];
-	const double fy = K[4];
-	const double cx = K[2];
-	const double cy = K[5];
-	z[0] = fx * x + cx;
-	z[1] = fy * y + cy;
+  /* Scale and center */
+  const double fx = K[0];
+  const double fy = K[4];
+  const double cx = K[2];
+  const double cy = K[5];
+  z[0] = fx * x + cx;
+  z[1] = fy * y + cy;
 }
 
 static int check_J_cam_pose(const double *cam_K,
-														const double *T_WC,
-														const double *p_W,
-														const double *J_cam_pose) {
-	const double step_size = 1e-8;
-	const double threshold = 1e-2;
+                            const double *T_WC,
+                            const double *p_W,
+                            const double *J_cam_pose) {
+  const double step_size = 1e-8;
+  const double threshold = 1e-2;
   const double z[2] = {0.0, 0.0};
   double fdiff[2 * 6] = {0.0};
 
   // Perturb rotation
   for (int i = 0; i < 3; i++) {
     // Forward difference
-		// -- Perturb rotation
+    // -- Perturb rotation
     double T_WC_fd[4 * 4] = {0};
-		mat_copy(T_WC, 4, 4, T_WC_fd);
-		tf_perturb_rot(T_WC_fd, step_size, i);
-		// -- Project landmark to image plane
-		double z_fd[2] = {0};
-		project(cam_K, T_WC_fd, p_W, z_fd);
-		// -- Calculate reprojection error
-		double e_fd[2] = {0};
-		e_fd[0] = z[0] - z_fd[0];
-		e_fd[1] = z[1] - z_fd[1];
+    mat_copy(T_WC, 4, 4, T_WC_fd);
+    tf_perturb_rot(T_WC_fd, step_size, i);
+    // -- Project landmark to image plane
+    double z_fd[2] = {0};
+    project(cam_K, T_WC_fd, p_W, z_fd);
+    // -- Calculate reprojection error
+    double e_fd[2] = {0};
+    e_fd[0] = z[0] - z_fd[0];
+    e_fd[1] = z[1] - z_fd[1];
 
     // Backward difference
-		// -- Perturb rotation
+    // -- Perturb rotation
     double T_WC_bd[4 * 4] = {0};
-		mat_copy(T_WC, 4, 4, T_WC_bd);
-		tf_perturb_rot(T_WC_bd, -step_size, i);
-		// -- Project landmark to image plane
-		double z_bd[2] = {0};
-		project(cam_K, T_WC_bd, p_W, z_bd);
-		// -- Calculate reprojection error
-		double e_bd[2] = {0};
-		e_bd[0] = z[0] - z_bd[0];
-		e_bd[1] = z[1] - z_bd[1];
+    mat_copy(T_WC, 4, 4, T_WC_bd);
+    tf_perturb_rot(T_WC_bd, -step_size, i);
+    // -- Project landmark to image plane
+    double z_bd[2] = {0};
+    project(cam_K, T_WC_bd, p_W, z_bd);
+    // -- Calculate reprojection error
+    double e_bd[2] = {0};
+    e_bd[0] = z[0] - z_bd[0];
+    e_bd[1] = z[1] - z_bd[1];
 
-		// Set finite difference
-		fdiff[i] = (e_fd[0] - e_bd[0]) / (2 * step_size);
-		fdiff[i + 6] = (e_fd[1] - e_bd[1]) / (2 * step_size);
+    // Set finite difference
+    fdiff[i] = (e_fd[0] - e_bd[0]) / (2 * step_size);
+    fdiff[i + 6] = (e_fd[1] - e_bd[1]) / (2 * step_size);
   }
 
   // Perturb translation
   for (int i = 0; i < 3; i++) {
     // Forward difference
-		// -- Perturb translation
+    // -- Perturb translation
     double T_WC_fd[4 * 4] = {0};
-		mat_copy(T_WC, 4, 4, T_WC_fd);
-		tf_perturb_trans(T_WC_fd, step_size, i);
-		// -- Project landmark to image plane
-		double z_fd[2] = {0};
-		project(cam_K, T_WC_fd, p_W, z_fd);
-		// -- Calculate reprojection error
-		double e_fd[2] = {z[0] - z_fd[0], z[1] - z_fd[1]};
+    mat_copy(T_WC, 4, 4, T_WC_fd);
+    tf_perturb_trans(T_WC_fd, step_size, i);
+    // -- Project landmark to image plane
+    double z_fd[2] = {0};
+    project(cam_K, T_WC_fd, p_W, z_fd);
+    // -- Calculate reprojection error
+    double e_fd[2] = {z[0] - z_fd[0], z[1] - z_fd[1]};
 
     // Backward difference
-		// -- Perturb translation
+    // -- Perturb translation
     double T_WC_bd[4 * 4] = {0};
-		mat_copy(T_WC, 4, 4, T_WC_bd);
-		tf_perturb_trans(T_WC_bd, -step_size, i);
-		// -- Project landmark to image plane
-		double z_bd[2] = {0};
-		project(cam_K, T_WC_bd, p_W, z_bd);
-		// -- Calculate reprojection error
-		double e_bd[2] = {z[0] - z_bd[0], z[1] - z_bd[1]};
+    mat_copy(T_WC, 4, 4, T_WC_bd);
+    tf_perturb_trans(T_WC_bd, -step_size, i);
+    // -- Project landmark to image plane
+    double z_bd[2] = {0};
+    project(cam_K, T_WC_bd, p_W, z_bd);
+    // -- Calculate reprojection error
+    double e_bd[2] = {z[0] - z_bd[0], z[1] - z_bd[1]};
 
-		// Set finite difference
-		fdiff[i + 3] = (e_fd[0] - e_bd[0]) / (2 * step_size);
-		fdiff[i + 9] = (e_fd[1] - e_bd[1]) / (2 * step_size);
+    // Set finite difference
+    fdiff[i + 3] = (e_fd[0] - e_bd[0]) / (2 * step_size);
+    fdiff[i + 9] = (e_fd[1] - e_bd[1]) / (2 * step_size);
   }
 
   return check_jacobian("J_cam_pose", fdiff, J_cam_pose, 2, 6, threshold, 1);
 }
 
-
 static int check_J_landmark(const double *cam_K,
-														const double *T_WC,
-														const double *p_W,
-														const double *J_landmark) {
-	const double step_size = 1e-8;
-	const double threshold = 1e-2;
+                            const double *T_WC,
+                            const double *p_W,
+                            const double *J_landmark) {
+  const double step_size = 1e-8;
+  const double threshold = 1e-2;
   const double z[2] = {0.0, 0.0};
   double fdiff[2 * 6] = {0.0};
 
   // Perturb landmark
   for (int i = 0; i < 3; i++) {
     // Forward difference
-		// -- Perturb landmark
+    // -- Perturb landmark
     double p_W_fd[3] = {p_W[0], p_W[1], p_W[2]};
-		p_W_fd[i] += step_size;
-		// -- Project landmark to image plane
-		double z_fd[2] = {0};
-		project(cam_K, T_WC, p_W_fd, z_fd);
-		// -- Calculate reprojection error
-		double e_fd[2] = {z[0] - z_fd[0], z[1] - z_fd[1]};
+    p_W_fd[i] += step_size;
+    // -- Project landmark to image plane
+    double z_fd[2] = {0};
+    project(cam_K, T_WC, p_W_fd, z_fd);
+    // -- Calculate reprojection error
+    double e_fd[2] = {z[0] - z_fd[0], z[1] - z_fd[1]};
 
     // Backward difference
-		// -- Perturb landmark
+    // -- Perturb landmark
     double p_W_bd[3] = {p_W[0], p_W[1], p_W[2]};
-		p_W_bd[i] -= step_size;
-		// -- Project landmark to image plane
-		double z_bd[2] = {0};
-		project(cam_K, T_WC, p_W_bd, z_bd);
-		// -- Calculate reprojection error
-		double e_bd[2] = {z[0] - z_bd[0], z[1] - z_bd[1]};
+    p_W_bd[i] -= step_size;
+    // -- Project landmark to image plane
+    double z_bd[2] = {0};
+    project(cam_K, T_WC, p_W_bd, z_bd);
+    // -- Calculate reprojection error
+    double e_bd[2] = {z[0] - z_bd[0], z[1] - z_bd[1]};
 
-		// Set finite difference
-		fdiff[i] = (e_fd[0] - e_bd[0]) / (2 * step_size);
-		fdiff[i + 3] = (e_fd[1] - e_bd[1]) / (2 * step_size);
+    // Set finite difference
+    fdiff[i] = (e_fd[0] - e_bd[0]) / (2 * step_size);
+    fdiff[i + 3] = (e_fd[1] - e_bd[1]) / (2 * step_size);
   }
 
   return check_jacobian("J_landmark", fdiff, J_landmark, 2, 3, threshold, 1);
@@ -214,127 +211,119 @@ int test_ba_residuals() {
 }
 
 int test_J_cam_pose() {
-	/* Setup camera intrinsics */
-	double cam_K[3 * 3] = {
-		640.0, 0.0, 320.0,
-		0.0, 480.0, 240.0,
-		0.0, 0.0, 1.0
-	};
+  /* Setup camera intrinsics */
+  double cam_K[3 * 3] = {640.0, 0.0, 320.0, 0.0, 480.0, 240.0, 0.0, 0.0, 1.0};
 
-	/* Setup camera pose */
-	/* -- Rotation -- */
-	const double roll = deg2rad(-90.0);
-	const double pitch = deg2rad(0.0);
-	const double yaw = deg2rad(-90.0);
-	const double rpy[3] = {roll, pitch, yaw};
-	double C_WC[3 * 3] = {0};
-	double q_WC[4] = {0};
-	euler321(rpy, C_WC);
-	rot2quat(C_WC, q_WC);
-	/* -- Translation -- */
-	double r_WC[3] = {0.1, 0.2, 0.3};
-	/* -- Transform -- */
-	double T_WC[4 * 4] = {0};
-	tf_rot_set(T_WC, C_WC);
-	tf_trans_set(T_WC, r_WC);
-	mat_set(T_WC, 4, 3, 3, 1.0);
+  /* Setup camera pose */
+  /* -- Rotation -- */
+  const double roll = deg2rad(-90.0);
+  const double pitch = deg2rad(0.0);
+  const double yaw = deg2rad(-90.0);
+  const double rpy[3] = {roll, pitch, yaw};
+  double C_WC[3 * 3] = {0};
+  double q_WC[4] = {0};
+  euler321(rpy, C_WC);
+  rot2quat(C_WC, q_WC);
+  /* -- Translation -- */
+  double r_WC[3] = {0.1, 0.2, 0.3};
+  /* -- Transform -- */
+  double T_WC[4 * 4] = {0};
+  tf_rot_set(T_WC, C_WC);
+  tf_trans_set(T_WC, r_WC);
+  mat_set(T_WC, 4, 3, 3, 1.0);
 
-	/* Landmark in world frame */
-	double p_W[3] = {10.0, 0.0, 0.0};
+  /* Landmark in world frame */
+  double p_W[3] = {10.0, 0.0, 0.0};
 
-	/* Transform point in world frame to camera frame */
-	double T_CW[4 * 4] = {0};
-	double p_C[3] = {0};
-	tf_inv(T_WC, T_CW);
-	tf_point(T_CW, p_W, p_C);
+  /* Transform point in world frame to camera frame */
+  double T_CW[4 * 4] = {0};
+  double p_C[3] = {0};
+  tf_inv(T_WC, T_CW);
+  tf_point(T_CW, p_W, p_C);
 
-	/* -- Form jacobians */
-	double J_K[2 * 2] = {0};
-	double J_P[2 * 3] = {0};
-	double J_h[2 * 3] = {0};
-	J_intrinsics_point(cam_K, J_K);
-	J_project(p_C, J_P);
-	dot(J_K, 2, 2, J_P, 2, 3, J_h);
+  /* -- Form jacobians */
+  double J_K[2 * 2] = {0};
+  double J_P[2 * 3] = {0};
+  double J_h[2 * 3] = {0};
+  J_intrinsics_point(cam_K, J_K);
+  J_project(p_C, J_P);
+  dot(J_K, 2, 2, J_P, 2, 3, J_h);
 
-	/* J_cam_rot = -1 * J_K * J_P * J_C; */
-	double J_C[3 * 3] = {0};
-	double J_cam_rot[2 * 3] = {0};
-	J_camera_rotation(q_WC, r_WC, p_W, J_C);
-	dot(J_h, 2, 3, J_C, 3, 3, J_cam_rot);
-	mat_scale(J_cam_rot, 2, 3, -1);
+  /* J_cam_rot = -1 * J_K * J_P * J_C; */
+  double J_C[3 * 3] = {0};
+  double J_cam_rot[2 * 3] = {0};
+  J_camera_rotation(q_WC, r_WC, p_W, J_C);
+  dot(J_h, 2, 3, J_C, 3, 3, J_cam_rot);
+  mat_scale(J_cam_rot, 2, 3, -1);
 
-	/* J_cam_pos = -1 * J_K * J_P * J_r; */
-	double J_r[3 * 3] = {0};
-	double J_cam_pos[2 * 3] = {0};
-	J_camera_translation(q_WC, J_r);
-	dot(J_h, 2, 3, J_r, 3, 3, J_cam_pos);
-	mat_scale(J_cam_pos, 2, 3, -1);
+  /* J_cam_pos = -1 * J_K * J_P * J_r; */
+  double J_r[3 * 3] = {0};
+  double J_cam_pos[2 * 3] = {0};
+  J_camera_translation(q_WC, J_r);
+  dot(J_h, 2, 3, J_r, 3, 3, J_cam_pos);
+  mat_scale(J_cam_pos, 2, 3, -1);
 
-	/* Form J_cam_pose */
-	double J_cam_pose[2 * 6] = {0};
-	mat_block_set(J_cam_pose, 6, 0, 0, 1, 2, J_cam_rot);
-	mat_block_set(J_cam_pose, 6, 0, 3, 1, 5, J_cam_pos);
+  /* Form J_cam_pose */
+  double J_cam_pose[2 * 6] = {0};
+  mat_block_set(J_cam_pose, 6, 0, 0, 1, 2, J_cam_rot);
+  mat_block_set(J_cam_pose, 6, 0, 3, 1, 5, J_cam_pos);
 
-	/* Check jacobians */
-	int retval = check_J_cam_pose(cam_K, T_WC, p_W, J_cam_pose);
-	MU_CHECK(retval == 0);
+  /* Check jacobians */
+  int retval = check_J_cam_pose(cam_K, T_WC, p_W, J_cam_pose);
+  MU_CHECK(retval == 0);
 
-	return 0;
+  return 0;
 }
 
 int test_J_landmark() {
-	/* Setup camera intrinsics */
-	double cam_K[3 * 3] = {
-		640.0, 0.0, 320.0,
-		0.0, 480.0, 240.0,
-		0.0, 0.0, 1.0
-	};
+  /* Setup camera intrinsics */
+  double cam_K[3 * 3] = {640.0, 0.0, 320.0, 0.0, 480.0, 240.0, 0.0, 0.0, 1.0};
 
-	/* Setup camera pose */
-	/* -- Rotation -- */
-	const double roll = deg2rad(-90.0);
-	const double pitch = deg2rad(0.0);
-	const double yaw = deg2rad(-90.0);
-	const double rpy[3] = {roll, pitch, yaw};
-	double C_WC[3 * 3] = {0};
-	double q_WC[4] = {0};
-	euler321(rpy, C_WC);
-	rot2quat(C_WC, q_WC);
-	/* -- Translation -- */
-	double r_WC[3] = {0.1, 0.2, 0.3};
-	/* -- Transform -- */
-	double T_WC[4 * 4] = {0};
-	tf_rot_set(T_WC, C_WC);
-	tf_trans_set(T_WC, r_WC);
-	mat_set(T_WC, 4, 3, 3, 1.0);
+  /* Setup camera pose */
+  /* -- Rotation -- */
+  const double roll = deg2rad(-90.0);
+  const double pitch = deg2rad(0.0);
+  const double yaw = deg2rad(-90.0);
+  const double rpy[3] = {roll, pitch, yaw};
+  double C_WC[3 * 3] = {0};
+  double q_WC[4] = {0};
+  euler321(rpy, C_WC);
+  rot2quat(C_WC, q_WC);
+  /* -- Translation -- */
+  double r_WC[3] = {0.1, 0.2, 0.3};
+  /* -- Transform -- */
+  double T_WC[4 * 4] = {0};
+  tf_rot_set(T_WC, C_WC);
+  tf_trans_set(T_WC, r_WC);
+  mat_set(T_WC, 4, 3, 3, 1.0);
 
-	/* Landmark in world frame */
-	double p_W[3] = {10.0, 0.0, 0.0};
+  /* Landmark in world frame */
+  double p_W[3] = {10.0, 0.0, 0.0};
 
-	/* Transform point in world frame to camera frame */
-	double T_CW[4 * 4] = {0};
-	double p_C[3] = {0};
-	tf_inv(T_WC, T_CW);
-	tf_point(T_CW, p_W, p_C);
+  /* Transform point in world frame to camera frame */
+  double T_CW[4 * 4] = {0};
+  double p_C[3] = {0};
+  tf_inv(T_WC, T_CW);
+  tf_point(T_CW, p_W, p_C);
 
-	/* -- Form jacobians */
-	double J_K[2 * 2] = {0};
-	double J_P[2 * 3] = {0};
-	double J_KP[2 * 3] = {0};
-	double J_L[3 * 3] = {0};
-	double J_landmark[2 * 3] = {0};
-	J_intrinsics_point(cam_K, J_K);
-	J_project(p_C, J_P);
-	J_target_point(q_WC, J_L);
-	dot(J_K, 2, 2, J_P, 2, 3, J_KP);
-	dot(J_KP, 2, 3, J_L, 3, 3, J_landmark);
-	mat_scale(J_landmark, 2, 3, -1);
+  /* -- Form jacobians */
+  double J_K[2 * 2] = {0};
+  double J_P[2 * 3] = {0};
+  double J_KP[2 * 3] = {0};
+  double J_L[3 * 3] = {0};
+  double J_landmark[2 * 3] = {0};
+  J_intrinsics_point(cam_K, J_K);
+  J_project(p_C, J_P);
+  J_target_point(q_WC, J_L);
+  dot(J_K, 2, 2, J_P, 2, 3, J_KP);
+  dot(J_KP, 2, 3, J_L, 3, 3, J_landmark);
+  mat_scale(J_landmark, 2, 3, -1);
 
-	/* Check jacobians */
-	int retval = check_J_landmark(cam_K, T_WC, p_W, J_landmark);
-	MU_CHECK(retval == 0);
+  /* Check jacobians */
+  int retval = check_J_landmark(cam_K, T_WC, p_W, J_landmark);
+  MU_CHECK(retval == 0);
 
-	return 0;
+  return 0;
 }
 
 int test_ba_jacobian() {
@@ -356,20 +345,20 @@ int test_ba_jacobian() {
   /* int index = 0; */
   /* int jac_ok = 1; */
 
-/*   for (int i = 0; i < nb_rows; i++) { */
-/*     for (int j = 0; j < nb_cols; j++) { */
-/*       if (fabs(J_data[i][j] - J[index]) > 1e-5) { */
-/*         printf("row: [%d] col: [%d] index: [%d] ", i, j, index); */
-/*         printf("expected: [%f] ", J_data[i][j]); */
-/*         printf("got: [%f]\n", J[index]); */
-/*         jac_ok = 0; */
-/*         goto end; */
-/*       } */
-/*       index++; */
-/*     } */
-/*   } */
-/* end: */
-/*   MU_CHECK(jac_ok == 1); */
+  /*   for (int i = 0; i < nb_rows; i++) { */
+  /*     for (int j = 0; j < nb_cols; j++) { */
+  /*       if (fabs(J_data[i][j] - J[index]) > 1e-5) { */
+  /*         printf("row: [%d] col: [%d] index: [%d] ", i, j, index); */
+  /*         printf("expected: [%f] ", J_data[i][j]); */
+  /*         printf("got: [%f]\n", J[index]); */
+  /*         jac_ok = 0; */
+  /*         goto end; */
+  /*       } */
+  /*       index++; */
+  /*     } */
+  /*   } */
+  /* end: */
+  /*   MU_CHECK(jac_ok == 1); */
 
   /* Clean up */
   free(J);
@@ -411,11 +400,12 @@ int test_ba_update() {
   free(E_t);
   /* -- Solve linear system: H dx = g */
   double *dx = vec_new(E_cols);
-  chol_lls_solve(H, g, dx, E_cols);
+  chol_solve(H, g, dx, E_cols);
   free(H);
   free(g);
 
   ba_update(data, dx);
+  free(dx);
   /* OCTAVE_SCRIPT("scripts/plot_matrix.m /tmp/H_before.csv"); */
   /* OCTAVE_SCRIPT("scripts/plot_matrix.m /tmp/H_after.csv"); */
 
@@ -441,8 +431,10 @@ int test_ba_cost() {
 }
 
 int test_ba_solve() {
+  struct timespec t_start = tic();
   ba_data_t *data = ba_load_data(TEST_BA_DATA);
   ba_solve(data);
+  printf("time taken: %f\n", toc(&t_start));
   ba_data_free(data);
 
   return 0;

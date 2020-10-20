@@ -4,6 +4,11 @@
 #include <string.h>
 
 #include "zero/zero.h"
+#include "zero/se.h"
+
+/* #include <gsl/gsl_vector.h> */
+/* #include <gsl/gsl_matrix.h> */
+/* #include <gsl/gsl_linalg.h> */
 
 static void load_camera(const char *data_path, double K[3 * 3]) {
   /* Setup csv path */
@@ -37,14 +42,63 @@ static void load_camera(const char *data_path, double K[3 * 3]) {
   free(cam_K);
 }
 
-static pose_t *load_camera_poses(const char *data_path, int *nb_cam_poses) {
+static double **load_poses(const char *csv_path, int *nb_poses) {
+  assert(csv_path != NULL);
+  assert(nb_poses != NULL);
+
+  FILE *csv_file = fopen(csv_path, "r");
+  char line[MAX_LINE_LENGTH] = {0};
+  *nb_poses = csv_rows(csv_path);
+  double **poses = malloc(sizeof(double *) * *nb_poses);
+
+  int pose_idx = 0;
+  while (fgets(line, MAX_LINE_LENGTH, csv_file) != NULL) {
+    if (line[0] == '#') {
+      continue;
+    }
+
+    char entry[MAX_LINE_LENGTH] = {0};
+    double data[7] = {0};
+    int index = 0;
+    for (size_t i = 0; i < strlen(line); i++) {
+      char c = line[i];
+      if (c == ' ') {
+        continue;
+      }
+
+      if (c == ',' || c == '\n') {
+        data[index] = strtod(entry, NULL);
+        memset(entry, '\0', sizeof(char) * 100);
+        index++;
+      } else {
+        entry[strlen(entry)] = c;
+      }
+    }
+
+    poses[pose_idx] = malloc(sizeof(double) * 7);
+    poses[pose_idx][0] = data[0];
+    poses[pose_idx][1] = data[1];
+    poses[pose_idx][2] = data[2];
+    poses[pose_idx][3] = data[3];
+    poses[pose_idx][4] = data[4];
+    poses[pose_idx][5] = data[5];
+    poses[pose_idx][6] = data[6];
+
+    pose_idx++;
+  }
+  fclose(csv_file);
+
+  return poses;
+}
+
+static double **load_camera_poses(const char *data_path, int *nb_cam_poses) {
   char cam_poses_csv[1000] = {0};
   strcat(cam_poses_csv, data_path);
   strcat(cam_poses_csv, "/camera_poses.csv");
   return load_poses(cam_poses_csv, nb_cam_poses);
 }
 
-static pose_t *load_target_pose(const char *data_path) {
+static double **load_target_pose(const char *data_path) {
   char target_pose_csv[1000] = {0};
   strcat(target_pose_csv, data_path);
   strcat(target_pose_csv, "/target_pose.csv");
@@ -214,8 +268,8 @@ struct ba_data_t {
   double cam_K[3 * 3];
 
   int nb_frames;
-  pose_t *cam_poses;
-  pose_t *target_pose;
+  double **cam_poses;
+  double **target_pose;
 
   keypoints_t **keypoints;
   int **point_ids;
@@ -240,9 +294,13 @@ ba_data_t *ba_load_data(const char *data_path) {
 
 void ba_data_free(ba_data_t *data) {
   /* Camera poses */
+  for (int k = 0; k < data->nb_frames; k++) {
+    free(data->cam_poses[k]);
+  }
   free(data->cam_poses);
 
   /* Target pose */
+  free(data->target_pose[0]);
   free(data->target_pose);
 
   /* Keypoints */
@@ -285,14 +343,14 @@ double *ba_residuals(ba_data_t *data, int *r_size) {
 
   /* Target pose */
   double T_WT[4 * 4] = {0};
-  pose2tf(data->target_pose, T_WT);
+  tf(data->target_pose[0], T_WT);
 
   /* Loop over time */
   int res_idx = 0; /* Residual index */
   for (int k = 0; k < data->nb_frames; k++) {
     /* Form camera pose */
     double T_WC[4 * 4] = {0};
-    pose2tf(&data->cam_poses[k], T_WC);
+    tf(data->cam_poses[k], T_WC);
 
     /* Invert camera pose T_WC to T_CW */
     double T_CW[4 * 4] = {0};
@@ -366,7 +424,7 @@ static void J_camera_rotation(const double q_WC[4],
   double S[3 * 3] = {0};
   skew(x, S);
 
-  dot(C_CW, 3, 3, S, 3, 3, J);
+  dot_cblas(C_CW, 3, 3, S, 3, 3, J);
 }
 
 static void J_camera_translation(const double q_WC[4], double J[3 * 3]) {
@@ -404,7 +462,7 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
     double T_WC[4 * 4] = {0};
     double q_WC[4] = {0};
     double r_WC[3] = {0};
-    pose2tf(&data->cam_poses[k], T_WC);
+    tf(data->cam_poses[k], T_WC);
     tf_quat_get(T_WC, q_WC);
     tf_trans_get(T_WC, r_WC);
 
@@ -439,20 +497,20 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
       double J_h[2 * 3] = {0};
       J_intrinsics_point(data->cam_K, J_K);
       J_project(p_C, J_P);
-      dot(J_K, 2, 2, J_P, 2, 3, J_h);
+      dot_cblas(J_K, 2, 2, J_P, 2, 3, J_h);
 
       /* -- J_cam_rot = -1 * J_h * J_C; */
       double J_C[3 * 3] = {0};
       double J_cam_rot[2 * 3] = {0};
       J_camera_rotation(q_WC, r_WC, p_W, J_C);
-      dot(J_h, 2, 3, J_C, 3, 3, J_cam_rot);
+      dot_cblas(J_h, 2, 3, J_C, 3, 3, J_cam_rot);
       mat_scale(J_cam_rot, 2, 3, -1);
 
       /* -- J_cam_pos = -1 * J_h * J_r; */
       double J_r[3 * 3] = {0};
       double J_cam_pos[2 * 3] = {0};
       J_camera_translation(q_WC, J_r);
-      dot(J_h, 2, 3, J_r, 3, 3, J_cam_pos);
+      dot_cblas(J_h, 2, 3, J_r, 3, 3, J_cam_pos);
       mat_scale(J_cam_pos, 2, 3, -1);
 
       /* -- Fill in the big jacobian */
@@ -468,7 +526,7 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
       J_target_point(q_WC, J_p);
       /* -- J_point = -1 * J_h * J_target_point(q_WC); */
       double J_point[2 * 3] = {0};
-      dot(J_h, 2, 3, J_p, 3, 3, J_point);
+      dot_cblas(J_h, 2, 3, J_p, 3, 3, J_point);
       mat_scale(J_point, 2, 3, -1);
       /* -- Fill in the big jacobian */
       mat_block_set(J, *J_cols, rs, cs, re, ce, J_point);
@@ -489,22 +547,24 @@ void ba_update(ba_data_t *data, double *dx) {
     /* Update camera rotation */
     /* dq = quatdelta(dalpha) */
     /* q_WC_k = quatmul(dq, q_WC_k) */
+    double *cam_pose = data->cam_poses[k];
     const double dalpha[3] = {dx[s], dx[s + 1], dx[s + 2]};
     double dq[4] = {0};
+    double q_WC[4] = {cam_pose[0], cam_pose[1], cam_pose[2], cam_pose[3]};
     double q_new[4] = {0};
     quatdelta(dalpha, dq);
-    quatmul(dq, data->cam_poses[k].q, q_new);
-    data->cam_poses[k].q[0] = q_new[0];
-    data->cam_poses[k].q[1] = q_new[1];
-    data->cam_poses[k].q[2] = q_new[2];
-    data->cam_poses[k].q[3] = q_new[3];
+    quatmul(dq, q_WC, q_new);
+    cam_pose[0] = q_new[0];
+    cam_pose[1] = q_new[1];
+    cam_pose[2] = q_new[2];
+    cam_pose[3] = q_new[3];
 
     /* Update camera position */
     /* r_WC_k += dr_WC */
     const double dr_WC[3] = {dx[s + 3], dx[s + 4], dx[s + 5]};
-    data->cam_poses[k].r[0] += dr_WC[0];
-    data->cam_poses[k].r[1] += dr_WC[1];
-    data->cam_poses[k].r[2] += dr_WC[2];
+    cam_pose[4] += dr_WC[0];
+    cam_pose[5] += dr_WC[1];
+    cam_pose[6] += dr_WC[2];
   }
 
   /* Update points */
@@ -520,13 +580,13 @@ void ba_update(ba_data_t *data, double *dx) {
 double ba_cost(const double *e, const int length) {
   /* cost = 0.5 * e' * e */
   double cost = 0.0;
-  dot(e, 1, length, e, length, 1, &cost);
+  dot_cblas(e, 1, length, e, length, 1, &cost);
   return cost * 0.5;
 }
 
 void ba_solve(ba_data_t *data) {
-  int max_iter = 200;
-  double lambda = 1e-4;
+  int max_iter = 5;
+  double lambda = 1e0;
 
   int e_size = 0;
   double *e = ba_residuals(data, &e_size);
@@ -544,28 +604,53 @@ void ba_solve(ba_data_t *data) {
     double *E_t = mat_new(E_cols, E_rows);
     double *H = mat_new(E_cols, E_cols);
     mat_transpose(E, E_rows, E_cols, E_t);
-    dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
+    dot_cblas(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
     /* -- Apply Levenberg-Marquardt damping: H = H + lambda * H_diag */
     for (int i = 0; i < E_cols; i++) {
       H[(i * E_cols) + i] += lambda * H[(i * E_cols) + i];
+      /* H[(i * E_cols) + i] += lambda; */
     }
     /* -- Calculate R.H.S of Gauss-Newton: g = -E' * W * e; */
     double *g = vec_new(E_cols);
     mat_scale(E_t, E_cols, E_rows, -1.0);
     e = ba_residuals(data, &e_size);
-    dot(E_t, E_cols, E_rows, e, e_size, 1, g);
+    dot_cblas(E_t, E_cols, E_rows, e, e_size, 1, g);
     free(e);
     free(E);
     free(E_t);
     /* -- Solve linear system: H * dx = g */
     double *dx = vec_new(E_cols);
-    chol_lls_solve(H, g, dx, E_cols);
-    /* chol_lls_solve2(H, g, dx, E_cols); */
+    /* { */
+    /*   gsl_matrix *A = gsl_matrix_alloc(E_cols, E_cols); */
+    /*   int idx = 0; */
+    /*   for (int i = 0; i < E_cols; i++) { */
+    /*     for (int j = 0; j < E_cols; j++) { */
+    /*       gsl_matrix_set(A, i, j, H[idx]); */
+    /*       idx++; */
+    /*     } */
+    /*   } */
+    /*  */
+    /*   gsl_vector *b = gsl_vector_alloc(E_cols); */
+    /*   for (int i = 0; i < E_cols; i++) { */
+    /*     gsl_vector_set(b, i, g[i]); */
+    /*   } */
+    /*  */
+    /*   gsl_vector *x = gsl_vector_alloc(E_cols); */
+    /*   gsl_linalg_cholesky_decomp1(A); */
+    /*   gsl_linalg_cholesky_solve(A, b, x); */
+    /*   for (int i = 0; i < E_cols; i++) { */
+    /*     dx[i] = gsl_vector_get(x, i); */
+    /*   } */
+    /* } */
+
+    /* chol_solve(H, g, dx, E_cols); */
+    chol_solve2(H, g, dx, E_cols);
     free(H);
     free(g);
 
     /* Update */
     ba_update(data, dx);
+    free(dx);
 
     /* Calculate cost */
     e = ba_residuals(data, &e_size);
@@ -578,25 +663,24 @@ void ba_solve(ba_data_t *data) {
     printf("dcost: %.2e\n", dcost);
 
     /* Termination criteria */
-    if (fabs(dcost) < 1.0e-6) {
-      printf("Done!\n");
-      break;
-    }
+    /* if (fabs(dcost) < 1.0e-6) { */
+    /*   printf("Done!\n"); */
+    /*   break; */
+    /* } */
 
-    /* Update lambda */
-    if (dcost < 0) {
-      lambda /= 10.0;
-      cost_prev = cost;
-
-    } else {
-      lambda *= 10.0;
-
-      /* Restore previous state because update failed */
-      for (int i = 0; i < E_cols; i++) dx[i] *= -1;
-      ba_update(data, dx);
-    }
-
-    free(dx);
+    /* #<{(| Update lambda |)}># */
+    /* if (dcost < 0) { */
+    /*   lambda /= 10.0; */
+    /*   cost_prev = cost; */
+    /*  */
+    /* } else { */
+    /*   lambda *= 10.0; */
+    /*  */
+    /*   #<{(| Restore previous state because update failed |)}># */
+    /*   for (int i = 0; i < E_cols; i++) */
+    /*     dx[i] *= -1; */
+    /*   ba_update(data, dx); */
+    /* } */
   }
 }
 

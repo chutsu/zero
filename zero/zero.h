@@ -1,6 +1,10 @@
 #ifndef ZERO_H
 #define ZERO_H
 
+#define MAX_LINE_LENGTH 9046
+#define USE_CBLAS
+#define USE_LAPACK
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,12 +16,15 @@ extern "C" {
 #include <math.h>
 #include <time.h>
 #include <assert.h>
+#include <sys/time.h>
+
+#ifdef USE_CBLAS
+#include <cblas.h>
+#endif
 
 #ifdef USE_LAPACK
 #include <lapacke.h>
 #endif
-
-#define MAX_LINE_LENGTH 9046
 
 /******************************************************************************
  *                                LOGGING
@@ -79,8 +86,6 @@ double **load_darrays(const char *csv_path, int *nb_arrays);
 #define SIGN(a, b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
 
 float randf(float a, float b);
-struct timespec tic();
-float toc(struct timespec *tic);
 double deg2rad(const double d);
 double rad2deg(const double r);
 int fltcmp(const double x, const double y);
@@ -107,8 +112,10 @@ void zeros(double *A, const size_t m, const size_t n);
 
 double *mat_new(const size_t m, const size_t n);
 int mat_cmp(const double *A, const double *B, const size_t m, const size_t n);
-int mat_equals(const double *A, const double *B,
-               const size_t m, const size_t n,
+int mat_equals(const double *A,
+               const double *B,
+               const size_t m,
+               const size_t n,
                const double thresh);
 int mat_save(const char *save_path, const double *A, const int m, const int n);
 double *mat_load(const char *save_path, int *nb_rows, int *nb_cols);
@@ -165,10 +172,18 @@ void bwdsubs(const double *U, const double *y, double *x, const size_t n);
 int check_jacobian(const char *jac_name,
                    const double *fdiff,
                    const double *jac,
-									 const size_t m,
-									 const size_t n,
+                   const size_t m,
+                   const size_t n,
                    const double threshold,
-									 const int print);
+                   const int print);
+
+void dot_cblas(const double *A,
+               const size_t A_m,
+               const size_t A_n,
+               const double *B,
+               const size_t B_m,
+               const size_t B_n,
+               double *C);
 
 /******************************************************************************
  *                                  SVD
@@ -183,16 +198,10 @@ int pinv(double *A, const int m, const int n, double *A_inv);
  ******************************************************************************/
 
 double *chol(const double *A, const size_t n);
-void chol_lls_solve(const double *A,
-                    const double *b,
-                    double *x,
-                    const size_t n);
+void chol_solve(const double *A, const double *b, double *x, const size_t n);
 
 #ifdef USE_LAPACK
-void chol_lls_solve2(const double *A,
-                     const double *b,
-                     double *x,
-                     const size_t n);
+void chol_solve2(const double *A, const double *b, double *x, const size_t n);
 #endif
 
 /******************************************************************************
@@ -201,11 +210,17 @@ void chol_lls_solve2(const double *A,
 
 typedef uint64_t timestamp_t;
 
+struct timespec tic();
+float toc(struct timespec *tic);
+float mtoc(struct timespec *tic);
+float time_now();
+
 /******************************************************************************
  *                                TRANSFORMS
  ******************************************************************************/
 
-void tf(const double C[3 * 3], const double r[3], double T[4 * 4]);
+void tf(const double params[7], double T[4 * 4]);
+void tf_params(const double T[4 * 4], double params[7]);
 void tf_rot_set(double T[4 * 4], const double C[3 * 3]);
 void tf_trans_set(double T[4 * 4], const double r[3]);
 void tf_trans_get(const double T[4 * 4], double r[3]);
@@ -225,28 +240,6 @@ void quatlmul(const double p[4], const double q[4], double r[4]);
 void quatrmul(const double p[4], const double q[4], double r[4]);
 void quatmul(const double p[4], const double q[4], double r[4]);
 void quatdelta(const double dalpha[3], double dq[4]);
-
-/******************************************************************************
- *                                   POSE
- ******************************************************************************/
-
-struct pose_t {
-  timestamp_t ts;
-  double q[4];
-  double r[3];
-} typedef pose_t;
-
-void pose_init(pose_t *pose,
-               const timestamp_t ts,
-               const double q[4],
-               const double r[3]);
-void pose_set_quat(pose_t *pose, const double q[4]);
-void pose_set_trans(pose_t *pose, const double r[3]);
-void pose_get_quat(const pose_t *pose, double q[4]);
-void pose_get_trans(const pose_t *pose, double r[3]);
-void pose_print(const char *prefix, const pose_t *pose);
-void pose2tf(const pose_t *pose, double T[4 * 4]);
-pose_t *load_poses(const char *csv_path, int *nb_poses);
 
 /*****************************************************************************
  *                                   IMAGE
