@@ -47,14 +47,14 @@ void xapp_draw_quad(const xapp_t *app,
                     const int width,
                     const int height) {
   glBegin(GL_QUADS);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(-1.0, -1.0, 0.0);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(1.0, -1.0, 0.0);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(1.0, 1.0, 0.0);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(-1.0, 1.0, 0.0);
+  glColor3f(1.0, 0.0, 0.0);
+  glVertex3f(-1.0, -1.0, 0.0);
+  glColor3f(1.0, 0.0, 0.0);
+  glVertex3f(1.0, -1.0, 0.0);
+  glColor3f(1.0, 0.0, 0.0);
+  glVertex3f(1.0, 1.0, 0.0);
+  glColor3f(1.0, 0.0, 0.0);
+  glVertex3f(-1.0, 1.0, 0.0);
   glEnd();
 }
 

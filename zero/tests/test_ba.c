@@ -4,7 +4,6 @@
 #define TEST_BA_DATA_GT "test_data/data_gnd"
 #define TEST_BA_DATA "test_data/data_noisy"
 #define TEST_BA_JAC "test_data/ba_jacobian.csv"
-#define TEST_BA_UPDATE_H "test_data/ba_update_H.csv"
 #define TEST_BA_UPDATE_DX "test_data/ba_update_dx.csv"
 
 #define STEP_SIZE 1e-8
@@ -373,48 +372,17 @@ int test_ba_update() {
 
   int e_size = 0;
   double *e_before = ba_residuals(data, &e_size);
-  printf("before: %f\n", ba_cost(e_before, e_size));
+  printf("before:  %f\n", ba_cost(e_before, e_size));
 
-  int E_rows = 0;
-  int E_cols = 0;
-  double *E = ba_jacobian(data, &E_rows, &E_cols);
-
-  /* Solve Gauss-Newton system [H dx = g]: Solve for dx */
-  double lambda = 1e-4;
-  /* -- Calculate L.H.S of Gauss-Newton */
-  /* H = (E' * W * E); */
-  double *E_t = mat_new(E_cols, E_rows);
-  double *H = mat_new(E_cols, E_cols);
-  mat_transpose(E, E_rows, E_cols, E_t);
-  dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
-  /* -- Apply Levenberg-Marquardt damping */
-  /* H = H + lambda * H_diag */
-  for (int i = 0; i < E_cols; i++) {
-    H[(i * E_cols) + i] += lambda * H[(i * E_cols) + i];
-  }
-  /* -- Calculate R.H.S of Gauss-Newton */
-  /* g = -E' * W * e; */
-  double *g = vec_new(E_cols);
-  mat_scale(E_t, E_cols, E_rows, -1.0);
-  dot(E_t, E_cols, E_rows, e_before, e_size, 1, g);
-  free(E_t);
-  /* -- Solve linear system: H dx = g */
-  double *dx = vec_new(E_cols);
-  chol_solve(H, g, dx, E_cols);
-  free(H);
-  free(g);
-
+  double *dx = load_vector(TEST_BA_UPDATE_DX);
   ba_update(data, dx);
-  free(dx);
-  /* OCTAVE_SCRIPT("scripts/plot_matrix.m /tmp/H_before.csv"); */
-  /* OCTAVE_SCRIPT("scripts/plot_matrix.m /tmp/H_after.csv"); */
 
   double *e_after = ba_residuals(data, &e_size);
   printf("after:  %f\n", ba_cost(e_after, e_size));
 
+  free(dx);
   free(e_before);
   free(e_after);
-  free(E);
   ba_data_free(data);
 
   return 0;
@@ -431,8 +399,8 @@ int test_ba_cost() {
 }
 
 int test_ba_solve() {
-  struct timespec t_start = tic();
   ba_data_t *data = ba_load_data(TEST_BA_DATA);
+  struct timespec t_start = tic();
   ba_solve(data);
   printf("time taken: %f\n", toc(&t_start));
   ba_data_free(data);

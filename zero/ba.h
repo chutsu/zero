@@ -6,10 +6,6 @@
 #include "zero/zero.h"
 #include "zero/se.h"
 
-/* #include <gsl/gsl_vector.h> */
-/* #include <gsl/gsl_matrix.h> */
-/* #include <gsl/gsl_linalg.h> */
-
 static void load_camera(const char *data_path, double K[3 * 3]) {
   /* Setup csv path */
   char cam_csv[1000] = {0};
@@ -585,8 +581,8 @@ double ba_cost(const double *e, const int length) {
 }
 
 void ba_solve(ba_data_t *data) {
-  int max_iter = 5;
-  double lambda = 1e0;
+  int max_iter = 10;
+  double lambda = 1e-4;
 
   int e_size = 0;
   double *e = ba_residuals(data, &e_size);
@@ -608,7 +604,6 @@ void ba_solve(ba_data_t *data) {
     /* -- Apply Levenberg-Marquardt damping: H = H + lambda * H_diag */
     for (int i = 0; i < E_cols; i++) {
       H[(i * E_cols) + i] += lambda * H[(i * E_cols) + i];
-      /* H[(i * E_cols) + i] += lambda; */
     }
     /* -- Calculate R.H.S of Gauss-Newton: g = -E' * W * e; */
     double *g = vec_new(E_cols);
@@ -620,29 +615,6 @@ void ba_solve(ba_data_t *data) {
     free(E_t);
     /* -- Solve linear system: H * dx = g */
     double *dx = vec_new(E_cols);
-    /* { */
-    /*   gsl_matrix *A = gsl_matrix_alloc(E_cols, E_cols); */
-    /*   int idx = 0; */
-    /*   for (int i = 0; i < E_cols; i++) { */
-    /*     for (int j = 0; j < E_cols; j++) { */
-    /*       gsl_matrix_set(A, i, j, H[idx]); */
-    /*       idx++; */
-    /*     } */
-    /*   } */
-    /*  */
-    /*   gsl_vector *b = gsl_vector_alloc(E_cols); */
-    /*   for (int i = 0; i < E_cols; i++) { */
-    /*     gsl_vector_set(b, i, g[i]); */
-    /*   } */
-    /*  */
-    /*   gsl_vector *x = gsl_vector_alloc(E_cols); */
-    /*   gsl_linalg_cholesky_decomp1(A); */
-    /*   gsl_linalg_cholesky_solve(A, b, x); */
-    /*   for (int i = 0; i < E_cols; i++) { */
-    /*     dx[i] = gsl_vector_get(x, i); */
-    /*   } */
-    /* } */
-
     /* chol_solve(H, g, dx, E_cols); */
     chol_solve2(H, g, dx, E_cols);
     free(H);
@@ -663,24 +635,24 @@ void ba_solve(ba_data_t *data) {
     printf("dcost: %.2e\n", dcost);
 
     /* Termination criteria */
-    /* if (fabs(dcost) < 1.0e-6) { */
-    /*   printf("Done!\n"); */
-    /*   break; */
-    /* } */
+    if (fabs(dcost) < 1.0e-6) {
+      printf("Done!\n");
+      break;
+    }
 
-    /* #<{(| Update lambda |)}># */
-    /* if (dcost < 0) { */
-    /*   lambda /= 10.0; */
-    /*   cost_prev = cost; */
-    /*  */
-    /* } else { */
-    /*   lambda *= 10.0; */
-    /*  */
-    /*   #<{(| Restore previous state because update failed |)}># */
-    /*   for (int i = 0; i < E_cols; i++) */
-    /*     dx[i] *= -1; */
-    /*   ba_update(data, dx); */
-    /* } */
+    /* Update lambda */
+    if (dcost < 0) {
+      lambda /= 10.0;
+      cost_prev = cost;
+
+    } else {
+      lambda *= 10.0;
+
+      /* Restore previous state because update failed */
+      for (int i = 0; i < E_cols; i++)
+        dx[i] *= -1;
+      ba_update(data, dx);
+    }
   }
 }
 

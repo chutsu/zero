@@ -67,6 +67,7 @@ char **csv_fields(const char *fp, int *nb_fields);
 double **csv_data(const char *fp, int *nb_rows, int *nb_cols);
 int **load_iarrays(const char *csv_path, int *nb_arrays);
 double **load_darrays(const char *csv_path, int *nb_arrays);
+double *load_vector(const char *file_path);
 
 /******************************************************************************
  *                                 GENERAL

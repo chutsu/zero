@@ -269,6 +269,34 @@ double **load_darrays(const char *csv_path, int *nb_arrays) {
   return array;
 }
 
+double *load_vector(const char *file_path) {
+  /* Open file */
+  FILE *csv = fopen(file_path, "r");
+  if (csv == NULL) {
+    return NULL;
+  }
+
+  /* Get number of lines in file */
+  size_t nb_lines = 0;
+  char buf[MAX_LINE_LENGTH] = {0};
+  while (fgets(buf, MAX_LINE_LENGTH, csv)) {
+    nb_lines++;
+  }
+  rewind(csv);
+
+  /* Load vector */
+  double *v = malloc(sizeof(double) * nb_lines);
+  for (size_t i = 0; i < nb_lines; i++) {
+    int retval = fscanf(csv, "%le", &v[i]);
+    if (retval != 1) {
+      return NULL;
+    }
+  }
+  fclose(csv);
+
+  return v;
+}
+
 /******************************************************************************
  *                                 GENERAL
  ******************************************************************************/
@@ -1784,7 +1812,7 @@ void quatlmul(const double p[4], const double q[4], double r[4]) {
   };
   /* clang-format on */
 
-  dot(lprod, 4, 4, q, 4, 1, r);
+  dot_cblas(lprod, 4, 4, q, 4, 1, r);
 }
 
 void quatrmul(const double p[4], const double q[4], double r[4]) {
@@ -1817,7 +1845,7 @@ void quatmul(const double p[4], const double q[4], double r[4]) {
 void quatdelta(const double dalpha[3], double dq[4]) {
   const double half_norm = 0.5 * vec_norm(dalpha, 3);
   const double k = sinc(half_norm) * 0.5;
-  const double vector[3] = {k * dalpha[0], k * dalpha[0], k * dalpha[0]};
+  const double vector[3] = {k * dalpha[0], k * dalpha[1], k * dalpha[2]};
   double scalar = cos(half_norm);
 
   dq[0] = scalar;
