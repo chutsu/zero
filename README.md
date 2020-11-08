@@ -4,9 +4,9 @@ Just bits and bobs.
 
 # Dependencies
 
-  stb
-  OpenBLAS
-  SuiteSparse
+    stb
+    OpenBLAS
+    SuiteSparse
 
 ## LICENCE
 

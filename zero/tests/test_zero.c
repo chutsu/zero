@@ -44,7 +44,7 @@ int test_csv_fields() {
 int test_csv_data() {
   int nb_rows = 0;
   int nb_cols = 0;
-  double **data = csv_data(TEST_CSV, &nb_rows, &nb_cols);
+  real_t **data = csv_data(TEST_CSV, &nb_rows, &nb_cols);
 
   int index = 0;
   for (int i = 0; i < nb_rows; i++) {
@@ -61,7 +61,7 @@ int test_csv_data() {
 }
 
 int test_eye() {
-  double A[25] = {0.0};
+  real_t A[25] = {0.0};
   eye(A, 5, 5);
 
   /* print_matrix("I", A, 5, 5); */
@@ -70,7 +70,7 @@ int test_eye() {
   size_t cols = 5;
   for (size_t i = 0; i < rows; i++) {
     for (size_t j = 0; j < cols; j++) {
-      double expected = (i == j) ? 1.0 : 0.0;
+      real_t expected = (i == j) ? 1.0 : 0.0;
       MU_CHECK(fltcmp(A[idx], expected) == 0);
       idx++;
     }
@@ -80,7 +80,7 @@ int test_eye() {
 }
 
 int test_ones() {
-  double A[25] = {0.0};
+  real_t A[25] = {0.0};
   ones(A, 5, 5);
 
   /* print_matrix("A", A, 5, 5); */
@@ -98,7 +98,7 @@ int test_ones() {
 }
 
 int test_zeros() {
-  double A[25] = {0.0};
+  real_t A[25] = {0.0};
   zeros(A, 5, 5);
 
   /* print_matrix("A", A, 5, 5); */
@@ -116,7 +116,7 @@ int test_zeros() {
 }
 
 int test_mat_set() {
-  double A[9] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  real_t A[9] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
   mat_set(A, 3, 0, 0, 1.0);
   mat_set(A, 3, 1, 1, 1.0);
@@ -131,7 +131,7 @@ int test_mat_set() {
 }
 
 int test_mat_val() {
-  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
 
   /* print_matrix("A", A, 3, 3); */
   MU_CHECK(fltcmp(mat_val(A, 3, 0, 0), 1.0) == 0);
@@ -143,8 +143,8 @@ int test_mat_val() {
 }
 
 int test_mat_block_get() {
-  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double B[4] = {0.0};
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t B[4] = {0.0};
   mat_block_get(A, 3, 1, 1, 2, 2, B);
 
   print_matrix("A", A, 3, 3);
@@ -158,8 +158,8 @@ int test_mat_block_get() {
 }
 
 int test_mat_block_set() {
-  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double B[4] = {0.0, 0.0, 0.0, 0.0};
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t B[4] = {0.0, 0.0, 0.0, 0.0};
   mat_block_set(A, 3, 1, 1, 2, 2, B);
 
   print_matrix("B", B, 2, 2);
@@ -173,8 +173,8 @@ int test_mat_block_set() {
 }
 
 int test_mat_diag_get() {
-  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double d[3] = {0.0, 0.0, 0.0};
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t d[3] = {0.0, 0.0, 0.0};
   mat_diag_get(A, 3, 3, d);
 
   print_matrix("A", A, 3, 3);
@@ -187,8 +187,8 @@ int test_mat_diag_get() {
 }
 
 int test_mat_diag_set() {
-  double A[9] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-  double d[4] = {1.0, 2.0, 3.0};
+  real_t A[9] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  real_t d[4] = {1.0, 2.0, 3.0};
   mat_diag_set(A, 3, 3, d);
 
   print_matrix("A", A, 3, 3);
@@ -201,11 +201,11 @@ int test_mat_diag_set() {
 
 int test_mat_triu() {
   /* clang-format off */
-  double A[16] = {1.0, 2.0, 3.0, 4.0,
+  real_t A[16] = {1.0, 2.0, 3.0, 4.0,
                   5.0, 6.0, 7.0, 8.0,
                   9.0, 10.0, 11.0, 12.0,
                   13.0, 14.0, 15.0, 16.0};
-  double U[16] = {0};
+  real_t U[16] = {0};
   /* clang-format on */
   mat_triu(A, 4, U);
   print_matrix("U", U, 4, 4);
@@ -215,11 +215,11 @@ int test_mat_triu() {
 
 int test_mat_tril() {
   /* clang-format off */
-  double A[16] = {1.0, 2.0, 3.0, 4.0,
+  real_t A[16] = {1.0, 2.0, 3.0, 4.0,
                   5.0, 6.0, 7.0, 8.0,
                   9.0, 10.0, 11.0, 12.0,
                   13.0, 14.0, 15.0, 16.0};
-  double L[16] = {0};
+  real_t L[16] = {0};
   /* clang-format on */
   mat_tril(A, 4, L);
   print_matrix("L", L, 4, 4);
@@ -229,20 +229,20 @@ int test_mat_tril() {
 
 int test_mat_trace() {
   /* clang-format off */
-  double A[16] = {1.0, 2.0, 3.0, 4.0,
+  real_t A[16] = {1.0, 2.0, 3.0, 4.0,
                   5.0, 6.0, 7.0, 8.0,
                   9.0, 10.0, 11.0, 12.0,
                   13.0, 14.0, 15.0, 16.0};
   /* clang-format on */
-  const double tr = mat_trace(A, 4, 4);
+  const real_t tr = mat_trace(A, 4, 4);
   MU_CHECK(fltcmp(tr, 1.0 + 6.0 + 11.0 + 16.0) == 0.0);
 
   return 0;
 }
 
 int test_mat_transpose() {
-  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double C[9] = {0.0};
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t C[9] = {0.0};
   mat_transpose(A, 3, 3, C);
   print_matrix("C", C, 3, 3);
 
@@ -250,9 +250,9 @@ int test_mat_transpose() {
 }
 
 int test_mat_add() {
-  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double B[9] = {9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0};
-  double C[9] = {0.0};
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t B[9] = {9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0};
+  real_t C[9] = {0.0};
   mat_add(A, B, C, 3, 3);
   print_matrix("C", C, 3, 3);
 
@@ -260,9 +260,9 @@ int test_mat_add() {
 }
 
 int test_mat_sub() {
-  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double B[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double C[9] = {0.0};
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t B[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t C[9] = {0.0};
   mat_sub(A, B, C, 3, 3);
   print_matrix("C", C, 3, 3);
 
@@ -270,9 +270,9 @@ int test_mat_sub() {
 }
 
 int test_vec_add() {
-  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double B[9] = {9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0};
-  double C[9] = {0.0};
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t B[9] = {9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0};
+  real_t C[9] = {0.0};
   vec_add(A, B, C, 9);
   print_vector("C", C, 9);
 
@@ -280,18 +280,18 @@ int test_vec_add() {
 }
 
 int test_vec_sub() {
-  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double B[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double C[9] = {0.0};
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t B[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t C[9] = {0.0};
   vec_sub(A, B, C, 9);
   print_vector("C", C, 9);
 
   return 0;
 }
 
-/* void dot(const double *A, const size_t A_m, const size_t A_n, */
-/*          const double *B, const size_t B_m, const size_t B_n, */
-/*          double *C) { */
+/* void dot(const real_t *A, const size_t A_m, const size_t A_n, */
+/*          const real_t *B, const size_t B_m, const size_t B_n, */
+/*          real_t *C) { */
 /*   assert(A_n == B_m); */
 /*  */
 /*   cblas_dgemm( */
@@ -313,9 +313,9 @@ int test_vec_sub() {
 /* } */
 
 int test_dot() {
-  double A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-  double B[3] = {1.0, 2.0, 3.0};
-  double C[9] = {0.0};
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  real_t B[3] = {1.0, 2.0, 3.0};
+  real_t C[9] = {0.0};
 
   /* Multiply matrix A and B */
   dot(A, 3, 3, B, 3, 1, C);
@@ -329,8 +329,8 @@ int test_dot() {
 }
 
 int test_skew() {
-  double x[3] = {1.0, 2.0, 3.0};
-  double S[3 * 3] = {0};
+  real_t x[3] = {1.0, 2.0, 3.0};
+  real_t S[3 * 3] = {0};
 
   skew(x, S);
   print_matrix("S", S, 3, 3);
@@ -353,13 +353,13 @@ int test_skew() {
 int test_check_jacobian() {
   const size_t m = 2;
   const size_t n = 3;
-  const double threshold = 1e-6;
+  const real_t threshold = 1e-6;
   const int print = 1;
 
   // Positive test
   {
-    const double fdiff[6] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
-    const double jac[6] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
+    const real_t fdiff[6] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
+    const real_t jac[6] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
     int retval = check_jacobian("test_check_jacobian",
                                 fdiff,
                                 jac,
@@ -372,8 +372,8 @@ int test_check_jacobian() {
 
   // Negative test
   {
-    const double fdiff[6] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
-    const double jac[6] = {0.0, 1.0, 2.0, 3.1, 4.0, 5.0};
+    const real_t fdiff[6] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
+    const real_t jac[6] = {0.0, 1.0, 2.0, 3.1, 4.0, 5.0};
     int retval = check_jacobian("test_check_jacobian",
                                 fdiff,
                                 jac,
@@ -388,17 +388,17 @@ int test_check_jacobian() {
 }
 
 /* int test_svd() { */
-/*   double A[M * N]; */
-/*   double A_orig[M * N]; */
+/*   real_t A[M * N]; */
+/*   real_t A_orig[M * N]; */
 /*   for (int i = 0; i < (M * N); i++) { */
 /*     A[i] = randf(0.0, 1.0); */
 /*     A_orig[i] = A[i]; */
 /*   } */
 /*  */
 /*   struct timespec t = tic(); */
-/*   double U[M * M]; */
-/*   double d[N]; */
-/*   double V_t[N * N]; */
+/*   real_t U[M * M]; */
+/*   real_t d[N]; */
+/*   real_t V_t[N * N]; */
 /*   int retval = svd(A, M, N, U, d, V_t); */
 /*   printf("time taken: %fs\n", toc(&t)); */
 /*   if (retval != 0) { */
@@ -407,11 +407,11 @@ int test_check_jacobian() {
 /*   } */
 /*  */
 /*   #<{(| A = U * S * V_t |)}># */
-/*   double S[N * N]; */
+/*   real_t S[N * N]; */
 /*   mat_diag_set(S, N, N, d); */
 /*  */
-/*   double US[M * N]; */
-/*   double USV[M * M]; */
+/*   real_t US[M * N]; */
+/*   real_t USV[M * M]; */
 /*   dot(U, M, N, S, N, N, US); */
 /*   dot(US, M, N, V_t, N, N, USV); */
 /*  */
@@ -424,15 +424,15 @@ int test_check_jacobian() {
 /* } */
 
 int test_svdcomp() {
-  double A[M * N];
-  double A_orig[M * N];
+  real_t A[M * N];
+  real_t A_orig[M * N];
   for (int i = 0; i < (M * N); i++) {
     A[i] = randf(0.0, 1.0);
     A_orig[i] = A[i];
   }
 
-  double d[N];
-  double V[N * N];
+  real_t d[N];
+  real_t V[N * N];
   struct timespec t = tic();
   int retval = svdcomp(A, M, N, d, V);
   printf("time taken: %fs\n", toc(&t));
@@ -442,12 +442,12 @@ int test_svdcomp() {
   }
 
   /* A = U * S * V_t */
-  double S[N * N];
+  real_t S[N * N];
   mat_diag_set(S, N, N, d);
 
-  double US[M * N];
-  double USV[M * M];
-  double V_t[N * N];
+  real_t US[M * N];
+  real_t USV[M * M];
+  real_t V_t[N * N];
   mat_transpose(V, N, N, V_t);
   dot(A, M, N, S, N, N, US);
   dot(US, M, N, V_t, N, N, USV);
@@ -461,23 +461,23 @@ int test_svdcomp() {
 }
 
 /* int test_pinv() { */
-/*   double A[M * N]; */
-/*   double A_orig[M * N]; */
+/*   real_t A[M * N]; */
+/*   real_t A_orig[M * N]; */
 /*   for (int i = 0; i < (M * N); i++) { */
 /*     A[i] = randf(0.0, 1.0); */
 /*     A_orig[i] = A[i]; */
 /*   } */
 /*  */
 /*   struct timespec t = tic(); */
-/*   double A_inv[M * N]; */
+/*   real_t A_inv[M * N]; */
 /*   int retval = pinv(A, M, N, A_inv); */
 /*   printf("time taken: %fs\n", toc(&t)); */
 /*   MU_CHECK(retval == 0); */
 /*  */
-/*   double AiA[M * N]; */
+/*   real_t AiA[M * N]; */
 /*   dot(A_inv, M, N, A_orig, M, N, AiA); */
 /*  */
-/*   double Imn[M * N]; */
+/*   real_t Imn[M * N]; */
 /*   eye(Imn, M, N); */
 /*   MU_CHECK(mat_equals(AiA, Imn, M, N, 1e-5) == 0); */
 /*  */
@@ -487,7 +487,7 @@ int test_svdcomp() {
 int test_chol() {
   /* clang-format off */
   const int n = 3;
-  double A[9] = {
+  real_t A[9] = {
     4.0, 12.0, -16.0,
     12.0, 37.0, -43.0,
     -16.0, -43.0, 98.0
@@ -495,11 +495,11 @@ int test_chol() {
   /* clang-format on */
 
   struct timespec t = tic();
-  double *L = chol(A, n);
+  real_t *L = chol(A, n);
   printf("time taken: [%fs]\n", toc(&t));
 
-  double Lt[9] = {0};
-  double LLt[9] = {0};
+  real_t Lt[9] = {0};
+  real_t LLt[9] = {0};
   mat_transpose(L, n, n, Lt);
   dot(L, n, n, Lt, n, n, LLt);
 
@@ -525,13 +525,13 @@ int test_chol() {
 int test_chol_solve() {
   /* clang-format off */
   const int n = 3;
-  double A[9] = {
+  real_t A[9] = {
     2.0, -1.0, 0.0,
     -1.0, 2.0, -1.0,
     0.0, -1.0, 1.0
   };
-  double b[3] = {1.0, 0.0, 0.0};
-  double x[3] = {0.0, 0.0, 0.0};
+  real_t b[3] = {1.0, 0.0, 0.0};
+  real_t x[3] = {0.0, 0.0, 0.0};
   /* clang-format on */
 
   struct timespec t = tic();
@@ -550,16 +550,16 @@ int test_chol_solve() {
 int test_chol_solve2() {
   /* #<{(| clang-format off |)}># */
   /* const int m = 3; */
-  /* const double A[9] = { */
+  /* const real_t A[9] = { */
   /*   2.0, -1.0, 0.0, */
   /*   -1.0, 2.0, -1.0, */
   /*   0.0, -1.0, 1.0 */
   /* }; */
-  /* const double b[3] = {1.0, 0.0, 0.0}; */
-  /* double x[3] = {0.0, 0.0, 0.0}; */
+  /* const real_t b[3] = {1.0, 0.0, 0.0}; */
+  /* real_t x[3] = {0.0, 0.0, 0.0}; */
   /* #<{(| clang-format on |)}># */
 
-  /* double a[9] = { 1.0, .6, .3, .6, 1., .5, .3, .5, 1 }; */
+  /* real_t a[9] = { 1.0, .6, .3, .6, 1., .5, .3, .5, 1 }; */
   /* print_matrix("a", a, 3, 3); */
   /* int retval = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', 3, a, 3); */
   /* if (retval != 0) { */
@@ -571,14 +571,14 @@ int test_chol_solve2() {
 
   /* clang-format off */
   int m = 4;
-  double A[16] = {
+  real_t A[16] = {
     4.16, -3.12, 0.56, -0.10,
     -3.12, 5.03, -0.83, 1.18,
     0.56, -0.83, 0.76, 0.34,
     -0.10, 1.18,  0.34, 1.18
   };
-  double b[4] = {1.0, 0.0, 0.0, 0.0};
-  double x[4] = {0.0, 0.0, 0.0, 0.0};
+  real_t b[4] = {1.0, 0.0, 0.0, 0.0};
+  real_t x[4] = {0.0, 0.0, 0.0, 0.0};
   /* clang-format on */
 
   struct timespec t = tic();
@@ -596,12 +596,12 @@ int test_chol_solve2() {
 #endif
 
 int test_tf_rot_set() {
-  double C[9];
+  real_t C[9];
   for (int i = 0; i < 9; i++) {
     C[i] = 1.0;
   }
 
-  double T[16] = {0.0};
+  real_t T[16] = {0.0};
   tf_rot_set(T, C);
   /* print_matrix("T", T, 4, 4); */
 
@@ -629,9 +629,9 @@ int test_tf_rot_set() {
 }
 
 int test_tf_trans_set() {
-  double r[3] = {1.0, 2.0, 3.0};
+  real_t r[3] = {1.0, 2.0, 3.0};
 
-  double T[16] = {0.0};
+  real_t T[16] = {0.0};
   tf_trans_set(T, r);
   /* print_matrix("T", T, 4, 4); */
 
@@ -660,7 +660,7 @@ int test_tf_trans_set() {
 
 int test_tf_trans_get() {
   /* clang-format off */
-  double T[16] = {1.0, 2.0, 3.0, 4.0,
+  real_t T[16] = {1.0, 2.0, 3.0, 4.0,
                   5.0, 6.0, 7.0, 8.0,
                   9.0, 10.0, 11.0, 12.0,
                   13.0, 14.0, 15.0, 16.0};
@@ -668,7 +668,7 @@ int test_tf_trans_get() {
   print_matrix("T", T, 4, 4);
 
   /* Get translation vector */
-  double r[3];
+  real_t r[3];
   tf_trans_get(T, r);
   print_vector("r", r, 3);
 
@@ -682,7 +682,7 @@ int test_tf_trans_get() {
 int test_tf_rot_get() {
   /* Transform */
   /* clang-format off */
-  double T[16] = {1.0, 2.0, 3.0, 4.0,
+  real_t T[16] = {1.0, 2.0, 3.0, 4.0,
                   5.0, 6.0, 7.0, 8.0,
                   9.0, 10.0, 11.0, 12.0,
                   13.0, 14.0, 15.0, 16.0};
@@ -690,7 +690,7 @@ int test_tf_rot_get() {
   print_matrix("T", T, 4, 4);
 
   /* Get rotation matrix */
-  double C[9];
+  real_t C[9];
   tf_rot_get(T, C);
   print_matrix("C", C, 3, 3);
 
@@ -712,24 +712,24 @@ int test_tf_rot_get() {
 int test_tf_quat_get() {
   /* Transform */
   /* clang-format off */
-  double T[16] = {1.0, 0.0, 0.0, 0.0,
+  real_t T[16] = {1.0, 0.0, 0.0, 0.0,
                   0.0, 1.0, 0.0, 0.0,
                   0.0, 0.0, 1.0, 0.0,
                   0.0, 0.0, 0.0, 1.0};
   /* clang-format on */
 
   /* Create rotation matrix */
-  const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
-  double C[9] = {0};
+  const real_t euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+  real_t C[9] = {0};
   euler321(euler, C);
   tf_rot_set(T, C);
 
   /* Extract quaternion from transform */
-  double q[4] = {0};
+  real_t q[4] = {0};
   tf_quat_get(T, q);
 
   /* Convert quaternion back to euler angles */
-  double rpy[3] = {0};
+  real_t rpy[3] = {0};
   quat2euler(q, rpy);
 
   MU_CHECK(fltcmp(rad2deg(rpy[0]), 10.0) == 0);
@@ -742,30 +742,30 @@ int test_tf_quat_get() {
 int test_tf_inv() {
   /* Create Transform */
   /* clang-format off */
-  double T[16] = {1.0, 0.0, 0.0, 0.0,
+  real_t T[16] = {1.0, 0.0, 0.0, 0.0,
                   0.0, 1.0, 0.0, 0.0,
                   0.0, 0.0, 1.0, 0.0,
                   0.0, 0.0, 0.0, 1.0};
   /* clang-format on */
   /* -- Set rotation component */
-  const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
-  double C[9] = {0};
+  const real_t euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+  real_t C[9] = {0};
   euler321(euler, C);
   tf_rot_set(T, C);
   /* -- Set translation component */
-  double r[3] = {1.0, 2.0, 3.0};
+  real_t r[3] = {1.0, 2.0, 3.0};
   tf_trans_set(T, r);
   print_matrix("T", T, 4, 4);
   printf("\n");
 
   /* Invert transform */
-  double T_inv[16] = {0};
+  real_t T_inv[16] = {0};
   tf_inv(T, T_inv);
   print_matrix("T_inv", T_inv, 4, 4);
   printf("\n");
 
-  /* Double Invert transform */
-  double T_inv_inv[16] = {0};
+  /* real_t Invert transform */
+  real_t T_inv_inv[16] = {0};
   tf_inv(T_inv, T_inv_inv);
   print_matrix("T_inv_inv", T_inv_inv, 4, 4);
 
@@ -783,7 +783,7 @@ int test_tf_inv() {
 int test_tf_point() {
   /* Transform */
   /* clang-format off */
-  double T[16] = {1.0, 0.0, 0.0, 1.0,
+  real_t T[16] = {1.0, 0.0, 0.0, 1.0,
                   0.0, 1.0, 0.0, 2.0,
                   0.0, 0.0, 1.0, 3.0,
                   0.0, 0.0, 0.0, 1.0};
@@ -791,11 +791,11 @@ int test_tf_point() {
   print_matrix("T", T, 4, 4);
 
   /* Point */
-  double p[3] = {1.0, 2.0, 3.0};
+  real_t p[3] = {1.0, 2.0, 3.0};
   print_vector("p", p, 3);
 
   /* Transform point */
-  double result[3] = {0};
+  real_t result[3] = {0};
   tf_point(T, p, result);
   print_vector("result", result, 3);
 
@@ -805,7 +805,7 @@ int test_tf_point() {
 int test_tf_hpoint() {
   /* Transform */
   /* clang-format off */
-  double T[16] = {1.0, 0.0, 0.0, 1.0,
+  real_t T[16] = {1.0, 0.0, 0.0, 1.0,
                   0.0, 1.0, 0.0, 2.0,
                   0.0, 0.0, 1.0, 3.0,
                   0.0, 0.0, 0.0, 1.0};
@@ -813,11 +813,11 @@ int test_tf_hpoint() {
   print_matrix("T", T, 4, 4);
 
   /* Homogeneous point */
-  double hp[4] = {1.0, 2.0, 3.0, 1.0};
+  real_t hp[4] = {1.0, 2.0, 3.0, 1.0};
   print_vector("hp", hp, 4);
 
   /* Transform homogeneous point */
-  double result[4] = {0};
+  real_t result[4] = {0};
   tf_hpoint(T, hp, result);
   print_vector("result", result, 4);
 
@@ -827,14 +827,14 @@ int test_tf_hpoint() {
 int test_tf_perturb_rot() {
   /* Transform */
   /* clang-format off */
-  double T[4 * 4] = {1.0, 0.0, 0.0, 1.0,
+  real_t T[4 * 4] = {1.0, 0.0, 0.0, 1.0,
                      0.0, 1.0, 0.0, 2.0,
                      0.0, 0.0, 1.0, 3.0,
                      0.0, 0.0, 0.0, 1.0};
   /* clang-format on */
 
   /* Perturb rotation */
-  const double step_size = 1e-2;
+  const real_t step_size = 1e-2;
   tf_perturb_rot(T, step_size, 0);
   print_matrix("T", T, 4, 4);
 
@@ -849,14 +849,14 @@ int test_tf_perturb_rot() {
 int test_tf_perturb_trans() {
   /* Transform */
   /* clang-format off */
-  double T[4 * 4] = {1.0, 0.0, 0.0, 1.0,
+  real_t T[4 * 4] = {1.0, 0.0, 0.0, 1.0,
                      0.0, 1.0, 0.0, 2.0,
                      0.0, 0.0, 1.0, 3.0,
                      0.0, 0.0, 0.0, 1.0};
   /* clang-format on */
 
   /* Perturb translation */
-  const double step_size = 1e-2;
+  const real_t step_size = 1e-2;
   tf_perturb_trans(T, step_size, 0);
   print_matrix("T", T, 4, 4);
 
@@ -870,16 +870,16 @@ int test_tf_perturb_trans() {
 
 int test_euler321() {
   /* Euler to rotation matrix */
-  const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
-  double C[9] = {0};
+  const real_t euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+  real_t C[9] = {0};
   euler321(euler, C);
 
   /* Rotation matrix to quaternion */
-  double q[4] = {0};
+  real_t q[4] = {0};
   rot2quat(C, q);
 
   /* Quaternion to Euler angles*/
-  double euler2[3] = {0};
+  real_t euler2[3] = {0};
   quat2euler(q, euler2);
 
   print_vector("euler", euler, 3);
@@ -890,8 +890,8 @@ int test_euler321() {
 
 int test_rot2quat() {
   /* Rotation matrix to quaternion */
-  const double C[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-  double q[4] = {0.0};
+  const real_t C[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+  real_t q[4] = {0.0};
   rot2quat(C, q);
   print_vector("q", q, 4);
 
@@ -899,15 +899,15 @@ int test_rot2quat() {
 }
 
 int test_quat2euler() {
-  const double C[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+  const real_t C[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
 
   /* Rotation matrix to quaternion */
-  double q[4] = {0.0};
+  real_t q[4] = {0.0};
   rot2quat(C, q);
   print_vector("q", q, 4);
 
   /* Quaternion to Euler angles */
-  double rpy[3] = {0.0};
+  real_t rpy[3] = {0.0};
   quat2euler(q, rpy);
   print_vector("euler", rpy, 3);
 
@@ -916,17 +916,17 @@ int test_quat2euler() {
 
 int test_quat2rot() {
   /* Euler to rotation matrix */
-  const double euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
-  double C[9] = {0};
+  const real_t euler[3] = {deg2rad(10.0), deg2rad(20.0), deg2rad(30.0)};
+  real_t C[9] = {0};
   euler321(euler, C);
 
   /* Rotation matrix to quaternion */
-  double q[4] = {0.0};
+  real_t q[4] = {0.0};
   rot2quat(C, q);
   /* print_vector("q", q, 4); */
 
   /* Quaternion to rotation matrix */
-  double rot[9] = {0.0};
+  real_t rot[9] = {0.0};
   quat2rot(q, rot);
 
   for (int i = 0; i < 9; i++) {
@@ -940,8 +940,8 @@ int test_quat2rot() {
 /*   pose_t pose; */
 /*  */
 /*   timestamp_t ts = 0; */
-/*   double q[4] = {1.0, 2.0, 3.0, 4.0}; */
-/*   double r[3] = {1.0, 2.0, 3.0}; */
+/*   real_t q[4] = {1.0, 2.0, 3.0, 4.0}; */
+/*   real_t r[3] = {1.0, 2.0, 3.0}; */
 /*   pose_init(&pose, ts, q, r); */
 /*  */
 /*   MU_CHECK(pose.ts == 0); */
@@ -959,10 +959,10 @@ int test_quat2rot() {
 /* int test_pose_set_get_quat() { */
 /*   pose_t pose; */
 /*  */
-/*   double q[4] = {1.0, 2.0, 3.0, 4.0}; */
+/*   real_t q[4] = {1.0, 2.0, 3.0, 4.0}; */
 /*   pose_set_quat(&pose, q); */
 /*  */
-/*   double q_got[4] = {1.0, 2.0, 3.0, 4.0}; */
+/*   real_t q_got[4] = {1.0, 2.0, 3.0, 4.0}; */
 /*   pose_get_quat(&pose, q_got); */
 /*  */
 /*   MU_CHECK(fltcmp(pose.q[0], 1.0) == 0); */
@@ -981,10 +981,10 @@ int test_quat2rot() {
 /* int test_pose_set_get_trans() { */
 /*   pose_t pose; */
 /*  */
-/*   double r[3] = {1.0, 2.0, 3.0}; */
+/*   real_t r[3] = {1.0, 2.0, 3.0}; */
 /*   pose_set_trans(&pose, r); */
 /*  */
-/*   double r_got[3] = {1.0, 2.0, 3.0}; */
+/*   real_t r_got[3] = {1.0, 2.0, 3.0}; */
 /*   pose_get_trans(&pose, r_got); */
 /*  */
 /*   MU_CHECK(fltcmp(pose.r[0], 1.0) == 0); */
@@ -1002,8 +1002,8 @@ int test_quat2rot() {
 /*   pose_t pose; */
 /*  */
 /*   timestamp_t ts = 0; */
-/*   double q[4] = {1.0, 0.0, 0.0, 0.0}; */
-/*   double r[3] = {0.0, 0.0, 0.0}; */
+/*   real_t q[4] = {1.0, 0.0, 0.0, 0.0}; */
+/*   real_t r[3] = {0.0, 0.0, 0.0}; */
 /*   pose_init(&pose, ts, q, r); */
 /*   pose_print("pose", &pose); */
 /*  */
@@ -1014,11 +1014,11 @@ int test_quat2rot() {
 /*   pose_t pose; */
 /*  */
 /*   timestamp_t ts = 0; */
-/*   double q[4] = {1.0, 0.0, 0.0, 0.0}; */
-/*   double r[3] = {1.0, 2.0, 3.0}; */
+/*   real_t q[4] = {1.0, 0.0, 0.0, 0.0}; */
+/*   real_t r[3] = {1.0, 2.0, 3.0}; */
 /*   pose_init(&pose, ts, q, r); */
 /*  */
-/*   double T[4 * 4] = {0}; */
+/*   real_t T[4 * 4] = {0}; */
 /*   pose2tf(&pose, T); */
 /*   #<{(| print_matrix("T", T, 4, 4); |)}># */
 /*  */

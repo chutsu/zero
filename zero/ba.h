@@ -4,9 +4,27 @@
 #include <string.h>
 
 #include "zero/zero.h"
-#include "zero/se.h"
 
-static void load_camera(const char *data_path, double K[3 * 3]) {
+struct keypoints_t {
+  real_t **data;
+  int size;
+} typedef keypoints_t;
+
+struct ba_data_t {
+  real_t cam_K[3 * 3];
+
+  int nb_frames;
+  real_t **cam_poses;
+  real_t **target_pose;
+
+  keypoints_t **keypoints;
+  int **point_ids;
+
+  real_t **points;
+  int nb_points;
+} typedef ba_data_t;
+
+static void load_camera(const char *data_path, real_t K[3 * 3]) {
   /* Setup csv path */
   char cam_csv[1000] = {0};
   strcat(cam_csv, data_path);
@@ -15,7 +33,7 @@ static void load_camera(const char *data_path, double K[3 * 3]) {
   /* Parse csv file */
   int nb_rows = 0;
   int nb_cols = 0;
-  double **cam_K = csv_data(cam_csv, &nb_rows, &nb_cols);
+  real_t **cam_K = csv_data(cam_csv, &nb_rows, &nb_cols);
   if (cam_K == NULL) {
     FATAL("Failed to load csv file [%s]!", cam_csv);
   }
@@ -38,14 +56,14 @@ static void load_camera(const char *data_path, double K[3 * 3]) {
   free(cam_K);
 }
 
-static double **load_poses(const char *csv_path, int *nb_poses) {
+static real_t **load_poses(const char *csv_path, int *nb_poses) {
   assert(csv_path != NULL);
   assert(nb_poses != NULL);
 
   FILE *csv_file = fopen(csv_path, "r");
   char line[MAX_LINE_LENGTH] = {0};
   *nb_poses = csv_rows(csv_path);
-  double **poses = malloc(sizeof(double *) * *nb_poses);
+  real_t **poses = malloc(sizeof(real_t *) * *nb_poses);
 
   int pose_idx = 0;
   while (fgets(line, MAX_LINE_LENGTH, csv_file) != NULL) {
@@ -54,7 +72,7 @@ static double **load_poses(const char *csv_path, int *nb_poses) {
     }
 
     char entry[MAX_LINE_LENGTH] = {0};
-    double data[7] = {0};
+    real_t data[7] = {0};
     int index = 0;
     for (size_t i = 0; i < strlen(line); i++) {
       char c = line[i];
@@ -71,7 +89,7 @@ static double **load_poses(const char *csv_path, int *nb_poses) {
       }
     }
 
-    poses[pose_idx] = malloc(sizeof(double) * 7);
+    poses[pose_idx] = malloc(sizeof(real_t) * 7);
     poses[pose_idx][0] = data[0];
     poses[pose_idx][1] = data[1];
     poses[pose_idx][2] = data[2];
@@ -87,14 +105,14 @@ static double **load_poses(const char *csv_path, int *nb_poses) {
   return poses;
 }
 
-static double **load_camera_poses(const char *data_path, int *nb_cam_poses) {
+static real_t **load_camera_poses(const char *data_path, int *nb_cam_poses) {
   char cam_poses_csv[1000] = {0};
   strcat(cam_poses_csv, data_path);
   strcat(cam_poses_csv, "/camera_poses.csv");
   return load_poses(cam_poses_csv, nb_cam_poses);
 }
 
-static double **load_target_pose(const char *data_path) {
+static real_t **load_target_pose(const char *data_path) {
   char target_pose_csv[1000] = {0};
   strcat(target_pose_csv, data_path);
   strcat(target_pose_csv, "/target_pose.csv");
@@ -102,11 +120,6 @@ static double **load_target_pose(const char *data_path) {
   int nb_poses = 0;
   return load_poses(target_pose_csv, &nb_poses);
 }
-
-struct keypoints_t {
-  double **data;
-  int size;
-} typedef keypoints_t;
 
 void keypoints_free(keypoints_t *keypoints) {
   for (int i = 0; i < keypoints->size; i++) {
@@ -131,7 +144,7 @@ static keypoints_t *parse_keypoints_line(char *line) {
 
   char entry[100] = {0};
   int kp_ready = 0;
-  double kp[2] = {0};
+  real_t kp[2] = {0};
   int kp_index = 0;
 
   /* Parse line */
@@ -145,7 +158,7 @@ static keypoints_t *parse_keypoints_line(char *line) {
       /* Initialize keypoints */
       if (keypoints->data == NULL) {
         size_t array_size = strtod(entry, NULL);
-        keypoints->data = calloc(array_size, sizeof(double *));
+        keypoints->data = calloc(array_size, sizeof(real_t *));
         keypoints->size = array_size / 2.0;
 
       } else { /* Parse keypoint */
@@ -155,7 +168,7 @@ static keypoints_t *parse_keypoints_line(char *line) {
 
         } else {
           kp[1] = strtod(entry, NULL);
-          keypoints->data[kp_index] = malloc(sizeof(double) * 2);
+          keypoints->data[kp_index] = malloc(sizeof(real_t) * 2);
           keypoints->data[kp_index][0] = kp[0];
           keypoints->data[kp_index][1] = kp[1];
 
@@ -197,16 +210,16 @@ static keypoints_t **load_keypoints(const char *data_path, int *nb_frames) {
   return keypoints;
 }
 
-static double **load_points(const char *data_path, int *nb_points) {
+static real_t **load_points(const char *data_path, int *nb_points) {
   char points_csv[1000] = {0};
   strcat(points_csv, data_path);
   strcat(points_csv, "/points.csv");
 
   /* Initialize memory for points */
   *nb_points = csv_rows(points_csv);
-  double **points = malloc(sizeof(double *) * *nb_points);
+  real_t **points = malloc(sizeof(real_t *) * *nb_points);
   for (int i = 0; i < *nb_points; i++) {
-    points[i] = malloc(sizeof(double) * 3);
+    points[i] = malloc(sizeof(real_t) * 3);
   }
 
   /* Load file */
@@ -259,20 +272,6 @@ static int **load_point_ids(const char *data_path, int *nb_points) {
   strcat(csv_path, "/point_ids.csv");
   return load_iarrays(csv_path, nb_points);
 }
-
-struct ba_data_t {
-  double cam_K[3 * 3];
-
-  int nb_frames;
-  double **cam_poses;
-  double **target_pose;
-
-  keypoints_t **keypoints;
-  int **point_ids;
-
-  double **points;
-  int nb_points;
-} typedef ba_data_t;
 
 ba_data_t *ba_load_data(const char *data_path) {
   ba_data_t *data = malloc(sizeof(ba_data_t));
@@ -332,24 +331,24 @@ int ba_residual_size(ba_data_t *data) {
   return r_size;
 }
 
-double *ba_residuals(ba_data_t *data, int *r_size) {
+real_t *ba_residuals(ba_data_t *data, int *r_size) {
   /* Initialize memory for residuals */
   *r_size = ba_residual_size(data);
-  double *r = calloc(*r_size, sizeof(double));
+  real_t *r = calloc(*r_size, sizeof(real_t));
 
   /* Target pose */
-  double T_WT[4 * 4] = {0};
+  real_t T_WT[4 * 4] = {0};
   tf(data->target_pose[0], T_WT);
 
   /* Loop over time */
   int res_idx = 0; /* Residual index */
   for (int k = 0; k < data->nb_frames; k++) {
     /* Form camera pose */
-    double T_WC[4 * 4] = {0};
+    real_t T_WC[4 * 4] = {0};
     tf(data->cam_poses[k], T_WC);
 
     /* Invert camera pose T_WC to T_CW */
-    double T_CW[4 * 4] = {0};
+    real_t T_CW[4 * 4] = {0};
     tf_inv(T_WC, T_CW);
 
     /* Get point ids and measurements at time step k */
@@ -359,18 +358,18 @@ double *ba_residuals(ba_data_t *data, int *r_size) {
     for (int i = 0; i < nb_ids; i++) {
       /* Get point in world frame */
       const int id = point_ids[i];
-      const double *p_W = data->points[id];
+      const real_t *p_W = data->points[id];
 
       /* Transform point in world frame to camera frame */
-      double p_C[3] = {0};
+      real_t p_C[3] = {0};
       tf_point(T_CW, p_W, p_C);
 
       /* Project point in camera frame down to image plane */
-      double z_hat[2] = {0};
+      real_t z_hat[2] = {0};
       pinhole_project(data->cam_K, p_C, z_hat);
 
       /* Calculate reprojection error */
-      const double *z = data->keypoints[k]->data[i];
+      const real_t *z = data->keypoints[k]->data[i];
       r[res_idx] = z[0] - z_hat[0];
       r[res_idx + 1] = z[1] - z_hat[1];
       res_idx += 2;
@@ -380,7 +379,7 @@ double *ba_residuals(ba_data_t *data, int *r_size) {
   return r;
 }
 
-static void J_intrinsics_point(const double K[3 * 3], double J[2 * 2]) {
+static void J_intrinsics_point(const real_t K[3 * 3], real_t J[2 * 2]) {
   /* J = [K[0, 0], 0.0,  */
   /* 		  0.0, K[1, 1]]; */
   zeros(J, 2, 2);
@@ -388,10 +387,10 @@ static void J_intrinsics_point(const double K[3 * 3], double J[2 * 2]) {
   J[3] = K[4];
 }
 
-static void J_project(const double p_C[3], double J[2 * 3]) {
-  const double x = p_C[0];
-  const double y = p_C[1];
-  const double z = p_C[2];
+static void J_project(const real_t p_C[3], real_t J[2 * 3]) {
+  const real_t x = p_C[0];
+  const real_t y = p_C[1];
+  const real_t z = p_C[2];
 
   /* J = [1 / z, 0, -x / z^2, */
   /* 		  0, 1 / z, -y / z^2]; */
@@ -402,30 +401,30 @@ static void J_project(const double p_C[3], double J[2 * 3]) {
   J[5] = -y / (z * z);
 }
 
-static void J_camera_rotation(const double q_WC[4],
-                              const double r_WC[3],
-                              const double p_W[3],
-                              double J[3 * 3]) {
+static void J_camera_rotation(const real_t q_WC[4],
+                              const real_t r_WC[3],
+                              const real_t p_W[3],
+                              real_t J[3 * 3]) {
   /* Convert quaternion to rotatoin matrix */
-  double C_WC[3 * 3] = {0};
+  real_t C_WC[3 * 3] = {0};
   quat2rot(q_WC, C_WC);
 
   /* J = C_WC * skew(p_W - r_WC); */
-  double C_CW[3 * 3] = {0};
+  real_t C_CW[3 * 3] = {0};
   mat_transpose(C_WC, 3, 3, C_CW);
 
-  double x[3] = {0};
+  real_t x[3] = {0};
   vec_sub(p_W, r_WC, x, 3);
 
-  double S[3 * 3] = {0};
+  real_t S[3 * 3] = {0};
   skew(x, S);
 
   dot_cblas(C_CW, 3, 3, S, 3, 3, J);
 }
 
-static void J_camera_translation(const double q_WC[4], double J[3 * 3]) {
+static void J_camera_translation(const real_t q_WC[4], real_t J[3 * 3]) {
   /* Convert quaternion to rotatoin matrix */
-  double C_WC[3 * 3] = {0};
+  real_t C_WC[3 * 3] = {0};
   quat2rot(q_WC, C_WC);
 
   /* J = -C_CW */
@@ -433,20 +432,20 @@ static void J_camera_translation(const double q_WC[4], double J[3 * 3]) {
   mat_scale(J, 3, 3, -1.0);
 }
 
-static void J_target_point(const double q_WC[4], double J[3 * 3]) {
+static void J_target_point(const real_t q_WC[4], real_t J[3 * 3]) {
   /* Convert quaternion to rotatoin matrix */
-  double C_WC[3 * 3] = {0};
+  real_t C_WC[3 * 3] = {0};
   quat2rot(q_WC, C_WC);
 
   /* J = C_CW */
   mat_transpose(C_WC, 3, 3, J);
 }
 
-double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
+real_t *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
   /* Initialize memory for jacobian */
   *J_rows = ba_residual_size(data);
   *J_cols = (data->nb_frames * 6) + (data->nb_points * 3);
-  double *J = calloc(*J_rows * *J_cols, sizeof(double));
+  real_t *J = calloc(*J_rows * *J_cols, sizeof(real_t));
   zeros(J, *J_rows, *J_cols);
 
   /* Loop over camera poses */
@@ -455,15 +454,15 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
 
   for (int k = 0; k < data->nb_frames; k++) {
     /* Form camera pose */
-    double T_WC[4 * 4] = {0};
-    double q_WC[4] = {0};
-    double r_WC[3] = {0};
+    real_t T_WC[4 * 4] = {0};
+    real_t q_WC[4] = {0};
+    real_t r_WC[3] = {0};
     tf(data->cam_poses[k], T_WC);
     tf_quat_get(T_WC, q_WC);
     tf_trans_get(T_WC, r_WC);
 
     /* Invert T_WC to T_CW */
-    double T_CW[4 * 4] = {0};
+    real_t T_CW[4 * 4] = {0};
     tf_inv(T_WC, T_CW);
 
     /* Get point ids and measurements at time step k */
@@ -474,10 +473,10 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
     for (int i = 0; i < nb_ids; i++) {
       /* Get point in world frame */
       const int id = point_ids[i];
-      const double *p_W = data->points[id];
+      const real_t *p_W = data->points[id];
 
       /* Transform point in world frame to camera frame */
-      double p_C[3] = {0};
+      real_t p_C[3] = {0};
       tf_point(T_CW, p_W, p_C);
 
       /* Camera pose jacobian */
@@ -488,23 +487,23 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
       int ce = cs + 5;
 
       /* -- Form jacobians */
-      double J_K[2 * 2] = {0};
-      double J_P[2 * 3] = {0};
-      double J_h[2 * 3] = {0};
+      real_t J_K[2 * 2] = {0};
+      real_t J_P[2 * 3] = {0};
+      real_t J_h[2 * 3] = {0};
       J_intrinsics_point(data->cam_K, J_K);
       J_project(p_C, J_P);
       dot_cblas(J_K, 2, 2, J_P, 2, 3, J_h);
 
       /* -- J_cam_rot = -1 * J_h * J_C; */
-      double J_C[3 * 3] = {0};
-      double J_cam_rot[2 * 3] = {0};
+      real_t J_C[3 * 3] = {0};
+      real_t J_cam_rot[2 * 3] = {0};
       J_camera_rotation(q_WC, r_WC, p_W, J_C);
       dot_cblas(J_h, 2, 3, J_C, 3, 3, J_cam_rot);
       mat_scale(J_cam_rot, 2, 3, -1);
 
       /* -- J_cam_pos = -1 * J_h * J_r; */
-      double J_r[3 * 3] = {0};
-      double J_cam_pos[2 * 3] = {0};
+      real_t J_r[3 * 3] = {0};
+      real_t J_cam_pos[2 * 3] = {0};
       J_camera_translation(q_WC, J_r);
       dot_cblas(J_h, 2, 3, J_r, 3, 3, J_cam_pos);
       mat_scale(J_cam_pos, 2, 3, -1);
@@ -518,10 +517,10 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
       cs = (data->nb_frames * 6) + point_ids[i] * 3;
       ce = cs + 2;
       /* -- Form jacobians */
-      double J_p[3 * 3] = {0};
+      real_t J_p[3 * 3] = {0};
       J_target_point(q_WC, J_p);
       /* -- J_point = -1 * J_h * J_target_point(q_WC); */
-      double J_point[2 * 3] = {0};
+      real_t J_point[2 * 3] = {0};
       dot_cblas(J_h, 2, 3, J_p, 3, 3, J_point);
       mat_scale(J_point, 2, 3, -1);
       /* -- Fill in the big jacobian */
@@ -535,7 +534,7 @@ double *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
   return J;
 }
 
-void ba_update(ba_data_t *data, double *dx) {
+void ba_update(ba_data_t *data, real_t *dx) {
   /* Update camera poses */
   for (int k = 0; k < data->nb_frames; k++) {
     const int s = k * 6;
@@ -543,11 +542,11 @@ void ba_update(ba_data_t *data, double *dx) {
     /* Update camera rotation */
     /* dq = quatdelta(dalpha) */
     /* q_WC_k = quatmul(dq, q_WC_k) */
-    double *cam_pose = data->cam_poses[k];
-    const double dalpha[3] = {dx[s], dx[s + 1], dx[s + 2]};
-    double dq[4] = {0};
-    double q_WC[4] = {cam_pose[0], cam_pose[1], cam_pose[2], cam_pose[3]};
-    double q_new[4] = {0};
+    real_t *cam_pose = data->cam_poses[k];
+    const real_t dalpha[3] = {dx[s], dx[s + 1], dx[s + 2]};
+    real_t dq[4] = {0};
+    real_t q_WC[4] = {cam_pose[0], cam_pose[1], cam_pose[2], cam_pose[3]};
+    real_t q_new[4] = {0};
     quatdelta(dalpha, dq);
     quatmul(dq, q_WC, q_new);
     cam_pose[0] = q_new[0];
@@ -557,7 +556,7 @@ void ba_update(ba_data_t *data, double *dx) {
 
     /* Update camera position */
     /* r_WC_k += dr_WC */
-    const double dr_WC[3] = {dx[s + 3], dx[s + 4], dx[s + 5]};
+    const real_t dr_WC[3] = {dx[s + 3], dx[s + 4], dx[s + 5]};
     cam_pose[4] += dr_WC[0];
     cam_pose[5] += dr_WC[1];
     cam_pose[6] += dr_WC[2];
@@ -566,39 +565,55 @@ void ba_update(ba_data_t *data, double *dx) {
   /* Update points */
   for (int i = 0; i < data->nb_points; i++) {
     const int s = (data->nb_frames * 6) + (i * 3);
-    const double dp_W[3] = {dx[s], dx[s + 1], dx[s + 2]};
+    const real_t dp_W[3] = {dx[s], dx[s + 1], dx[s + 2]};
     data->points[i][0] += dp_W[0];
     data->points[i][1] += dp_W[1];
     data->points[i][2] += dp_W[2];
   }
 }
 
-double ba_cost(const double *e, const int length) {
+real_t ba_cost(const real_t *e, const int length) {
   /* cost = 0.5 * e' * e */
-  double cost = 0.0;
+  real_t cost = 0.0;
   dot_cblas(e, 1, length, e, length, 1, &cost);
   return cost * 0.5;
 }
 
+static real_t calc_reproj_error(const real_t *e, const int length) {
+  real_t sse = 0;
+  for (int i = 0; i < length; i += 2) {
+    real_t err_x = e[i];
+    real_t err_y = e[i + 1];
+    real_t err_norm = sqrt(err_x * err_x + err_y * err_y);
+    sse += err_norm * err_norm;
+  }
+
+  real_t nb_reproj_errors = length / 2.0;
+  real_t mse = sse / nb_reproj_errors;
+  real_t rmse = sqrt(mse);
+
+  return rmse;
+}
+
 void ba_solve(ba_data_t *data) {
   int max_iter = 10;
-  double lambda = 1e-4;
+  real_t lambda = 1e-4;
 
   int e_size = 0;
-  double *e = ba_residuals(data, &e_size);
-  double cost_prev = ba_cost(e, e_size);
+  real_t *e = ba_residuals(data, &e_size);
+  real_t cost_prev = ba_cost(e, e_size);
   free(e);
 
   for (int iter = 0; iter < max_iter; iter++) {
     /* Jacobians */
     int E_rows = 0;
     int E_cols = 0;
-    double *E = ba_jacobian(data, &E_rows, &E_cols);
+    real_t *E = ba_jacobian(data, &E_rows, &E_cols);
 
     /* Solve Gauss-Newton system [H dx = g]: Solve for dx */
     /* -- Calculate L.H.S of Gauss-Newton: H = (E' * W * E); */
-    double *E_t = mat_new(E_cols, E_rows);
-    double *H = mat_new(E_cols, E_cols);
+    real_t *E_t = mat_new(E_cols, E_rows);
+    real_t *H = mat_new(E_cols, E_cols);
     mat_transpose(E, E_rows, E_cols, E_t);
     dot_cblas(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
     /* -- Apply Levenberg-Marquardt damping: H = H + lambda * H_diag */
@@ -606,7 +621,7 @@ void ba_solve(ba_data_t *data) {
       H[(i * E_cols) + i] += lambda * H[(i * E_cols) + i];
     }
     /* -- Calculate R.H.S of Gauss-Newton: g = -E' * W * e; */
-    double *g = vec_new(E_cols);
+    real_t *g = vec_new(E_cols);
     mat_scale(E_t, E_cols, E_rows, -1.0);
     e = ba_residuals(data, &e_size);
     dot_cblas(E_t, E_cols, E_rows, e, e_size, 1, g);
@@ -614,9 +629,9 @@ void ba_solve(ba_data_t *data) {
     free(E);
     free(E_t);
     /* -- Solve linear system: H * dx = g */
-    double *dx = vec_new(E_cols);
-    /* chol_solve(H, g, dx, E_cols); */
-    chol_solve2(H, g, dx, E_cols);
+    real_t *dx = vec_new(E_cols);
+    chol_solve(H, g, dx, E_cols);
+    /* chol_solve2(H, g, dx, E_cols); */
     free(H);
     free(g);
 
@@ -626,16 +641,19 @@ void ba_solve(ba_data_t *data) {
 
     /* Calculate cost */
     e = ba_residuals(data, &e_size);
-    double cost = ba_cost(e, e_size);
-    const double dcost = cost - cost_prev;
+    real_t cost = ba_cost(e, e_size);
+    const real_t dcost = cost - cost_prev;
+    const real_t rms_reproj_error = calc_reproj_error(e, e_size);
     free(e);
+
     printf("iter: [%d]  ", iter);
     printf("lambda: %.2e  ", lambda);
     printf("cost: %.4e  ", cost);
-    printf("dcost: %.2e\n", dcost);
+    printf("dcost: %.2e  ", dcost);
+    printf("rms reproj error: %.2f\n", rms_reproj_error);
 
     /* Termination criteria */
-    if (fabs(dcost) < 1.0e-6) {
+    if (fabs(dcost) < 1.0e-1) {
       printf("Done!\n");
       break;
     }

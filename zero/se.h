@@ -3,12 +3,20 @@
 
 #include "zero.h"
 
+/* PARAMETER TYPE */
 #define NOT_SET -1
 #define POSE 1
 #define LANDMARK 2
 #define CAMERA 3
 #define EXTRINSIC 4
 #define SPEED_BIAS 5
+
+/* PROJECTION MODELS */
+#define PINHOLE 1
+
+/* DISTORTION MODELS */
+#define RADTAN4 1
+#define EQUI4 2
 
 typedef uint64_t param_id_t;
 
@@ -18,18 +26,18 @@ struct param_t {
   param_id_t param_id;
 };
 
-/* struct pose_t { */
-/*   struct param_t meta; */
-/*  */
-/*   double *param; */
-/*   size_t param_size; */
-/*   size_t min_param_size; */
-/* }; */
+struct pose_t {
+  struct param_t meta;
+
+  real_t *param;
+  size_t param_size;
+  size_t min_param_size;
+};
 
 struct landmark_t {
   struct param_t meta;
 
-  double *param;
+  real_t *param;
   size_t param_size;
   size_t min_param_size;
 };
@@ -37,7 +45,7 @@ struct landmark_t {
 struct extrinsic_t {
   struct param_t meta;
 
-  double *param;
+  real_t *param;
   size_t param_size;
   size_t min_param_size;
 };
@@ -50,13 +58,13 @@ struct camera_t {
   int proj_model;
   int dist_model;
 
-  double *param;
+  real_t *param;
   size_t param_size;
   size_t min_param_size;
 };
 
 void param_init(struct param_t *param);
-/* void pose_init(struct pose_t *pose); */
+void pose_init(struct pose_t *pose);
 void landmark_init(struct landmark_t *landmark);
 void extrinsic_init(struct extrinsic_t *extrinsic);
 void camera_init(struct camera_t *camera);

@@ -18,9 +18,9 @@ debug() {
 
 # python3 scripts/tf_point.py
 
-# make format_code
+make format_code
 # make clean
-# time make
+time make
 
 cd ./build/bin
 # ZERO-DATA

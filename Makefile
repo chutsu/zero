@@ -1,7 +1,7 @@
 include config.mk
 
-.PHONY: format_code zero tests
-default: $(BLD_DIR) $(BIN_DIR) zero tests
+default: $(BLD_DIR) $(BIN_DIR) zero tests done
+.PHONY: format_code zero tests done
 
 clean:
 	@rm -rf $(BLD_DIR)
@@ -23,3 +23,6 @@ benchmarks:
 
 tests:
 	@make -s -C zero/tests
+
+done:
+	@echo "Done! :)"

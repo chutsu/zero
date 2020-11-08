@@ -6,9 +6,7 @@ void param_init(struct param_t *param) {
   param->param_id = NOT_SET;
 }
 
-/* void pose_init(struct pose_t *pose, const ) { */
-/*  */
-/* } */
+void pose_init(struct pose_t *pose) {}
 
 void landmark_init(struct landmark_t *landmark) {
   landmark->meta.type = NOT_SET;
