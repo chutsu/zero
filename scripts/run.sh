@@ -19,7 +19,8 @@ debug() {
 # python3 scripts/tf_point.py
 
 # make format_code
-# make clean
+make clean
+# cp -rv zero/tests/test_data/ build/bin/
 time make
 
 cd ./build/bin
@@ -93,6 +94,8 @@ cd ./build/bin
 # ./test_ba --target test_ba_cost
 # time ./test_ba --target test_ba_solve
 
-./test_gui
+# ./test_gui
+./test_imshow
+# gdb -ex run -ex bt ./test_imshow
 
 # ./test_template
