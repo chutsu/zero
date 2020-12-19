@@ -13,7 +13,7 @@ unsigned int texture_id;
 
 
 void resize_window(int width, int height) {
-	/* Prevent division by zero */
+  /* Prevent division by zero */
   if (height == 0) {
     height = 1;
   }
@@ -29,8 +29,8 @@ void draw_window() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
 
-	glBindTexture(GL_TEXTURE_2D, texture_id);
-	glBegin(GL_QUADS);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
+  glBegin(GL_QUADS);
     glTexCoord2f(0.0f, 0.0f);
     glVertex3f(-1.0, -1.0, 0.0);
     glTexCoord2f(1.0f, 0.0f);
@@ -39,19 +39,19 @@ void draw_window() {
     glVertex3f(1.0, 1.0, 0.0);
     glTexCoord2f(0.0f, 1.0f);
     glVertex3f(-1.0, 1.0, 0.0);
-	glEnd();
-	glFlush();
+  glEnd();
+  glFlush();
 
   glutSwapBuffers();
 }
 
 void keyboard_callback(unsigned char key, int x, int y) {
-	usleep(100);  /* avoid thrashing this procedure */
+  usleep(100);  /* avoid thrashing this procedure */
 
-	if (key == ESCAPE) {
-		glutDestroyWindow(window);
-		exit(0);
-	}
+  if (key == ESCAPE) {
+    glutDestroyWindow(window);
+    exit(0);
+  }
 }
 
 void load_image(int img_w, int img_h, int img_c, const unsigned char *data) {
@@ -75,7 +75,7 @@ void load_image(int img_w, int img_h, int img_c, const unsigned char *data) {
                format,
                GL_UNSIGNED_BYTE,
                data);
-	glEnable(GL_TEXTURE_2D);
+  glEnable(GL_TEXTURE_2D);
 }
 
 int main(int argc, char **argv) {
@@ -86,20 +86,20 @@ int main(int argc, char **argv) {
   int img_w = 0;
   int img_h = 0;
   int img_c = 0;
-	stbi_set_flip_vertically_on_load(1);
+  stbi_set_flip_vertically_on_load(1);
   unsigned char *data = stbi_load(img_path, &img_w, &img_h, &img_c, 0);
   if (!data) {
     perror("Failed to load image file");
-		return -1;
+    return -1;
   }
 
-	/* Setup glut */
+  /* Setup glut */
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
   glutInitWindowSize(img_w, img_h);
   glutInitWindowPosition(0, 0);
 
-	/* Setup window */
+  /* Setup window */
   window = glutCreateWindow("Image");
   load_image(img_w, img_h, img_c, data);
   glutDisplayFunc(&draw_window);
