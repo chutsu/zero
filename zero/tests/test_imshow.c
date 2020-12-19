@@ -80,7 +80,7 @@ void load_image(int img_w, int img_h, int img_c, const unsigned char *data) {
 
 int main(int argc, char **argv) {
   /* Load image */
-  const char *img_path = "test_data/imaes/awesomeface.png";
+  const char *img_path = "test_data/images/awesomeface.png";
   /* const char *img_path = "test_data/images/google.jpeg"; */
 
   int img_w = 0;
