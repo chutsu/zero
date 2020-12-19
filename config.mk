@@ -7,12 +7,10 @@ TESTS_DIR=$(PWD)/tests
 # COMPILER SETTINGS
 # CC=tcc
 CC=gcc
-
-CFLAGS= -O3 -Wall -I$(INC_DIR)
+CFLAGS= -Wall -I$(INC_DIR) -pedantic
 
 LIBS=-L$(BLD_DIR) \
 	-lzero \
-	-lgsl \
 	-lblas \
 	-llapack \
 	-lpthread \

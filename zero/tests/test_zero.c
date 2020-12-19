@@ -1,4 +1,4 @@
-#include "zero/munit.h"
+#include "munit.h"
 #include "zero/zero.h"
 
 /* TEST PARAMS */
@@ -13,21 +13,21 @@ int test_malloc_string() {
   return 0;
 }
 
-int test_csv_rows() {
-  int nb_rows = csv_rows(TEST_CSV);
+int test_dsv_rows() {
+  int nb_rows = dsv_rows(TEST_CSV);
   MU_CHECK(nb_rows == 10);
   return 0;
 }
 
-int test_csv_cols() {
-  int nb_cols = csv_cols(TEST_CSV);
+int test_dsv_cols() {
+  int nb_cols = dsv_cols(TEST_CSV, ',');
   MU_CHECK(nb_cols == 10);
   return 0;
 }
 
-int test_csv_fields() {
+int test_dsv_fields() {
   int nb_fields = 0;
-  char **fields = csv_fields(TEST_CSV, &nb_fields);
+  char **fields = dsv_fields(TEST_CSV, ',', &nb_fields);
   char *expected[10] = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
 
   MU_CHECK(nb_fields == 10);
@@ -41,10 +41,10 @@ int test_csv_fields() {
   return 0;
 }
 
-int test_csv_data() {
+int test_dsv_data() {
   int nb_rows = 0;
   int nb_cols = 0;
-  real_t **data = csv_data(TEST_CSV, &nb_rows, &nb_cols);
+  real_t **data = dsv_data(TEST_CSV, ',', &nb_rows, &nb_cols);
 
   int index = 0;
   for (int i = 0; i < nb_rows; i++) {
@@ -1048,10 +1048,10 @@ int test_quat2rot() {
 void test_suite() {
   /* DATA */
   MU_ADD_TEST(test_malloc_string);
-  MU_ADD_TEST(test_csv_rows);
-  MU_ADD_TEST(test_csv_cols);
-  MU_ADD_TEST(test_csv_fields);
-  MU_ADD_TEST(test_csv_data);
+  MU_ADD_TEST(test_dsv_rows);
+  MU_ADD_TEST(test_dsv_cols);
+  MU_ADD_TEST(test_dsv_fields);
+  MU_ADD_TEST(test_dsv_data);
 
   /* LINEAR ALGEBRA */
   MU_ADD_TEST(test_eye);
@@ -1112,4 +1112,4 @@ void test_suite() {
   /* MU_ADD_TEST(test_load_poses); */
 }
 
-MU_RUN_TESTS(test_suite);
+MU_RUN_TESTS(test_suite)

@@ -1,7 +1,7 @@
 #ifndef ZERO_H
 #define ZERO_H
 
-#define PRECISION 1
+#define PRECISION 2
 #define MAX_LINE_LENGTH 9046
 #define USE_CBLAS
 /* #define USE_LAPACK */
@@ -66,9 +66,10 @@ typedef double real_t;
 #endif
 
 char *malloc_string(const char *s);
-int csv_rows(const char *fp);
-int csv_cols(const char *fp);
-char **csv_fields(const char *fp, int *nb_fields);
+int dsv_rows(const char *fp);
+int dsv_cols(const char *fp, const char delim);
+char **dsv_fields(const char *fp, const char delim, int *nb_fields);
+real_t **dsv_data(const char *fp, const char delim, int *nb_rows, int *nb_cols);
 real_t **csv_data(const char *fp, int *nb_rows, int *nb_cols);
 int **load_iarrays(const char *csv_path, int *nb_arrays);
 real_t **load_darrays(const char *csv_path, int *nb_arrays);
@@ -120,7 +121,7 @@ int mat_equals(const real_t *A,
                const real_t *B,
                const size_t m,
                const size_t n,
-               const real_t thresh);
+               const real_t tol);
 int mat_save(const char *save_path, const real_t *A, const int m, const int n);
 real_t *mat_load(const char *save_path, int *nb_rows, int *nb_cols);
 void mat_set(real_t *A,
@@ -178,11 +179,11 @@ int check_jacobian(const char *jac_name,
                    const real_t *jac,
                    const size_t m,
                    const size_t n,
-                   const real_t threshold,
+                   const real_t tol,
                    const int print);
 
 #ifdef USE_CBLAS
-void dot_cblas(const real_t *A,
+void cblas_dot(const real_t *A,
                const size_t A_m,
                const size_t A_n,
                const real_t *B,
@@ -199,6 +200,10 @@ int svd(real_t *A, int m, int n, real_t *U, real_t *s, real_t *V_t);
 int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V);
 int pinv(real_t *A, const int m, const int n, real_t *A_inv);
 
+#ifdef USE_LAPACK
+
+#endif
+
 /******************************************************************************
  *                                   CHOL
  ******************************************************************************/
@@ -207,7 +212,10 @@ real_t *chol(const real_t *A, const size_t n);
 void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n);
 
 #ifdef USE_LAPACK
-void chol_solve2(const real_t *A, const real_t *b, real_t *x, const size_t n);
+void lapack_chol_solve(const real_t *A,
+                       const real_t *b,
+                       real_t *x,
+                       const size_t n);
 #endif
 
 /******************************************************************************
@@ -242,10 +250,10 @@ void euler321(const real_t euler[3], real_t C[3 * 3]);
 void rot2quat(const real_t C[3 * 3], real_t q[4]);
 void quat2euler(const real_t q[4], real_t euler[3]);
 void quat2rot(const real_t q[4], real_t C[3 * 3]);
-void quatlmul(const real_t p[4], const real_t q[4], real_t r[4]);
-void quatrmul(const real_t p[4], const real_t q[4], real_t r[4]);
-void quatmul(const real_t p[4], const real_t q[4], real_t r[4]);
-void quatdelta(const real_t dalpha[3], real_t dq[4]);
+void quat_lmul(const real_t p[4], const real_t q[4], real_t r[4]);
+void quat_rmul(const real_t p[4], const real_t q[4], real_t r[4]);
+void quat_mul(const real_t p[4], const real_t q[4], real_t r[4]);
+void quat_delta(const real_t dalpha[3], real_t dq[4]);
 
 /*****************************************************************************
  *                                 IMAGE
@@ -263,26 +271,15 @@ void image_init(image_t *img, uint8_t *data, int width, int height);
  *                                  CV
  *****************************************************************************/
 
-/******************************** PINHOLE ************************************/
-
-void pinhole_K(const real_t params[4], real_t K[3 * 3]);
-real_t pinhole_focal(const int image_width, const real_t fov);
-int pinhole_project(const real_t K[3 * 3], const real_t p_C[3], real_t x[2]);
-void pinhole_calc_K(const real_t image_width,
-                    const real_t image_height,
-                    const real_t lens_hfov,
-                    const real_t lens_vfov,
-                    real_t K[3 * 3]);
-
 /********************************* RADTAN ************************************/
 
 void radtan4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]);
 void radtan4_point_jacobian(const real_t params[4],
                             const real_t p[2],
                             real_t J_point[2 * 2]);
-void radtan4_param_jacobian(const real_t params[4],
-                            const real_t p[2],
-                            real_t J_param[2 * 4]);
+void radtan4_params_jacobian(const real_t params[4],
+                             const real_t p[2],
+                             real_t J_param[2 * 4]);
 
 /********************************** EQUI *************************************/
 
@@ -290,7 +287,18 @@ void equi4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]);
 void equi4_point_jacobian(const real_t params[4],
                           const real_t p[2],
                           real_t J_point[2 * 2]);
-void equi4_param_jacobian(const real_t params[4],
-                          const real_t p[2],
-                          real_t J_param[2 * 4]);
+void equi4_params_jacobian(const real_t params[4],
+                           const real_t p[2],
+                           real_t J_param[2 * 4]);
+
+/******************************** PINHOLE ************************************/
+
+void pinhole_K(const real_t params[4], real_t K[3 * 3]);
+real_t pinhole_focal(const int image_width, const real_t fov);
+int pinhole_project(const real_t K[3 * 3], const real_t p_C[3], real_t x[2]);
+void pinhole_point_jacobian(const real_t params[4], real_t J_point[2 * 3]);
+void pinhole_params_jacobian(const real_t params[4],
+                             const real_t x[2],
+                             real_t J[2 * 4]);
+
 #endif // ZERO_H

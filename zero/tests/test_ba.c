@@ -1,4 +1,4 @@
-#include "zero/munit.h"
+#include "munit.h"
 #include "zero/ba.h"
 
 #define TEST_BA_DATA_GT "test_data/data_gnd"
@@ -422,4 +422,4 @@ void test_suite() {
   MU_ADD_TEST(test_ba_solve);
 }
 
-MU_RUN_TESTS(test_suite);
+MU_RUN_TESTS(test_suite)

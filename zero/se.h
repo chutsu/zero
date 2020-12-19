@@ -1,5 +1,5 @@
-#ifndef SE_H
-#define SE_H
+#ifndef ZERO_SE_H
+#define ZERO_SE_H
 
 #include "zero.h"
 
@@ -69,4 +69,4 @@ void landmark_init(struct landmark_t *landmark);
 void extrinsic_init(struct extrinsic_t *extrinsic);
 void camera_init(struct camera_t *camera);
 
-#endif // SE_H
+#endif // ZERO_SE_H

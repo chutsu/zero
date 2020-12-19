@@ -10,7 +10,7 @@ char *malloc_string(const char *s) {
   return retval;
 }
 
-int csv_rows(const char *fp) {
+int dsv_rows(const char *fp) {
   /* Load file */
   FILE *infile = fopen(fp, "r");
   if (infile == NULL) {
@@ -32,7 +32,7 @@ int csv_rows(const char *fp) {
   return nb_rows;
 }
 
-int csv_cols(const char *fp) {
+int dsv_cols(const char *fp, const char delim) {
   /* Load file */
   FILE *infile = fopen(fp, "r");
   if (infile == NULL) {
@@ -51,7 +51,7 @@ int csv_cols(const char *fp) {
   int nb_elements = 1;
   int found_separator = 0;
   for (size_t i = 0; i < MAX_LINE_LENGTH; i++) {
-    if (line[i] == ',') {
+    if (line[i] == delim) {
       found_separator = 1;
       nb_elements++;
     }
@@ -63,7 +63,7 @@ int csv_cols(const char *fp) {
   return (found_separator) ? nb_elements : -1;
 }
 
-char **csv_fields(const char *fp, int *nb_fields) {
+char **dsv_fields(const char *fp, const char delim, int *nb_fields) {
   /* Load file */
   FILE *infile = fopen(fp, "r");
   if (infile == NULL) {
@@ -83,7 +83,7 @@ char **csv_fields(const char *fp, int *nb_fields) {
   }
 
   /* Parse fields */
-  *nb_fields = csv_cols(fp);
+  *nb_fields = dsv_cols(fp, delim);
   char **fields = malloc(sizeof(char *) * *nb_fields);
   int field_idx = 0;
   char field_name[100] = {0};
@@ -92,7 +92,7 @@ char **csv_fields(const char *fp, int *nb_fields) {
     char c = field_line[i];
 
     /* Ignore # and ' ' */
-    if (c == '#' || c == ' ') {
+    if (c == '#' || c == delim) {
       continue;
     }
 
@@ -113,20 +113,20 @@ char **csv_fields(const char *fp, int *nb_fields) {
   return fields;
 }
 
-real_t **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
+double **dsv_data(const char *fp, const char delim, int *nb_rows, int *nb_cols) {
   assert(fp != NULL);
 
-  /* Obtain number of rows and columns in csv data */
-  *nb_rows = csv_rows(fp);
-  *nb_cols = csv_cols(fp);
+  /* Obtain number of rows and columns in dsv data */
+  *nb_rows = dsv_rows(fp);
+  *nb_cols = dsv_cols(fp, delim);
   if (*nb_rows == -1 || *nb_cols == -1) {
     return NULL;
   }
 
-  /* Initialize memory for csv data */
-  real_t **data = malloc(sizeof(real_t *) * *nb_rows);
+  /* Initialize memory for dsv data */
+  double **data = malloc(sizeof(double *) * *nb_rows);
   for (int i = 0; i < *nb_rows; i++) {
-    data[i] = malloc(sizeof(real_t) * *nb_cols);
+    data[i] = malloc(sizeof(double) * *nb_cols);
   }
 
   /* Load file */
@@ -175,6 +175,10 @@ real_t **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
   return data;
 }
 
+double **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
+  return dsv_data(fp, ',', nb_rows, nb_cols);
+}
+
 static int *parse_iarray_line(char *line) {
   char entry[MAX_LINE_LENGTH] = {0};
   int index = 0;
@@ -204,7 +208,7 @@ static int *parse_iarray_line(char *line) {
 
 int **load_iarrays(const char *csv_path, int *nb_arrays) {
   FILE *csv_file = fopen(csv_path, "r");
-  *nb_arrays = csv_rows(csv_path);
+  *nb_arrays = dsv_rows(csv_path);
   int **array = calloc(*nb_arrays, sizeof(int *));
 
   char line[MAX_LINE_LENGTH] = {0};
@@ -251,7 +255,7 @@ static real_t *parse_darray_line(char *line) {
 
 real_t **load_darrays(const char *csv_path, int *nb_arrays) {
   FILE *csv_file = fopen(csv_path, "r");
-  *nb_arrays = csv_rows(csv_path);
+  *nb_arrays = dsv_rows(csv_path);
   real_t **array = calloc(*nb_arrays, sizeof(real_t *));
 
   char line[MAX_LINE_LENGTH] = {0};
@@ -474,12 +478,12 @@ int mat_equals(const real_t *A,
                const real_t *B,
                const size_t m,
                const size_t n,
-               const real_t thresh) {
+               const real_t tol) {
   size_t index = 0;
 
   for (size_t i = 0; i < m; i++) {
     for (size_t j = 0; j < n; j++) {
-      if (fabs(A[index] - B[index]) > thresh) {
+      if (fabs(A[index] - B[index]) > tol) {
         printf("Failed at index[%zu]\n", index);
         return -1;
       }
@@ -514,8 +518,8 @@ int mat_save(const char *save_path, const real_t *A, const int m, const int n) {
 
 real_t *mat_load(const char *mat_path, int *nb_rows, int *nb_cols) {
   /* Obtain number of rows and columns in csv data */
-  *nb_rows = csv_rows(mat_path);
-  *nb_cols = csv_cols(mat_path);
+  *nb_rows = dsv_rows(mat_path);
+  *nb_cols = dsv_cols(mat_path, ',');
   if (*nb_rows == -1 || *nb_cols == -1) {
     return NULL;
   }
@@ -849,17 +853,17 @@ int check_jacobian(const char *jac_name,
                    const real_t *jac,
                    const size_t m,
                    const size_t n,
-                   const real_t threshold,
+                   const real_t tol,
                    const int print) {
   int retval = 0;
   int ok = 1;
   real_t *delta = mat_new(m, n);
   mat_sub(fdiff, jac, delta, m, n);
 
-  /* Check if any of the values are beyond the threshold */
+  /* Check if any of the values are beyond the tol */
   for (size_t i = 0; i < m; i++) {
     for (size_t j = 0; j < n; j++) {
-      if (fabs(mat_val(delta, n, i, j)) >= threshold) {
+      if (fabs(mat_val(delta, n, i, j)) >= tol) {
         ok = 0;
       }
     }
@@ -888,7 +892,7 @@ int check_jacobian(const char *jac_name,
 }
 
 #ifdef USE_CBLAS
-void dot_cblas(const real_t *A,
+void cblas_dot(const real_t *A,
                const size_t A_m,
                const size_t A_n,
                const real_t *B,
@@ -1369,7 +1373,10 @@ void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n) {
 }
 
 #ifdef USE_LAPACK
-void chol_solve2(const real_t *A, const real_t *b, real_t *x, const size_t m) {
+void lapack_chol_solve(const real_t *A,
+                       const real_t *b,
+                       real_t *x,
+                       const size_t m) {
   /* Cholesky Decomposition */
   int info = 0;
   int lda = m;
@@ -1760,19 +1767,19 @@ void quat2euler(const real_t q[4], real_t euler[3]) {
   assert(q != NULL);
   assert(euler != NULL);
 
-  const float qw = q[0];
-  const float qx = q[1];
-  const float qy = q[2];
-  const float qz = q[3];
+  const real_t qw = q[0];
+  const real_t qx = q[1];
+  const real_t qy = q[2];
+  const real_t qz = q[3];
 
-  const float qw2 = qw * qw;
-  const float qx2 = qx * qx;
-  const float qy2 = qy * qy;
-  const float qz2 = qz * qz;
+  const real_t qw2 = qw * qw;
+  const real_t qx2 = qx * qx;
+  const real_t qy2 = qy * qy;
+  const real_t qz2 = qz * qz;
 
-  const float t1 = atan2(2 * (qx * qw + qz * qy), (qw2 - qx2 - qy2 + qz2));
-  const float t2 = asin(2 * (qy * qw - qx * qz));
-  const float t3 = atan2(2 * (qx * qy + qz * qw), (qw2 + qx2 - qy2 - qz2));
+  const real_t t1 = atan2(2 * (qx * qw + qz * qy), (qw2 - qx2 - qy2 + qz2));
+  const real_t t2 = asin(2 * (qy * qw - qx * qz));
+  const real_t t3 = atan2(2 * (qx * qy + qz * qw), (qw2 + qx2 - qy2 - qz2));
 
   euler[0] = t1;
   euler[1] = t2;
@@ -1808,7 +1815,7 @@ void quat2rot(const real_t q[4], real_t C[3 * 3]) {
   C[8] = qw2 - qx2 - qy2 + qz2;
 }
 
-void quatlmul(const real_t p[4], const real_t q[4], real_t r[4]) {
+void quat_lmul(const real_t p[4], const real_t q[4], real_t r[4]) {
   assert(p != NULL && q != NULL && r != NULL);
   assert(p != r && q != r);
 
@@ -1826,10 +1833,10 @@ void quatlmul(const real_t p[4], const real_t q[4], real_t r[4]) {
   };
   /* clang-format on */
 
-  dot_cblas(lprod, 4, 4, q, 4, 1, r);
+  cblas_dot(lprod, 4, 4, q, 4, 1, r);
 }
 
-void quatrmul(const real_t p[4], const real_t q[4], real_t r[4]) {
+void quat_rmul(const real_t p[4], const real_t q[4], real_t r[4]) {
   assert(p != NULL && q != NULL && r != NULL);
   assert(p != r && q != r);
 
@@ -1850,13 +1857,13 @@ void quatrmul(const real_t p[4], const real_t q[4], real_t r[4]) {
   dot(rprod, 4, 4, p, 4, 1, r);
 }
 
-void quatmul(const real_t p[4], const real_t q[4], real_t r[4]) {
+void quat_mul(const real_t p[4], const real_t q[4], real_t r[4]) {
   assert(p != NULL && q != NULL && r != NULL);
   assert(p != r && q != r);
-  quatlmul(p, q, r);
+  quat_lmul(p, q, r);
 }
 
-void quatdelta(const real_t dalpha[3], real_t dq[4]) {
+void quat_delta(const real_t dalpha[3], real_t dq[4]) {
   const real_t half_norm = 0.5 * vec_norm(dalpha, 3);
   const real_t k = sinc(half_norm) * 0.5;
   const real_t vector[3] = {k * dalpha[0], k * dalpha[1], k * dalpha[2]};
@@ -1879,56 +1886,10 @@ void image_init(image_t *img, uint8_t *data, int width, int height) {
 }
 
 /*****************************************************************************
- *                                  PINHOLE
+ *                                  CV
  *****************************************************************************/
 
-void pinhole_K(const real_t params[4], real_t K[9]) {
-  K[0] = params[0];
-  K[1] = 0.0;
-  K[2] = params[2];
-  K[3] = 0.0;
-  K[4] = params[1];
-  K[5] = params[3];
-  K[6] = 0.0;
-  K[7] = 0.0;
-  K[8] = 1.0;
-}
-
-real_t pinhole_focal(const int image_width, const real_t fov) {
-  return ((image_width / 2.0) / tan(deg2rad(fov) / 2.0));
-}
-
-int pinhole_project(const real_t K[9], const real_t p_C[3], real_t x[2]) {
-  const real_t fx = K[0];
-  const real_t fy = K[4];
-  const real_t cx = K[2];
-  const real_t cy = K[5];
-
-  const real_t px = p_C[0] / p_C[2];
-  const real_t py = p_C[1] / p_C[2];
-
-  x[0] = px * fx + cx;
-  x[1] = py * fy + cy;
-
-  return 0;
-}
-
-void pinhole_calc_K(const real_t image_width,
-                    const real_t image_height,
-                    const real_t lens_hfov,
-                    const real_t lens_vfov,
-                    real_t K[9]) {
-  const real_t fx = pinhole_focal(image_width, lens_hfov);
-  const real_t fy = pinhole_focal(image_height, lens_vfov);
-  const real_t cx = image_width / 2.0;
-  const real_t cy = image_height / 2.0;
-  const real_t intrinsics[4] = {fx, fy, cx, cy};
-  return pinhole_K(intrinsics, K);
-}
-
-/*****************************************************************************
- *                                 RADTAN
- *****************************************************************************/
+/********************************* RADTAN ************************************/
 
 void radtan4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]) {
   /* Distortion parameters */
@@ -1980,19 +1941,17 @@ void radtan4_point_jacobian(const real_t params[4],
   const real_t r4 = r2 * r2;
 
   /* Point Jacobian is 2x2 */
-  /* clang-format off */
-  J_point[0] = k1 * r2 + k2 * r4 + 2 * p1 * y + 6 * p2 * x +
-               x * (2 * k1 * x + 4 * k2 * x * r2) + 1;
+  J_point[0] = k1 * r2 + k2 * r4 + 2 * p1 * y + 6 * p2 * x;
+  J_point[0] += x * (2 * k1 * x + 4 * k2 * x * r2) + 1;
   J_point[1] = 2 * p1 * x + 2 * p2 * y + y * (2 * k1 * x + 4 * k2 * x * r2);
   J_point[2] = J_point[1];
-  J_point[3] = k1 * r2 + k2 * r4 + 6 * p1 * y + 2 * p2 * x +
-               y * (2 * k1 * y + 4 * k2 * y * r2) + 1;
-  /* clang-format on */
+  J_point[3] = k1 * r2 + k2 * r4 + 6 * p1 * y + 2 * p2 * x;
+  J_point[3] += y * (2 * k1 * y + 4 * k2 * y * r2) + 1;
 }
 
-void radtan4_param_jacobian(const real_t params[4],
-                            const real_t p[2],
-                            real_t J_param[2 * 4]) {
+void radtan4_params_jacobian(const real_t params[4],
+                             const real_t p[2],
+                             real_t J_param[2 * 4]) {
   UNUSED(params);
 
   /* Point */
@@ -2018,9 +1977,7 @@ void radtan4_param_jacobian(const real_t params[4],
   J_param[7] = 2 * xy;
 }
 
-/*****************************************************************************
- *                                  EQUI
- *****************************************************************************/
+/********************************** EQUI *************************************/
 
 void equi4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]) {
   const real_t k1 = params[0];
@@ -2081,9 +2038,9 @@ void equi4_point_jacobian(const real_t params[4],
   J_point[3] = s + y * s_r * r_y;
 }
 
-void equi4_param_jacobian(const real_t params[4],
-                          const real_t p[2],
-                          real_t J_param[2 * 4]) {
+void equi4_params_jacobian(const real_t params[4],
+                           const real_t p[2],
+                           real_t J_param[2 * 4]) {
   UNUSED(params);
 
   const real_t x = p[0];
@@ -2107,4 +2064,60 @@ void equi4_param_jacobian(const real_t params[4],
   J_param[5] = y * th5 / r;
   J_param[6] = y * th7 / r;
   J_param[7] = y * th9 / r;
+}
+
+/******************************** PINHOLE ************************************/
+
+void pinhole_K(const real_t params[4], real_t K[9]) {
+  K[0] = params[0];
+  K[1] = 0.0;
+  K[2] = params[2];
+  K[3] = 0.0;
+  K[4] = params[1];
+  K[5] = params[3];
+  K[6] = 0.0;
+  K[7] = 0.0;
+  K[8] = 1.0;
+}
+
+real_t pinhole_focal(const int image_width, const real_t fov) {
+  return ((image_width / 2.0) / tan(deg2rad(fov) / 2.0));
+}
+
+int pinhole_project(const real_t K[9], const real_t p_C[3], real_t x[2]) {
+  const real_t fx = K[0];
+  const real_t fy = K[4];
+  const real_t cx = K[2];
+  const real_t cy = K[5];
+
+  const real_t px = p_C[0] / p_C[2];
+  const real_t py = p_C[1] / p_C[2];
+
+  x[0] = px * fx + cx;
+  x[1] = py * fy + cy;
+
+  return 0;
+}
+
+void pinhole_point_jacobian(const real_t params[4], real_t J[2 * 3]) {
+  J[0] = params[0];
+  J[1] = 0.0;
+  J[2] = 0.0;
+  J[3] = params[1];
+}
+
+void pinhole_params_jacobian(const real_t params[4],
+                             const real_t x[2],
+                             real_t J[2 * 4]) {
+  UNUSED(params);
+
+  J[0] = x[0];
+  J[1] = 0.0;
+  J[2] = 1.0;
+  J[3] = 0.0;
+
+  J[4] = 0.0;
+  J[5] = x[1];
+  J[6] = 0.0;
+  J[7] = 1.0;
 }

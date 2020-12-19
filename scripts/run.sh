@@ -18,7 +18,7 @@ debug() {
 
 # python3 scripts/tf_point.py
 
-make format_code
+# make format_code
 # make clean
 time make
 
@@ -78,6 +78,9 @@ cd ./build/bin
 # ./test_zero --target test_pose2tf
 # ./test_zero --target test_load_poses
 
+# valgrind --leak-check=full ./test_traj_eval
+# time ./test_traj_eval
+
 # ./test_ba
 # ./test_ba --target test_load_camera
 # ./test_ba --target test_parse_keypoints_line
@@ -88,8 +91,8 @@ cd ./build/bin
 # ./test_ba --target test_ba_jacobian
 # ./test_ba --target test_ba_update
 # ./test_ba --target test_ba_cost
-time ./test_ba --target test_ba_solve
+# time ./test_ba --target test_ba_solve
 
-# ./test_gui
+./test_gui
 
 # ./test_template

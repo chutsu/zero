@@ -1,5 +1,5 @@
-default: dirs OpenBLAS SuiteSparse stb
-.PHONY: dirs OpenBLAS SuiteSparse stb
+default: dirs OpenBLAS SuiteSparse stb fast
+.PHONY: dirs OpenBLAS SuiteSparse stb fast
 
 dirs:
 	@mkdir -p bin
@@ -18,6 +18,10 @@ SuiteSparse:
 stb:
 	@echo "[Installing STB]"
 	@bash stb.bash > stb.log 2>&1
+
+fast:
+	@echo "[Installing FAST]"
+	@bash fast.bash > stb.log 2>&1
 
 clean:
 	@rm -rf OpenBLAS

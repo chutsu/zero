@@ -62,7 +62,7 @@ static real_t **load_poses(const char *csv_path, int *nb_poses) {
 
   FILE *csv_file = fopen(csv_path, "r");
   char line[MAX_LINE_LENGTH] = {0};
-  *nb_poses = csv_rows(csv_path);
+  *nb_poses = dsv_rows(csv_path);
   real_t **poses = malloc(sizeof(real_t *) * *nb_poses);
 
   int pose_idx = 0;
@@ -192,7 +192,7 @@ static keypoints_t **load_keypoints(const char *data_path, int *nb_frames) {
   strcat(keypoints_csv, "/keypoints.csv");
 
   FILE *csv_file = fopen(keypoints_csv, "r");
-  *nb_frames = csv_rows(keypoints_csv);
+  *nb_frames = dsv_rows(keypoints_csv);
   keypoints_t **keypoints = calloc(*nb_frames, sizeof(keypoints_t *));
 
   char line[1024] = {0};
@@ -216,7 +216,7 @@ static real_t **load_points(const char *data_path, int *nb_points) {
   strcat(points_csv, "/points.csv");
 
   /* Initialize memory for points */
-  *nb_points = csv_rows(points_csv);
+  *nb_points = dsv_rows(points_csv);
   real_t **points = malloc(sizeof(real_t *) * *nb_points);
   for (int i = 0; i < *nb_points; i++) {
     points[i] = malloc(sizeof(real_t) * 3);
@@ -419,7 +419,7 @@ static void J_camera_rotation(const real_t q_WC[4],
   real_t S[3 * 3] = {0};
   skew(x, S);
 
-  dot_cblas(C_CW, 3, 3, S, 3, 3, J);
+  cblas_dot(C_CW, 3, 3, S, 3, 3, J);
 }
 
 static void J_camera_translation(const real_t q_WC[4], real_t J[3 * 3]) {
@@ -492,20 +492,20 @@ real_t *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
       real_t J_h[2 * 3] = {0};
       J_intrinsics_point(data->cam_K, J_K);
       J_project(p_C, J_P);
-      dot_cblas(J_K, 2, 2, J_P, 2, 3, J_h);
+      cblas_dot(J_K, 2, 2, J_P, 2, 3, J_h);
 
       /* -- J_cam_rot = -1 * J_h * J_C; */
       real_t J_C[3 * 3] = {0};
       real_t J_cam_rot[2 * 3] = {0};
       J_camera_rotation(q_WC, r_WC, p_W, J_C);
-      dot_cblas(J_h, 2, 3, J_C, 3, 3, J_cam_rot);
+      cblas_dot(J_h, 2, 3, J_C, 3, 3, J_cam_rot);
       mat_scale(J_cam_rot, 2, 3, -1);
 
       /* -- J_cam_pos = -1 * J_h * J_r; */
       real_t J_r[3 * 3] = {0};
       real_t J_cam_pos[2 * 3] = {0};
       J_camera_translation(q_WC, J_r);
-      dot_cblas(J_h, 2, 3, J_r, 3, 3, J_cam_pos);
+      cblas_dot(J_h, 2, 3, J_r, 3, 3, J_cam_pos);
       mat_scale(J_cam_pos, 2, 3, -1);
 
       /* -- Fill in the big jacobian */
@@ -521,7 +521,7 @@ real_t *ba_jacobian(ba_data_t *data, int *J_rows, int *J_cols) {
       J_target_point(q_WC, J_p);
       /* -- J_point = -1 * J_h * J_target_point(q_WC); */
       real_t J_point[2 * 3] = {0};
-      dot_cblas(J_h, 2, 3, J_p, 3, 3, J_point);
+      cblas_dot(J_h, 2, 3, J_p, 3, 3, J_point);
       mat_scale(J_point, 2, 3, -1);
       /* -- Fill in the big jacobian */
       mat_block_set(J, *J_cols, rs, cs, re, ce, J_point);
@@ -540,15 +540,15 @@ void ba_update(ba_data_t *data, real_t *dx) {
     const int s = k * 6;
 
     /* Update camera rotation */
-    /* dq = quatdelta(dalpha) */
-    /* q_WC_k = quatmul(dq, q_WC_k) */
+    /* dq = quat_delta(dalpha) */
+    /* q_WC_k = quat_mul(dq, q_WC_k) */
     real_t *cam_pose = data->cam_poses[k];
     const real_t dalpha[3] = {dx[s], dx[s + 1], dx[s + 2]};
     real_t dq[4] = {0};
     real_t q_WC[4] = {cam_pose[0], cam_pose[1], cam_pose[2], cam_pose[3]};
     real_t q_new[4] = {0};
-    quatdelta(dalpha, dq);
-    quatmul(dq, q_WC, q_new);
+    quat_delta(dalpha, dq);
+    quat_mul(dq, q_WC, q_new);
     cam_pose[0] = q_new[0];
     cam_pose[1] = q_new[1];
     cam_pose[2] = q_new[2];
@@ -575,7 +575,7 @@ void ba_update(ba_data_t *data, real_t *dx) {
 real_t ba_cost(const real_t *e, const int length) {
   /* cost = 0.5 * e' * e */
   real_t cost = 0.0;
-  dot_cblas(e, 1, length, e, length, 1, &cost);
+  cblas_dot(e, 1, length, e, length, 1, &cost);
   return cost * 0.5;
 }
 
@@ -615,7 +615,7 @@ void ba_solve(ba_data_t *data) {
     real_t *E_t = mat_new(E_cols, E_rows);
     real_t *H = mat_new(E_cols, E_cols);
     mat_transpose(E, E_rows, E_cols, E_t);
-    dot_cblas(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
+    cblas_dot(E_t, E_cols, E_rows, E, E_rows, E_cols, H);
     /* -- Apply Levenberg-Marquardt damping: H = H + lambda * H_diag */
     for (int i = 0; i < E_cols; i++) {
       H[(i * E_cols) + i] += lambda * H[(i * E_cols) + i];
@@ -624,7 +624,7 @@ void ba_solve(ba_data_t *data) {
     real_t *g = vec_new(E_cols);
     mat_scale(E_t, E_cols, E_rows, -1.0);
     e = ba_residuals(data, &e_size);
-    dot_cblas(E_t, E_cols, E_rows, e, e_size, 1, g);
+    cblas_dot(E_t, E_cols, E_rows, e, e_size, 1, g);
     free(e);
     free(E);
     free(E_t);
