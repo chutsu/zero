@@ -6,6 +6,7 @@ build
 
 deps/OpenBLAS
 deps/SuiteSparse
+deps/fast-C-src
 deps/bin
 deps/include
 deps/lib
