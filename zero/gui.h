@@ -48,13 +48,16 @@ void xapp_draw_quad(const xapp_t *app,
                     const int height) {
   glBegin(GL_QUADS);
   glColor3f(1.0, 0.0, 0.0);
-  glVertex3f(-1.0, -1.0, 0.0);
+  glVertex3f(-0.1, -0.1, 0.0);
+
   glColor3f(1.0, 0.0, 0.0);
-  glVertex3f(1.0, -1.0, 0.0);
+  glVertex3f(0.1, -0.1, 0.0);
+
   glColor3f(1.0, 0.0, 0.0);
-  glVertex3f(1.0, 1.0, 0.0);
+  glVertex3f(0.1, 0.1, 0.0);
+
   glColor3f(1.0, 0.0, 0.0);
-  glVertex3f(-1.0, 1.0, 0.0);
+  glVertex3f(-0.1, 0.1, 0.0);
   glEnd();
 }
 
@@ -151,11 +154,14 @@ void xapp_loop(xapp_t *app) {
     XNextEvent(app->disp, &ev);
     if (ev.type == Expose) {
       xapp_clear(app);
+
       /* draw_quad(); */
-      xapp_draw_circle(app, 0, 0, 0.1);
+      /* xapp_draw_circle(app, 0, 0, 0.1); */
       /* xapp_draw_circle(app, 200, 400, 10); */
       /* xapp_draw_circle(app, 300, 400, 10); */
       /* xapp_draw_circle(app, 400, 400, 10); */
+      xapp_draw_quad(app, 10, 10, 100, 100);
+
       glXSwapBuffers(app->disp, app->win);
     }
 

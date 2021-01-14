@@ -16,7 +16,7 @@ LIBS=-L$(BLD_DIR) \
 	-lpthread \
 	-lm \
 	-L/usr/X11R6/lib -lX11 \
-	-lGL -lGLU
+	-lX11 -lXi -lXmu -lglut -lGL -lGLU -lGLEW
 
 # ARCHIVER SETTTINGS
 AR = ar
