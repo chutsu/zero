@@ -113,7 +113,7 @@ char **dsv_fields(const char *fp, const char delim, int *nb_fields) {
   return fields;
 }
 
-double **dsv_data(const char *fp, const char delim, int *nb_rows, int *nb_cols) {
+real_t **dsv_data(const char *fp, const char delim, int *nb_rows, int *nb_cols) {
   assert(fp != NULL);
 
   /* Obtain number of rows and columns in dsv data */
@@ -124,9 +124,9 @@ double **dsv_data(const char *fp, const char delim, int *nb_rows, int *nb_cols) 
   }
 
   /* Initialize memory for dsv data */
-  double **data = malloc(sizeof(double *) * *nb_rows);
+  real_t **data = malloc(sizeof(real_t *) * *nb_rows);
   for (int i = 0; i < *nb_rows; i++) {
-    data[i] = malloc(sizeof(double) * *nb_cols);
+    data[i] = malloc(sizeof(real_t) * *nb_cols);
   }
 
   /* Load file */
@@ -175,7 +175,7 @@ double **dsv_data(const char *fp, const char delim, int *nb_rows, int *nb_cols) 
   return data;
 }
 
-double **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
+real_t **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
   return dsv_data(fp, ',', nb_rows, nb_cols);
 }
 
@@ -918,8 +918,7 @@ void cblas_dot(const real_t *A,
               B_n,           /* First dimension of B */
               0.0,           /* Scale factor for C */
               C,             /* Output */
-              B_n            /* First dimension of C */
-  );
+              B_n);          /* First dimension of C */
 #elif PRECISION == 2
   cblas_dgemm(CblasRowMajor, /* Matrix data arrangement */
               CblasNoTrans,  /* Transpose A */
@@ -934,8 +933,7 @@ void cblas_dot(const real_t *A,
               B_n,           /* First dimension of B */
               0.0,           /* Scale factor for C */
               C,             /* Output */
-              B_n            /* First dimension of C */
-  );
+              B_n);          /* First dimension of C */
 #endif
 }
 #endif
@@ -1296,10 +1294,10 @@ int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V) {
  *                                  CHOL
  ******************************************************************************/
 
-real_t *chol(const real_t *A, const size_t n) {
+void chol(const real_t *A, const size_t n, real_t *L) {
   assert(A != NULL);
   assert(n > 0);
-  real_t *L = calloc(n * n, sizeof(real_t));
+  /* real_t *L = calloc(n * n, sizeof(real_t)); */
 
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < (i + 1); j++) {
@@ -1320,17 +1318,16 @@ real_t *chol(const real_t *A, const size_t n) {
       }
     }
   }
-
-  return L;
 }
 
 void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n) {
   /* Allocate memory */
+  real_t *L = calloc(n * n, sizeof(real_t));
   real_t *Lt = calloc(n * n, sizeof(real_t));
   real_t *y = calloc(n, sizeof(real_t));
 
   /* Cholesky decomposition */
-  real_t *L = chol(A, n);
+  chol(A, n, L);
   mat_transpose(L, n, n, Lt);
 
   /* Forward substitution */
@@ -1384,7 +1381,11 @@ void lapack_chol_solve(const real_t *A,
   char uplo = 'L';
   real_t *a = mat_new(m, m);
   mat_copy(A, m, m, a);
+#if PRECISION == 1
+  spotrf_(&uplo, &n, a, &lda, &info);
+#elif PRECISION == 2
   dpotrf_(&uplo, &n, a, &lda, &info);
+#endif
   if (info != 0) {
     fprintf(stderr, "Failed to decompose A using Cholesky Decomposition!\n");
   }
@@ -1393,7 +1394,11 @@ void lapack_chol_solve(const real_t *A,
   vec_copy(b, m, x);
   int nhrs = 1;
   int ldb = m;
+#if PRECISION == 1
+  spotrs_(&uplo, &n, &nhrs, a, &lda, x, &ldb, &info);
+#elif PRECISION == 2
   dpotrs_(&uplo, &n, &nhrs, a, &lda, x, &ldb, &info);
+#endif
   if (info != 0) {
     fprintf(stderr, "Failed to solve Ax = b!\n");
   }
@@ -2068,27 +2073,15 @@ void equi4_params_jacobian(const real_t params[4],
 
 /******************************** PINHOLE ************************************/
 
-void pinhole_K(const real_t params[4], real_t K[9]) {
-  K[0] = params[0];
-  K[1] = 0.0;
-  K[2] = params[2];
-  K[3] = 0.0;
-  K[4] = params[1];
-  K[5] = params[3];
-  K[6] = 0.0;
-  K[7] = 0.0;
-  K[8] = 1.0;
-}
-
 real_t pinhole_focal(const int image_width, const real_t fov) {
   return ((image_width / 2.0) / tan(deg2rad(fov) / 2.0));
 }
 
-int pinhole_project(const real_t K[9], const real_t p_C[3], real_t x[2]) {
-  const real_t fx = K[0];
-  const real_t fy = K[4];
-  const real_t cx = K[2];
-  const real_t cy = K[5];
+int pinhole_project(const real_t params[4], const real_t p_C[3], real_t x[2]) {
+  const real_t fx = params[0];
+  const real_t fy = params[1];
+  const real_t cx = params[2];
+  const real_t cy = params[3];
 
   const real_t px = p_C[0] / p_C[2];
   const real_t py = p_C[1] / p_C[2];
@@ -2120,4 +2113,175 @@ void pinhole_params_jacobian(const real_t params[4],
   J[5] = x[1];
   J[6] = 0.0;
   J[7] = 1.0;
+}
+
+/***************************** PINHOLE-RADTAN4 ********************************/
+
+void pinhole_radtan4_project(const real_t params[8],
+                             const real_t p_C[3],
+                             real_t x[2]) {
+  /* Project */
+  const real_t p[2] = {p_C[0] / p_C[2], p_C[1] / p_C[2]};
+
+  /* Distort */
+  const real_t d[4] = {params[4], params[5], params[6], params[7]};
+  real_t p_d[2] = {0};
+  radtan4_distort(d, p, p_d);
+
+  /* Scale and center */
+  const real_t fx = params[0];
+  const real_t fy = params[1];
+  const real_t cx = params[2];
+  const real_t cy = params[3];
+
+  x[0] = p[0] * fx + cx;
+  x[1] = p[1] * fy + cy;
+}
+
+void pinhole_radtan4_project_jacobian(const real_t params[8],
+                                      const real_t p_C[3],
+                                      real_t J[2 * 3]) {
+  /* Project */
+  const real_t x = p_C[0];
+  const real_t y = p_C[0];
+  const real_t z = p_C[0];
+  const real_t p[2] = {x / z, y / z};
+
+  /* Projection Jacobian */
+  real_t J_proj[2 * 3] = {0};
+  J_proj[0] = 1.0 / z;
+  J_proj[1] = 0.0;
+  J_proj[2] = -x / (z * z);
+  J_proj[3] = 0.0;
+  J_proj[4] = 1.0 / z;
+  J_proj[5] = -y / (z * z);
+
+  /* Distortion Point Jacobian */
+  const real_t k1 = params[4];
+  const real_t k2 = params[5];
+  const real_t p1 = params[6];
+  const real_t p2 = params[7];
+  const real_t d[4] = {k1, k2, p1, p2};
+  real_t J_dist_point[2 * 2] = {0};
+  radtan4_point_jacobian(d, p, J_dist_point);
+
+  /* Project Point Jacobian */
+  real_t J_proj_point[2 * 3] = {0};
+  pinhole_point_jacobian(params, J_proj_point);
+
+  /* J = J_proj * J_dist_point * J_proj_point; */
+  real_t J_dist_proj[2 * 3] = {0};
+  dot(J_dist_point, 2, 2, J_proj, 2, 3, J_dist_proj);
+  dot(J_proj, 2, 2, J_dist_proj, 2, 3, J);
+}
+
+void pinhole_radtan4_params_jacobian(const real_t params[8],
+                                     const real_t p_C[3],
+                                     real_t J[2 * 8]) {
+  const real_t fx = params[0];
+  const real_t fy = params[1];
+  const real_t cx = params[2];
+  const real_t cy = params[3];
+  const real_t k[4] = {fx, fy, cx, cy};
+
+  const real_t k1 = params[4];
+  const real_t k2 = params[5];
+  const real_t p1 = params[6];
+  const real_t p2 = params[7];
+  const real_t d[4] = {k1, k2, p1, p2};
+
+  /* Project */
+  const real_t x = p_C[0];
+  const real_t y = p_C[0];
+  const real_t z = p_C[0];
+  const real_t p[2] = {x / z, y / z};
+
+  /* Distort */
+  real_t p_d[2] = {0};
+  radtan4_distort(d, p, p_d);
+
+  /* Project params Jacobian: J_proj_params */
+  real_t J_proj_params[2 * 4] = {0};
+  pinhole_params_jacobian(k, p_d, J_proj_params);
+
+  /* Project point Jacobian: J_proj_point */
+  real_t J_proj_point[2 * 3] = {0};
+  pinhole_point_jacobian(k, J_proj_point);
+
+  /* Distortion point Jacobian: J_dist_params */
+  real_t J_dist_params[2 * 2] = {0};
+  radtan4_params_jacobian(d, p, J_dist_params);
+
+  /* J = [J_proj_params, J_proj_point * J_dist_params] */
+  J[0] = J_proj_params[0];
+  J[1] = J_proj_params[1];
+  J[2] = J_proj_params[2];
+  J[3] = J_proj_params[3];
+
+  J[8] = J_proj_params[4];
+  J[9] = J_proj_params[5];
+  J[10] = J_proj_params[6];
+  J[11] = J_proj_params[7];
+
+
+}
+
+/****************************** PINHOLE-EQUI4 *********************************/
+
+void pinhole_equi4_project(const real_t params[8],
+                           const real_t p_C[3],
+                           real_t x[2]) {
+  /* Project */
+  const real_t p[2] = {p_C[0] / p_C[2], p_C[1] / p_C[2]};
+
+  /* Distort */
+  const real_t d[4] = {params[4], params[5], params[6], params[7]};
+  real_t p_d[2] = {0};
+  equi4_distort(d, p, p_d);
+
+  /* Scale and center */
+  const real_t fx = params[0];
+  const real_t fy = params[1];
+  const real_t cx = params[2];
+  const real_t cy = params[3];
+
+  x[0] = p[0] * fx + cx;
+  x[1] = p[1] * fy + cy;
+}
+
+void pinhole_equi4_project_jacobian(const real_t params[8],
+                                    const real_t p_C[3],
+                                    real_t J[2 * 3]) {
+  /* Project */
+  const real_t x = p_C[0];
+  const real_t y = p_C[0];
+  const real_t z = p_C[0];
+  const real_t p[2] = {x / z, y / z};
+
+  /* Projection Jacobian */
+  real_t J_proj[2 * 3] = {0};
+  J_proj[0] = 1.0 / z;
+  J_proj[1] = 0.0;
+  J_proj[2] = -x / (z * z);
+  J_proj[3] = 0.0;
+  J_proj[4] = 1.0 / z;
+  J_proj[5] = -y / (z * z);
+
+  /* Distortion Point Jacobian */
+  const real_t k1 = params[4];
+  const real_t k2 = params[5];
+  const real_t p1 = params[6];
+  const real_t p2 = params[7];
+  const real_t d[4] = {k1, k2, p1, p2};
+  real_t J_dist_point[2 * 2] = {0};
+  equi4_point_jacobian(d, p, J_dist_point);
+
+  /* Project Point Jacobian */
+  real_t J_proj_point[2 * 3] = {0};
+  pinhole_point_jacobian(params, J_proj_point);
+
+  /* J = J_proj * J_dist_point * J_proj_point; */
+  real_t J_dist_proj[2 * 3] = {0};
+  dot(J_dist_point, 2, 2, J_proj, 2, 3, J_dist_proj);
+  dot(J_proj, 2, 2, J_dist_proj, 2, 3, J);
 }

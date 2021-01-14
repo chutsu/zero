@@ -1,7 +1,7 @@
 #ifndef ZERO_H
 #define ZERO_H
 
-#define PRECISION 2
+#define PRECISION 1
 #define MAX_LINE_LENGTH 9046
 #define USE_CBLAS
 /* #define USE_LAPACK */
@@ -208,7 +208,7 @@ int pinv(real_t *A, const int m, const int n, real_t *A_inv);
  *                                   CHOL
  ******************************************************************************/
 
-real_t *chol(const real_t *A, const size_t n);
+void chol(const real_t *A, const size_t n, real_t *L);
 void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n);
 
 #ifdef USE_LAPACK
@@ -255,9 +255,9 @@ void quat_rmul(const real_t p[4], const real_t q[4], real_t r[4]);
 void quat_mul(const real_t p[4], const real_t q[4], real_t r[4]);
 void quat_delta(const real_t dalpha[3], real_t dq[4]);
 
-/*****************************************************************************
+/******************************************************************************
  *                                 IMAGE
- *****************************************************************************/
+ ******************************************************************************/
 
 typedef struct image_t {
   int width;
@@ -267,11 +267,11 @@ typedef struct image_t {
 
 void image_init(image_t *img, uint8_t *data, int width, int height);
 
-/*****************************************************************************
+/******************************************************************************
  *                                  CV
- *****************************************************************************/
+ ******************************************************************************/
 
-/********************************* RADTAN ************************************/
+/******************************** RADTAN **************************************/
 
 void radtan4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]);
 void radtan4_point_jacobian(const real_t params[4],
@@ -281,7 +281,7 @@ void radtan4_params_jacobian(const real_t params[4],
                              const real_t p[2],
                              real_t J_param[2 * 4]);
 
-/********************************** EQUI *************************************/
+/********************************* EQUI ***************************************/
 
 void equi4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]);
 void equi4_point_jacobian(const real_t params[4],
@@ -291,14 +291,38 @@ void equi4_params_jacobian(const real_t params[4],
                            const real_t p[2],
                            real_t J_param[2 * 4]);
 
-/******************************** PINHOLE ************************************/
+/******************************** PINHOLE *************************************/
 
-void pinhole_K(const real_t params[4], real_t K[3 * 3]);
 real_t pinhole_focal(const int image_width, const real_t fov);
-int pinhole_project(const real_t K[3 * 3], const real_t p_C[3], real_t x[2]);
+int pinhole_project(const real_t params[4], const real_t p_C[3], real_t x[2]);
+
 void pinhole_point_jacobian(const real_t params[4], real_t J_point[2 * 3]);
 void pinhole_params_jacobian(const real_t params[4],
                              const real_t x[2],
                              real_t J[2 * 4]);
+
+/**************************** PINHOLE-RADTAN4 *********************************/
+
+void pinhole_radtan4_project(const real_t params[8],
+                             const real_t p_C[3],
+                             real_t x[2]);
+void pinhole_radtan4_project_jacobian(const real_t params[8],
+                                      const real_t p_C[3],
+                                      real_t J[2 * 3]);
+void pinhole_radtan4_params_jacobian(const real_t params[8],
+                                     const real_t p_C[3],
+                                     real_t J[2 * 8]);
+
+/***************************** PINHOLE-EQUI4 **********************************/
+
+void pinhole_equi4_project(const real_t params[8],
+                           const real_t p_C[3],
+                           real_t x[2]);
+void pinhole_equi4_project_jacobian(const real_t params[8],
+                                    const real_t p_C[3],
+                                    real_t J[2 * 3]);
+void pinhole_equi4_params_jacobian(const real_t params[8],
+                                   const real_t p_C[3],
+                                   real_t J[2 * 8]);
 
 #endif // ZERO_H

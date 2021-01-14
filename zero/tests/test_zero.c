@@ -495,7 +495,8 @@ int test_chol() {
   /* clang-format on */
 
   struct timespec t = tic();
-  real_t *L = chol(A, n);
+  real_t L[9] = {0};
+  chol(A, n, L);
   printf("time taken: [%fs]\n", toc(&t));
 
   real_t Lt[9] = {0};
@@ -517,7 +518,6 @@ int test_chol() {
 
   int retval = mat_equals(A, LLt, n, n, 1e-5);
   MU_CHECK(retval == 0);
-  free(L);
 
   return 0;
 }
@@ -582,7 +582,7 @@ int test_chol_solve2() {
   /* clang-format on */
 
   struct timespec t = tic();
-  chol_solve2(A, b, x, m);
+  lapack_chol_solve(A, b, x, m);
   /* OCTAVE_SCRIPT("scripts/plot_matrix.m /tmp/A.csv"); */
   printf("time taken: [%fs]\n", toc(&t));
   print_vector("x", x, m);

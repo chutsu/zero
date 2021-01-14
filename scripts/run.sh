@@ -59,6 +59,7 @@ cd ./build/bin
 # ./test_zero --target test_chol_lls_solve
 # ./test_zero --target test_chol_lls_solve2
 # ./test_zero --target test_chol_Axb
+# ZERO-TIME
 # ZERO-TRANSFORMS
 # ./test_zero --target test_tf_set_rot
 # ./test_zero --target test_tf_set_trans
@@ -77,22 +78,33 @@ cd ./build/bin
 # ./test_zero --target test_pose_set_get_trans
 # ./test_zero --target test_pose2tf
 # ./test_zero --target test_load_poses
+# ZERO-CV
+# ./test_zero --target test_radtan4_distort
+# ./test_zero --target test_radtan4_point_jacobian
+# ./test_zero --target test_radtan4_params_jacobian
+# ./test_zero --target test_equi4_distort
+# ./test_zero --target test_equi4_point_jacobian
+# ./test_zero --target test_equi4_params_jacobian
+# ./test_zero --target test_pinhole_K
+# ./test_zero --target test_pinhole_focal
+# ./test_zero --target test_pinhole_project
+# ./test_zero --target test_pinhole_point_jacobian
+# ./test_zero --target test_pinhole_params_jacobian
+# ./test_zero --target test_pinhole_radtan4_project
+# ./test_zero --target test_pinhole_radtan4_project_jacobian
+# ./test_zero --target test_pinhole_radtan4_params_jacobian
+# ./test_zero --target test_pinhole_equi4_project
+# ./test_zero --target test_pinhole_equi4_project_jacobian
+# ./test_zero --target test_pinhole_equi4_params_jacobian
 
 # valgrind --leak-check=full ./test_traj_eval
 # time ./test_traj_eval
 
-# ./test_ba
-# ./test_ba --target test_load_camera
-# ./test_ba --target test_parse_keypoints_line
-# ./test_ba --target test_load_keypoints
-# ./test_ba --target test_ba_residuals
-# ./test_ba --target test_J_cam_pose
-# ./test_ba --target test_J_landmark
-# ./test_ba --target test_ba_jacobian
-# ./test_ba --target test_ba_update
-# ./test_ba --target test_ba_cost
-# time ./test_ba --target test_ba_solve
+# ./test_gui
 
-./test_gui
-
+./test_se --target test_pose_setup
+./test_se --target test_speed_bias_setup
+./test_se --target test_landmark_setup
+./test_se --target test_extrinsics_setup
+# ./test_se --target test_pose_factor_eval
 # ./test_template
