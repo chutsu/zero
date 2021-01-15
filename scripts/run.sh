@@ -102,12 +102,20 @@ cd ./build/bin
 # time ./test_traj_eval
 
 # ./test_gui
-./test_imshow
+# ./test_imshow
 # gdb -ex run -ex bt ./test_imshow
 
-./test_se --target test_pose_setup
-./test_se --target test_speed_bias_setup
-./test_se --target test_landmark_setup
-./test_se --target test_extrinsics_setup
+# ./test_se --target test_pose_setup
+# ./test_se --target test_speed_bias_setup
+# ./test_se --target test_landmark_setup
+# ./test_se --target test_extrinsics_setup
+# ./test_se --target test_camera_setup
+# ./test_se --target test_pose_factor_setup
 # ./test_se --target test_pose_factor_eval
+# ./test_se --target test_cam_factor_setup
+# ./test_se --target test_imu_buf_setup
+# ./test_se --target test_imu_buf_add
+# ./test_se --target test_imu_buf_clear
+# ./test_se --target test_imu_buf_copy
+# ./test_se --target test_imu_buf_print
 # ./test_template

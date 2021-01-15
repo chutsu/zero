@@ -11,7 +11,6 @@
 int window;
 unsigned int texture_id;
 
-
 void resize_window(int width, int height) {
   /* Prevent division by zero */
   if (height == 0) {
@@ -60,7 +59,7 @@ void load_image(int img_w, int img_h, int img_c, const unsigned char *data) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  GLenum format;
+  GLenum format = 0;
   switch (img_c) {
   case 1: format = GL_RED; break;
   case 3: format = GL_RGB; break;

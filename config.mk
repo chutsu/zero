@@ -7,7 +7,7 @@ TESTS_DIR=$(PWD)/tests
 # COMPILER SETTINGS
 CC=tcc
 # CC=gcc
-CFLAGS= -O3 -Wall -I$(INC_DIR) -pedantic
+CFLAGS=-g -O3 -Wall -I$(INC_DIR) -pedantic
 
 LIBS=-L$(BLD_DIR) \
 	-lzero \

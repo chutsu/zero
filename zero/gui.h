@@ -20,6 +20,11 @@
 
 #define APP_DRAW_CIRCLE_SEGMENTS 1000
 
+#define UNUSED(expr)                                                           \
+  do {                                                                         \
+    (void) (expr);                                                             \
+  } while (0)
+
 struct xapp_t {
   Display *disp;
   int screen;
@@ -46,6 +51,12 @@ void xapp_draw_quad(const xapp_t *app,
                     const int y,
                     const int width,
                     const int height) {
+  UNUSED(app);
+  UNUSED(x);
+  UNUSED(y);
+  UNUSED(width);
+  UNUSED(height);
+
   glBegin(GL_QUADS);
   glColor3f(1.0, 0.0, 0.0);
   glVertex3f(-0.1, -0.1, 0.0);
@@ -65,6 +76,8 @@ void xapp_draw_circle(const xapp_t *app,
                       const float cx,
                       const float cy,
                       const float r) {
+  UNUSED(app);
+
   glBegin(GL_LINE_LOOP);
   for (int ii = 0; ii < APP_DRAW_CIRCLE_SEGMENTS; ii++) {
     double theta =

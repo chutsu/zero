@@ -395,6 +395,7 @@ void print_matrix(const char *prefix,
     }
     printf("\n");
   }
+  printf("\n");
 }
 
 void print_vector(const char *prefix, const real_t *data, const size_t length) {
@@ -874,11 +875,8 @@ int check_jacobian(const char *jac_name,
     if (print) {
       LOG_ERROR("Bad jacobian [%s]!\n", jac_name);
       print_matrix("analytical jac", jac, m, n);
-      printf("\n");
       print_matrix("num diff jac", fdiff, m, n);
-      printf("\n");
       print_matrix("difference matrix", delta, m, n);
-      printf("\n");
     }
     retval = -1;
   } else {

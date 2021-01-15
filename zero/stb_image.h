@@ -340,6 +340,10 @@ RECENT REVISION HISTORY:
 #include <stdio.h>
 #endif // STBI_NO_STDIO
 
+#ifdef __TINYC__
+#define STBI_NO_SIMD
+#endif
+
 #define STBI_VERSION 1
 
 enum

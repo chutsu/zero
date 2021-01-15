@@ -3,20 +3,7 @@
 
 #include "zero.h"
 
-/* PARAMETER TYPE */
-#define NOT_SET -1
-#define POSE 1
-#define LANDMARK 2
-#define CAMERA 3
-#define EXTRINSIC 4
-#define SPEED_BIAS 5
-
-/* PROJECTION MODELS */
-#define PINHOLE 1
-
-/* DISTORTION MODELS */
-#define RADTAN4 1
-#define EQUI4 2
+/* POSE --------------------------------------------------------------------- */
 
 typedef struct pose_t {
   uint64_t param_id;
@@ -24,22 +11,51 @@ typedef struct pose_t {
   real_t data[7];
 } pose_t;
 
-typedef struct speed_bias_t {
+void pose_setup(pose_t *pose,
+                uint64_t *param_id,
+                const timestamp_t ts,
+                const real_t *param);
+void pose_print(const pose_t *pose);
+
+/* SPEED AND BIASES --------------------------------------------------------- */
+
+typedef struct speed_biases_t {
   uint64_t param_id;
   timestamp_t ts;
   real_t data[9];
-} speed_bias_t;
+} speed_biases_t;
 
-typedef struct landmark_t {
+void speed_biases_setup(speed_biases_t *sb,
+                      uint64_t *param_id,
+                      const timestamp_t ts,
+                      const real_t *param);
+void speed_biases_print(const speed_biases_t *sb);
+
+/* FEATURE ------------------------------------------------------------------ */
+
+typedef struct feature_t {
   uint64_t param_id;
   real_t data[3];
-} landmark_t;
+} feature_t;
+
+void feature_setup(feature_t *p,
+                   uint64_t *param_id,
+                   const real_t *param);
+void feature_print(const feature_t *feature);
+
+/* EXTRINSICS --------------------------------------------------------------- */
 
 typedef struct extrinsics_t {
   uint64_t param_id;
-  timestamp_t ts;
   real_t data[7];
 } extrinsics_t;
+
+void extrinsics_setup(extrinsics_t *extrinsics,
+                      uint64_t *param_id,
+                      const real_t *param);
+void extrinsics_print(const extrinsics_t *extrinsics);
+
+/* CAMERA ------------------------------------------------------------------- */
 
 typedef struct camera_t {
   uint64_t param_id;
@@ -49,6 +65,70 @@ typedef struct camera_t {
   char dist_model[20];
   real_t data[8];
 } camera_t;
+
+void camera_setup(camera_t *camera,
+                  uint64_t *param_id,
+                  const int cam_idx,
+                  const int cam_res[2],
+                  const char *proj_model,
+                  const char *dist_model,
+                  const real_t *data);
+void camera_print(const camera_t *camera);
+
+/* POSE FACTOR -------------------------------------------------------------- */
+
+typedef struct pose_factor_t {
+  real_t pose_meas[7];
+  pose_t *pose_est;
+
+  real_t covar[6 * 6];
+  real_t r[6];
+  int r_size;
+
+  real_t J0[6 * 6];
+  real_t *jacs[1];
+  int nb_params;
+} pose_factor_t;
+
+void pose_factor_setup(pose_factor_t *factor,
+                       pose_t *pose,
+                       const real_t var[6]);
+void pose_factor_reset(pose_factor_t *factor);
+int pose_factor_eval(pose_factor_t *factor);
+
+/* CAMERA FACTOR ------------------------------------------------------------ */
+
+typedef struct cam_factor_t {
+  pose_t *pose;
+  extrinsics_t *extrinsics;
+  camera_t *camera;
+  feature_t *feature;
+
+  real_t covar[2 * 2];
+  real_t z[2];
+
+  real_t r[2];
+  int r_size;
+
+  real_t J0[2 * 6];
+  real_t J1[2 * 6];
+  real_t J2[2 * 8];
+  real_t J3[2 * 3];
+  real_t *jacs[4];
+  int nb_params;
+} cam_factor_t;
+
+void cam_factor_setup(cam_factor_t *factor,
+                      pose_t *pose,
+                      extrinsics_t *extrinsics,
+                      camera_t *camera,
+                      const real_t var[2]);
+void cam_factor_reset(cam_factor_t *factor);
+int cam_factor_eval(cam_factor_t *factor);
+
+/* IMU FACTOR --------------------------------------------------------------- */
+
+#define MAX_IMU_BUF_SIZE 10000
 
 typedef struct imu_params_t {
   uint64_t param_id;
@@ -62,88 +142,93 @@ typedef struct imu_params_t {
   real_t g;
 } imu_params_t;
 
-typedef struct pose_factor_t {
-  timestamp_t ts;
-
-  real_t covar[6 * 6];
-  pose_t pose_meas;
-  pose_t *pose_est;
-
-} pose_factor_t;
-
-typedef struct cam_factor_t {
-  timestamp_t ts;
-
-  pose_t *sensor_pose;
-  extrinsics_t *extrinsics;
-  landmark_t *landmark;
-  camera_t *camera;
-  imu_params_t *imu_params;
-
-  real_t z[2];
-  real_t covar[2*2];
-} cam_factor_t;
+typedef struct imu_buf_t {
+  timestamp_t ts[MAX_IMU_BUF_SIZE];
+  real_t acc[MAX_IMU_BUF_SIZE][3];
+  real_t gyr[MAX_IMU_BUF_SIZE][3];
+  int size;
+} imu_buf_t;
 
 typedef struct imu_factor_t {
-  timestamp_t ts;
-
+  imu_params_t *imu_params;
+  imu_buf_t imu_buf;
   pose_t *pose_i;
   pose_t *pose_j;
-  speed_bias_t *sb_i;
-  speed_bias_t *sb_j;
-  extrinsics_t *extrinsics;
+  speed_biases_t *sb_i;
+  speed_biases_t *sb_j;
 
-  real_t z[2];
-  real_t covar[2*2];
+  real_t covar[15 * 15];
+  real_t r[15];
+  int r_size;
+
+  real_t J0[2 * 6];
+  real_t J1[2 * 9];
+  real_t J2[2 * 6];
+  real_t J3[2 * 9];
+  real_t *jacs[4];
+  int nb_params;
 } imu_factor_t;
 
-typedef struct fgraph_t {
-  int r_size;
-  int x_size;
+void imu_buf_setup(imu_buf_t *imu_buf);
+void imu_buf_add(imu_buf_t *imu_buf,
+                 timestamp_t ts,
+                 real_t acc[3],
+                 real_t gyr[3]);
+void imu_buf_clear(imu_buf_t *imu_buf);
+void imu_buf_copy(const imu_buf_t *from, imu_buf_t *to);
+void imu_buf_print(const imu_buf_t *imu_buf);
 
-  cam_factor_t *cam_factors;
+void imu_factor_setup(imu_factor_t *factor,
+                      imu_params_t *imu_params,
+                      imu_buf_t *imu_buf,
+                      pose_t *pose_i,
+                      speed_biases_t *sb_i,
+                      pose_t *pose_j,
+                      speed_biases_t *sb_j);
+void imu_factor_reset(imu_factor_t *factor);
+int imu_factor_eval(imu_factor_t *factor);
+
+/* SLIDING WINDOW ESTIMATOR ------------------------------------------------- */
+
+#define MAX_POSES 1000
+#define MAX_CAMS 4
+#define MAX_FEATURES 1000
+#define MAX_PARAMS MAX_POSES + MAX_CAMS + MAX_CAMS + MAX_FEATURES
+#define MAX_H_SIZE \
+  MAX_POSES * 6 \
+  + MAX_CAMS * 8 \
+  + MAX_CAMS * 6 \
+  + MAX_FEATURES * 3
+
+typedef struct swe_t {
+  cam_factor_t cam_factors[MAX_FEATURES];
   int nb_cam_factors;
 
-  imu_factor_t *imu_factors;
+  imu_factor_t imu_factors[MAX_POSES];
   int nb_imu_factors;
 
-  pose_t *poses;
+  pose_t poses[MAX_POSES];
   int nb_poses;
 
-  camera_t *cams;
+  camera_t cams[MAX_CAMS];
   int nb_cams;
-} fgraph_t;
 
-void pose_setup(pose_t *pose,
-                uint64_t *param_id,
-                const timestamp_t ts,
-                const real_t *param);
-void speed_bias_setup(speed_bias_t *sb,
-                      uint64_t *param_id,
-                      const timestamp_t ts,
-                      const real_t *param);
-void landmark_setup(landmark_t *p,
-                    uint64_t *param_id,
-                    const real_t *param);
-void extrinsics_setup(extrinsics_t *extrinsics,
-                      uint64_t *param_id,
-                      const timestamp_t ts,
-                      const real_t *param);
-void camera_setup(camera_t *camera,
-                  uint64_t *param_id,
-                  const int cam_idx,
-                  const int cam_res[2],
-                  const char *proj_model,
-                  const char *dist_model,
-                  const real_t *data);
+  extrinsics_t extrinsics[MAX_CAMS];
+  int nb_extrinsics;
 
-int pose_factor_eval(const pose_factor_t *factor, real_t *r, real_t **jacs);
-int cam_factor_eval(const cam_factor_t *factor, real_t *r, real_t **jacs);
-int imu_factor_eval(const imu_factor_t *factor, real_t *r, real_t **jacs);
+  feature_t features[MAX_FEATURES];
+  int nb_features;
 
-void fgraph_setup(fgraph_t *graph);
-void fgraph_print(fgraph_t *graph);
-int fgraph_eval(fgraph_t *graph, double *H, double *b);
-void fgraph_solve(fgraph_t *graph);
+  real_t H[MAX_H_SIZE];
+  real_t g[MAX_H_SIZE];
+  real_t x[MAX_H_SIZE];
+  int x_size;
+  int r_size;
+} swe_t;
+
+void swe_setup(swe_t *graph);
+void swe_print(swe_t *graph);
+int swe_eval(swe_t *graph);
+void swe_solve(swe_t *graph);
 
 #endif // ZERO_SE_H
