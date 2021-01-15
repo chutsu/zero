@@ -100,6 +100,10 @@ real_t pythag(const real_t a, const real_t b);
 real_t lerp(const real_t a, const real_t b, const real_t t);
 void lerp3(const real_t *a, const real_t *b, const real_t t, real_t *x);
 real_t sinc(const real_t x);
+real_t mean(const real_t* x, const size_t length);
+real_t median(const real_t* x, const size_t length);
+real_t var(const real_t *x, const size_t length);
+real_t stddev(const real_t *x, const size_t length);
 
 /******************************************************************************
  *                              LINEAR ALGEBRA

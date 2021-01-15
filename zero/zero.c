@@ -373,6 +373,35 @@ real_t sinc(const real_t x) {
   }
 }
 
+real_t mean(const real_t* x, const size_t length) {
+  real_t sum = 0.0;
+  for (size_t i = 0; i < length; i++) {
+    sum += x[i];
+  }
+  real_t N = length;
+  return sum / N;
+}
+
+real_t median(const real_t* x, const size_t length) {
+  /* qsort(x, length, sizeof(real_t), fltcmp); */
+  return 0;
+}
+
+real_t var(const real_t *x, const size_t length) {
+  real_t mu = mean(x, length);
+
+  real_t sse = 0.0;
+  for (size_t i = 0; i < length; i++) {
+    sse += (x[i] - mu) * (x[i] - mu);
+  }
+
+  return length;
+}
+
+real_t stddev(const real_t *x, const size_t length) {
+  return sqrt(var(x, length));
+}
+
 /******************************************************************************
  *                              LINEAR ALGEBRA
  ******************************************************************************/
