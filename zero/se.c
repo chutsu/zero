@@ -410,42 +410,42 @@ int imu_factor_eval(imu_factor_t *factor) {
   return 0;
 }
 
-/* SLIDING WINDOW ESTIMATOR ------------------------------------------------- */
+/* SOLVER ------------------------------------------------------------------- */
 
-void swe_setup(swe_t *swe) {
-  assert(swe);
+void solver_setup(solver_t *solver) {
+  assert(solver);
 
-  swe->nb_cam_factors = 0;
-  swe->nb_imu_factors = 0;
+  solver->nb_cam_factors = 0;
+  solver->nb_imu_factors = 0;
 
-  swe->nb_poses = 0;
-  swe->nb_cams = 0;
-  swe->nb_extrinsics = 0;
-  swe->nb_features = 0;
+  solver->nb_poses = 0;
+  solver->nb_cams = 0;
+  solver->nb_extrinsics = 0;
+  solver->nb_features = 0;
 
-  swe->x_size = 0;
-  swe->r_size = 0;
+  solver->x_size = 0;
+  solver->r_size = 0;
 }
 
-void swe_print(swe_t *swe) {
-  printf("swe:\n");
-  printf("r_size: %d\n", swe->r_size);
-  printf("x_size: %d\n", swe->x_size);
-  printf("nb_cam_factors: %d\n", swe->nb_cam_factors);
-  printf("nb_imu_factors: %d\n", swe->nb_imu_factors);
-  printf("nb_poses: %d\n", swe->nb_poses);
+void solver_print(solver_t *solver) {
+  printf("solver:\n");
+  printf("r_size: %d\n", solver->r_size);
+  printf("x_size: %d\n", solver->x_size);
+  printf("nb_cam_factors: %d\n", solver->nb_cam_factors);
+  printf("nb_imu_factors: %d\n", solver->nb_imu_factors);
+  printf("nb_poses: %d\n", solver->nb_poses);
 }
 
-static void swe_evaluator(swe_t *swe,
-                          int **param_orders,
-                          int *param_sizes,
-                          int nb_params,
-                          real_t *r,
-                          int r_size,
-                          real_t **jacs) {
-  real_t *H = swe->H;
-  int H_size = swe->x_size;
-  real_t *g = swe->g;
+static void solver_evaluator(solver_t *solver,
+                             int **param_orders,
+                             int *param_sizes,
+                             int nb_params,
+                             real_t *r,
+                             int r_size,
+                             real_t **jacs) {
+  real_t *H = solver->H;
+  int H_size = solver->x_size;
+  real_t *g = solver->g;
 
   for (int i = 0; i < nb_params; i++) {
     int *idx_i = param_orders[i];
@@ -493,38 +493,38 @@ static void swe_evaluator(swe_t *swe,
   }
 }
 
-int swe_eval(swe_t *swe) {
-  assert(swe != NULL);
+int solver_eval(solver_t *solver) {
+  assert(solver != NULL);
 
   int pose_idx = 0;
-  int lmks_idx = swe->nb_poses * 6;
-  int exts_idx = lmks_idx + swe->nb_features * 3;
-  int cams_idx = exts_idx + swe->nb_extrinsics * 6;
+  int lmks_idx = solver->nb_poses * 6;
+  int exts_idx = lmks_idx + solver->nb_features * 3;
+  int cams_idx = exts_idx + solver->nb_extrinsics * 6;
 
   /* Evaluate camera factors */
-  for (int i = 0; i < swe->nb_cam_factors; i++) {
-    cam_factor_t *factor = &swe->cam_factors[i];
+  for (int i = 0; i < solver->nb_cam_factors; i++) {
+    cam_factor_t *factor = &solver->cam_factors[i];
     cam_factor_eval(factor);
 
     int *param_orders[4] = {&pose_idx, &exts_idx, &cams_idx, &lmks_idx};
     int param_sizes[4] = {6, 6, 8, 3};
     int nb_params = 4;
 
-    swe_evaluator(swe,
-                  param_orders,
-                  param_sizes,
-                  nb_params,
-                  factor->r,
-                  factor->r_size,
-                  factor->jacs);
+    solver_evaluator(solver,
+                     param_orders,
+                     param_sizes,
+                     nb_params,
+                     factor->r,
+                     factor->r_size,
+                     factor->jacs);
   }
 
   return 0;
 }
 
-/* int swe_solve(swe_t *swe) { */
+/* int solver_optimize(solver_t *solver) { */
 /*   struct timespec solve_tic = tic(); */
-/*   real_t lambda_k = lambda; */
+/*   real_t lambda_k = 1e-4; */
 /*  */
 /*   int iter = 0; */
 /*   int max_iter = 10; */
@@ -532,17 +532,17 @@ int swe_eval(swe_t *swe) {
 /*  */
 /*   for (iter = 0; iter < max_iter; iter++) { */
 /*     #<{(| Cost k |)}># */
-/*     #<{(| x = swe_get_state(swe); |)}># */
-/*     #<{(| swe_eval(swe, H, g, &marg_size, &remain_size); |)}># */
+/*     #<{(| x = solver_get_state(solver); |)}># */
+/*     #<{(| solver_eval(solver, H, g, &marg_size, &remain_size); |)}># */
 /*     #<{(| const matx_t H_diag = (H.diagonal().asDiagonal()); |)}># */
 /*     #<{(| H = H + lambda_k * H_diag; |)}># */
 /*     #<{(| dx = H.ldlt().solve(g); |)}># */
-/*     #<{(| e = swe_residuals(swe); |)}># */
+/*     #<{(| e = solver_residuals(solver); |)}># */
 /*     #<{(| cost = 0.5 * e.transpose() * e; |)}># */
 /*  */
 /*     #<{(| Cost k+1 |)}># */
-/*     #<{(| swe_update(swe, dx); |)}># */
-/*     #<{(| e = swe_residuals(swe); |)}># */
+/*     #<{(| solver_update(solver, dx); |)}># */
+/*     #<{(| e = solver_residuals(solver); |)}># */
 /*     const real_t cost_k = 0.5 * e.transpose() * e; */
 /*  */
 /*     const real_t cost_delta = cost_k - cost; */
@@ -576,7 +576,7 @@ int swe_eval(swe_t *swe) {
 /*       cost = cost_k; */
 /*     } else { */
 /*       #<{(| Reject update |)}># */
-/*       #<{(| swe_set_state(swe, x); // Restore state |)}># */
+/*       #<{(| solver_set_state(solver, x); // Restore state |)}># */
 /*       lambda_k *= update_factor; */
 /*     } */
 /*  */

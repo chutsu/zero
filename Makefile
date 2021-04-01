@@ -16,13 +16,13 @@ format_code:
 	@bash scripts/format_code.bash
 
 zero:
-	@make -s -C zero
+	@make -s -C zero -j8
 
 benchmarks:
 	@make -s -C zero/benchmarks
 
 tests:
-	@make -s -C zero/tests
+	@make -s -C zero/tests -j8
 
 done:
 	@echo "Done! :)"

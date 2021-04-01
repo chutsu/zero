@@ -1,13 +1,13 @@
 BLD_DIR=$(PWD)/build
 BIN_DIR=$(PWD)/build/bin
 INC_DIR=$(PWD)
-DEP_DIR=$(PWD)/dep
+DEPS_DIR=$(PWD)/deps
 TESTS_DIR=$(PWD)/tests
 
 # COMPILER SETTINGS
 CC=tcc
 # CC=gcc
-CFLAGS=-g -O3 -Wall -I$(INC_DIR) -pedantic
+CFLAGS=-g -Wall -I$(INC_DIR) -I$(DEPS_DIR)/include
 
 LIBS=-L$(BLD_DIR) \
 	-lzero \
@@ -16,7 +16,7 @@ LIBS=-L$(BLD_DIR) \
 	-lpthread \
 	-lm \
 	-L/usr/X11R6/lib -lX11 \
-	-lX11 -lXi -lXmu -lglut -lGL -lGLU -lGLEW
+	-lXi -lXmu -lglut -lGL -lGLU -lGLEW
 
 # ARCHIVER SETTTINGS
 AR = ar

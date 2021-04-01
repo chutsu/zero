@@ -28,7 +28,7 @@ int test_dsv_cols() {
 int test_dsv_fields() {
   int nb_fields = 0;
   char **fields = dsv_fields(TEST_CSV, ',', &nb_fields);
-  char *expected[10] = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+  const char *expected[10] = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
 
   MU_CHECK(nb_fields == 10);
   for (int i = 0; i < nb_fields; i++) {

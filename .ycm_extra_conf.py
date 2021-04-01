@@ -31,6 +31,7 @@ flags = [
     # '-isystem', '../llvm/tools/clang/include',
     # '-std=c11',
     '-I', '.',
+    '-I', 'deps/include',
     '-I', 'include',
     '-I', '/usr/local/include',
     '-I', '/usr/include/octave-4.2.2/octave',

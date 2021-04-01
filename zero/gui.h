@@ -11,12 +11,7 @@
 #include <GL/glx.h>
 #include <GL/glu.h>
 
-#define APP_TITLE "App"
-#define APP_X 0
-#define APP_Y 0
-#define APP_WIDTH 800
-#define APP_HEIGHT 800
-#define APP_BORDER_WIDTH 1
+#include "zero/zero.h"
 
 #define APP_DRAW_CIRCLE_SEGMENTS 1000
 
@@ -58,17 +53,14 @@ void xapp_draw_quad(const xapp_t *app,
   UNUSED(height);
 
   glBegin(GL_QUADS);
-  glColor3f(1.0, 0.0, 0.0);
-  glVertex3f(-0.1, -0.1, 0.0);
-
-  glColor3f(1.0, 0.0, 0.0);
-  glVertex3f(0.1, -0.1, 0.0);
-
-  glColor3f(1.0, 0.0, 0.0);
-  glVertex3f(0.1, 0.1, 0.0);
-
-  glColor3f(1.0, 0.0, 0.0);
-  glVertex3f(-0.1, 0.1, 0.0);
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex3f(-1.0, -1.0, 0.0);
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex3f(1.0, -1.0, 0.0);
+    glTexCoord2f(1.0f, 1.0f);
+    glVertex3f(1.0, 1.0, 0.0);
+    glTexCoord2f(0.0f, 1.0f);
+    glVertex3f(-1.0, 1.0, 0.0);
   glEnd();
 }
 
@@ -90,7 +82,13 @@ void xapp_draw_circle(const xapp_t *app,
   glEnd();
 }
 
-void xapp_setup(xapp_t *app) {
+void xapp_setup(xapp_t *app,
+                const char *title,
+                const int x,
+                const int y,
+                const int win_width,
+                const int win_height,
+                const int border_width) {
   /* Setup display, screen and default root window */
   app->disp = XOpenDisplay(NULL);
   if (app->disp == NULL) {
@@ -114,11 +112,16 @@ void xapp_setup(xapp_t *app) {
   app->swa.event_mask = ExposureMask | KeyPressMask;
 
   /* Setup window */
-  app->x = APP_X;
-  app->y = APP_Y;
-  app->width = APP_WIDTH;
-  app->height = APP_HEIGHT;
-  app->border_width = APP_BORDER_WIDTH;
+  /* app->x = APP_X; */
+  /* app->y = APP_Y; */
+  /* app->width = APP_WIDTH; */
+  /* app->height = APP_HEIGHT; */
+  /* app->border_width = APP_BORDER_WIDTH; */
+  app->x = x;
+  app->y = y;
+  app->width = win_width;
+  app->height = win_height;
+  app->border_width = border_width;
   app->win = XCreateWindow(app->disp,
                            app->root,
                            app->x,
@@ -134,7 +137,7 @@ void xapp_setup(xapp_t *app) {
 
   XSelectInput(app->disp, app->win, ExposureMask | KeyPressMask);
   XMapWindow(app->disp, app->win);
-  XStoreName(app->disp, app->win, APP_TITLE);
+  XStoreName(app->disp, app->win, title);
 
   app->glc = glXCreateContext(app->disp, app->vi, NULL, GL_TRUE);
   glXMakeCurrent(app->disp, app->win, app->glc);
@@ -144,8 +147,7 @@ void xapp_setup(xapp_t *app) {
 void xapp_clear(xapp_t *app) {
   XGetWindowAttributes(app->disp, app->win, &app->gwa);
   glViewport(0, 0, app->gwa.width, app->gwa.height);
-
-  glClearColor(1.0, 1.0, 1.0, 1.0);
+  glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glMatrixMode(GL_PROJECTION);
@@ -168,22 +170,18 @@ void xapp_loop(xapp_t *app) {
     if (ev.type == Expose) {
       xapp_clear(app);
 
-      /* draw_quad(); */
       /* xapp_draw_circle(app, 0, 0, 0.1); */
-      /* xapp_draw_circle(app, 200, 400, 10); */
-      /* xapp_draw_circle(app, 300, 400, 10); */
-      /* xapp_draw_circle(app, 400, 400, 10); */
-      xapp_draw_quad(app, 10, 10, 100, 100);
+      xapp_draw_quad(app, 0, 0, 10, 10);
 
       glXSwapBuffers(app->disp, app->win);
     }
 
     /* Stop app */
     if (ev.type == KeyPress) {
-      int esc_pressed = (ev.xkey.keycode == 0x09);
-      int q_pressed =
-          (ev.xkey.keycode == XKeysymToKeycode(app->disp, (KeySym) 'q'));
-      if (esc_pressed || q_pressed) {
+      const int keycode = ev.xkey.keycode;
+      int pressed_esc = (keycode == 0x09);
+      int pressed_q = (keycode == XKeysymToKeycode(app->disp, (KeySym) 'q'));
+      if (pressed_esc || pressed_q) {
         break;
       }
     }

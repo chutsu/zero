@@ -318,18 +318,18 @@ int test_imu_buf_print() {
   return 0;
 }
 
-int test_swe_setup() {
-  swe_t graph;
-  swe_setup(&graph);
+int test_solver_setup() {
+  solver_t solver;
+  solver_setup(&solver);
   return 0;
 }
 
-int test_swe_print() {
-  swe_t graph;
-  swe_setup(&graph);
-  swe_print(&graph);
-  return 0;
-}
+/* int test_solver_print() { */
+/*   solver_t solver; */
+/*   solver_setup(&solver); */
+/*   solver_print(&solver); */
+/*   return 0; */
+/* } */
 
 void test_suite() {
   MU_ADD_TEST(test_pose_setup);
@@ -352,10 +352,10 @@ void test_suite() {
   /* MU_ADD_TEST(test_imu_factor_setup); */
   /* MU_ADD_TEST(test_imu_factor_eval); */
 
-  MU_ADD_TEST(test_swe_setup);
-  MU_ADD_TEST(test_swe_print);
-  /* MU_ADD_TEST(test_swe_eval); */
-  /* MU_ADD_TEST(test_swe_solve); */
+  /* MU_ADD_TEST(test_solver_setup); */
+  /* MU_ADD_TEST(test_solver_print); */
+  /* MU_ADD_TEST(test_solver_eval); */
+  /* MU_ADD_TEST(test_solver_solve); */
 }
 
 MU_RUN_TESTS(test_suite)

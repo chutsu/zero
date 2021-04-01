@@ -101,7 +101,7 @@ cd ./build/bin
 # valgrind --leak-check=full ./test_traj_eval
 # time ./test_traj_eval
 
-# ./test_gui
+./test_gui
 # ./test_imshow
 # gdb -ex run -ex bt ./test_imshow
 

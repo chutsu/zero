@@ -15,6 +15,8 @@
 #include <assert.h>
 #include <sys/time.h>
 
+#include "zero/stb_image.h"
+
 #ifdef USE_CBLAS
 #include <cblas.h>
 #endif
@@ -266,10 +268,13 @@ void quat_delta(const real_t dalpha[3], real_t dq[4]);
 typedef struct image_t {
   int width;
   int height;
+  int channels;
   uint8_t *data;
 } image_t;
 
-void image_init(image_t *img, uint8_t *data, int width, int height);
+void image_setup(image_t *img, uint8_t *data, int width, int height);
+void image_load(image_t *img, const char *file_path);
+void image_free(image_t *img);
 
 /******************************************************************************
  *                                  CV

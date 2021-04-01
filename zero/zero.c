@@ -1,5 +1,8 @@
 #include "zero/zero.h"
 
+/* #define STB_IMAGE_IMPLEMENTATION */
+/* #include "zero/stb_image.h" */
+
 /******************************************************************************
  *                                   DATA
  ******************************************************************************/
@@ -1911,10 +1914,30 @@ void quat_delta(const real_t dalpha[3], real_t dq[4]) {
  *                                  IMAGE
  *****************************************************************************/
 
-void image_init(image_t *img, uint8_t *data, int width, int height) {
+void image_setup(image_t *img, uint8_t *data, int width, int height) {
   img->data = data;
   img->width = width;
   img->height = height;
+}
+
+void image_load(image_t *image, const char *file_path) {
+  int img_w = 0;
+  int img_h = 0;
+  int img_c = 0;
+  stbi_set_flip_vertically_on_load(1);
+  unsigned char *data = stbi_load(file_path, &img_w, &img_h, &img_c, 0);
+  if (!data) {
+    FATAL("Failed to load image file: [%s]", file_path);
+  }
+
+  image->width = img_w;
+  image->height = img_h;
+  image->channels = img_c;
+  image->data = data;
+}
+
+void image_free(image_t *image) {
+  free(image->data);
 }
 
 /*****************************************************************************

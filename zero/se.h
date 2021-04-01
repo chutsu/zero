@@ -200,7 +200,7 @@ int imu_factor_eval(imu_factor_t *factor);
   + MAX_CAMS * 6 \
   + MAX_FEATURES * 3
 
-typedef struct swe_t {
+typedef struct solver_t {
   cam_factor_t cam_factors[MAX_FEATURES];
   int nb_cam_factors;
 
@@ -224,11 +224,11 @@ typedef struct swe_t {
   real_t x[MAX_H_SIZE];
   int x_size;
   int r_size;
-} swe_t;
+} solver_t;
 
-void swe_setup(swe_t *graph);
-void swe_print(swe_t *graph);
-int swe_eval(swe_t *graph);
-void swe_solve(swe_t *graph);
+void solver_setup(solver_t *solver);
+void solver_print(solver_t *solver);
+int solver_eval(solver_t *solver);
+void solver_optimize(solver_t *solver);
 
 #endif // ZERO_SE_H
