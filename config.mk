@@ -5,8 +5,8 @@ DEPS_DIR=$(PWD)/deps
 TESTS_DIR=$(PWD)/tests
 
 # COMPILER SETTINGS
-CC=tcc
-# CC=gcc
+# CC=tcc
+CC=gcc
 CFLAGS=-g -Wall -I$(INC_DIR) -I$(DEPS_DIR)/include
 
 LIBS=-L$(BLD_DIR) \

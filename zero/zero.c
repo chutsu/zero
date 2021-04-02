@@ -4,6 +4,50 @@
 /* #include "zero/stb_image.h" */
 
 /******************************************************************************
+ *                               FILE SYSTEM
+ ******************************************************************************/
+
+char **list_files(const char *path, int *nb_files) {
+  struct dirent **namelist;
+  int N = scandir(path, &namelist, 0, alphasort);
+  if (N < 0) {
+		return NULL;
+  }
+
+  /* The first two are '.' and '..' */
+  free(namelist[0]);
+  free(namelist[1]);
+
+  /* Allocate memory for list of files */
+  char **files = malloc(sizeof(char *) * (N - 2));
+  *nb_files = 0;
+
+  /* Create list of files */
+  for (int i = 2; i < N; i++) {
+    char fp[9046] = {0};
+    strcat(fp, path);
+    strcat(fp, (fp[strlen(fp) - 1] == '/') ? "" : "/");
+    strcat(fp, namelist[i]->d_name);
+
+    files[*nb_files] = malloc(sizeof(char) * (strlen(fp) + 1));
+    strcpy(files[*nb_files], fp);
+    (*nb_files)++;
+
+		free(namelist[i]);
+	}
+	free(namelist);
+
+  return files;
+}
+
+void list_files_free(char **data, const int n) {
+  for (int i = 0; i < n; i++) {
+    free(data[i]);
+  }
+  free(data);
+}
+
+/******************************************************************************
  *                                   DATA
  ******************************************************************************/
 
@@ -1915,12 +1959,14 @@ void quat_delta(const real_t dalpha[3], real_t dq[4]) {
  *****************************************************************************/
 
 void image_setup(image_t *img, uint8_t *data, int width, int height) {
+	assert(img != NULL);
+
   img->data = data;
   img->width = width;
   img->height = height;
 }
 
-void image_load(image_t *image, const char *file_path) {
+image_t *image_load(const char *file_path) {
   int img_w = 0;
   int img_h = 0;
   int img_c = 0;
@@ -1930,14 +1976,24 @@ void image_load(image_t *image, const char *file_path) {
     FATAL("Failed to load image file: [%s]", file_path);
   }
 
-  image->width = img_w;
-  image->height = img_h;
-  image->channels = img_c;
-  image->data = data;
+  image_t *img = malloc(sizeof(image_t));
+  img->width = img_w;
+  img->height = img_h;
+  img->channels = img_c;
+  img->data = data;
+  return img;
 }
 
-void image_free(image_t *image) {
-  free(image->data);
+void image_print_stats(const image_t *img) {
+	assert(img != NULL);
+  printf("img.width: %d\n", img->width);
+  printf("img.height: %d\n", img->height);
+  printf("img.channels: %d\n", img->channels);
+}
+
+void image_free(image_t *img) {
+  free(img->data);
+  free(img);
 }
 
 /*****************************************************************************

@@ -1,32 +1,59 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include <X11/Xlib.h>
+#include <GL/gl.h>
+#include <GL/glx.h>
+#include <GL/glu.h>
+
 #include "zero.h"
-#include "gui.h"
 
-/* #include <GL/glut.h> */
-/* #include <GL/gl.h> */
-/* #include <GL/glu.h> */
+typedef struct imshow_t {
+  /* Image data */
+  char title[100];
+  unsigned int texture_id;
+  int img_w;
+  int img_h;
+  int img_c;
+  uint8_t *data;
 
-int imshow_window;
-unsigned int imshow_texture_id;
+  /* X11 */
+  Display *disp;
+  int screen;
+  Window root;
+  Window win;
 
-void imshow_resize_window(const int width, const int height);
-void imshow_draw_window();
-void imshow_keyboard_callback(unsigned char key, int x, int y);
-void imshow_load_image(const int img_w,
-                       const int img_h,
-                       const int img_c,
-                       const unsigned char *data);
+  int x;
+  int y;
+  int border_width;
 
-void imshow_setup();
-void imshow(const char *title, const char *image_path);
+	int mouse_pressed;
+	int mouse_prev_x;
+	int mouse_prev_y;
+	int mouse_dx;
+	int mouse_dy;
 
+	float pan_x;
+	float pan_y;
+	float pan_factor;
 
-void *imshow_thread(void *data) {
-  UNUSED(data);
-  xapp_t app;
-  xapp_setup(&app, "Test", 0, 0, 800, 600, 1);
-  xapp_loop(&app);
-  return NULL;
-}
+	float zoom;
+	float zoom_factor;
+
+  XVisualInfo *vi;
+  Colormap cmap;
+  XWindowAttributes gwa;
+  XSetWindowAttributes swa;
+
+  GLXContext glc;
+
+} imshow_t;
+
+void imshow_setup(imshow_t *im);
+void imshow_load(imshow_t *im, const char *title, const char *image_path);
+void imshow_free(imshow_t *im);
+void imshow_draw(imshow_t *im);
+void imshow_update(imshow_t *im, image_t *img);
+int imshow_wait(imshow_t *im);
+void imshow_loop(imshow_t *im);
+void *imshow_thread(void *data);

@@ -101,8 +101,9 @@ cd ./build/bin
 # valgrind --leak-check=full ./test_traj_eval
 # time ./test_traj_eval
 
-./test_gui
-# ./test_imshow
+# ./test_gui
+# valgrind --leak-check=full --show-leak-kinds=all ./test_imshow
+./test_imshow
 # gdb -ex run -ex bt ./test_imshow
 
 # ./test_se --target test_pose_setup

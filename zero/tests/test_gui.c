@@ -1,17 +1,18 @@
 #include "zero/gui.h"
 #include "zero/imshow.h"
 
-
 int main(void) {
-  pthread_t th;
-  pthread_create(&th, NULL, imshow_thread, NULL);
-  sleep(1);
+  const char *title = "Test";
+  const char *image_path = "./test_data/images/flower.jpg";
 
-  pthread_t th2;
-  pthread_create(&th2, NULL, imshow_thread, NULL);
-
-  pthread_join(th, NULL);
-  pthread_join(th2, NULL);
+  imshow_t im;
+  imshow_load(&im, title, image_path);
+  while (1) {
+    if (XK_q == imshow_wait(&im)) {
+      break;
+    }
+  }
+	imshow_free(&im);
 
   return 0;
 }

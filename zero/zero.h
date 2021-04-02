@@ -12,6 +12,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <dirent.h>
 #include <assert.h>
 #include <sys/time.h>
 
@@ -54,6 +55,13 @@
     log_err(M, ##__VA_ARGS__);                                                 \
     goto error;                                                                \
   }
+
+/******************************************************************************
+ *                               FILE SYSTEM
+ ******************************************************************************/
+
+char **list_files(const char *path, int *nb_files);
+void list_files_free(char **data, const int n);
 
 /******************************************************************************
  *                                   DATA
@@ -273,7 +281,8 @@ typedef struct image_t {
 } image_t;
 
 void image_setup(image_t *img, uint8_t *data, int width, int height);
-void image_load(image_t *img, const char *file_path);
+image_t *image_load(const char *file_path);
+void image_print_stats(const image_t *img);
 void image_free(image_t *img);
 
 /******************************************************************************
