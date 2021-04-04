@@ -14,21 +14,20 @@ void imshow_setup(imshow_t *im) {
   GLint att[] = {GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None};
   im->vi = glXChooseVisual(im->disp, 0, att);
   if (im->vi == NULL) {
-    printf("Failed to setup GL context!");
-    exit(0);
+    FATAL("Failed to setup GL context!");
   }
 
-	/* UI event defaults */
-	im->mouse_pressed = 0;
-	im->mouse_prev_x = 0;
-	im->mouse_prev_y = 0;
-	im->mouse_dx = 0;
-	im->mouse_dy = 0;
-	im->pan_x = 0;
-	im->pan_y = 0;
-	im->pan_factor = 0.95;
-	im->zoom = 1.0;
-	im->zoom_factor = 0.95;
+  /* UI event defaults */
+  im->mouse_pressed = 0;
+  im->mouse_prev_x = 0;
+  im->mouse_prev_y = 0;
+  im->mouse_dx = 0;
+  im->mouse_dy = 0;
+  im->pan_x = 0;
+  im->pan_y = 0;
+  im->pan_factor = 0.95;
+  im->zoom = 1.0;
+  im->zoom_factor = 0.95;
 
   /* Colormap */
   im->cmap = XCreateColormap(im->disp, im->root, im->vi->visual, AllocNone);
@@ -51,11 +50,11 @@ void imshow_setup(imshow_t *im) {
                           im->vi->visual,
                           CWColormap | CWEventMask,
                           &im->swa);
-	int io_mask = ExposureMask;
-	io_mask |= KeyPressMask;
-	io_mask |= ButtonPressMask;
-	io_mask |= ButtonReleaseMask;
-	io_mask |= PointerMotionMask;
+  int io_mask = ExposureMask;
+  io_mask |= KeyPressMask;
+  io_mask |= ButtonPressMask;
+  io_mask |= ButtonReleaseMask;
+  io_mask |= PointerMotionMask;
   XSelectInput(im->disp, im->win, io_mask);
   XMapWindow(im->disp, im->win);
   XStoreName(im->disp, im->win, im->title);
@@ -121,33 +120,32 @@ void imshow_free(imshow_t *im) {
   XCloseDisplay(im->disp);
 }
 
+void imshow_reset(imshow_t *im) {
+  im->pan_x = 0.0;
+  im->pan_y = 0.0;
+  im->zoom = 200.0;
+}
+
+void imshow_pan(imshow_t *im, double dx, double dy) {
+  im->pan_x += dx / im->zoom;
+  im->pan_y += dy / im->zoom;
+}
+
+void imshow_zoom_in(imshow_t *im, double x, double y) {
+  imshow_pan(im, -x, -y);
+  im->zoom *= im->zoom_factor;
+  imshow_pan(im, x, y);
+}
+
+void imshow_zoom_out(imshow_t *im, double x, double y) {
+  imshow_pan(im, -x, -y);
+  im->zoom /= im->zoom_factor;
+  imshow_pan(im, x, y);
+}
+
 void imshow_draw(imshow_t *im) {
-  /* float w = im->img_w; */
-  /* float h = im->img_h; */
-  /* float aspect = 1.0f * h / w; */
-  /* glViewport(0, 0, w, h); */
-  /* glMatrixMode(GL_PROJECTION); */
-  /* glLoadIdentity(); */
-  /* gluOrtho2D(-w/2, w/2, -h/2, h/2); */
-
-  /* glMatrixMode(GL_MODELVIEW); */
-  /* glLoadIdentity(); */
-  /* glTranslatef(0.0f, 0.0f, 0.0f); */
-
-	/* Window root, child; */
-  /* int rootX, rootY, winX, winY; */
-  /* unsigned int mask; */
-  /* XQueryPointer(im->disp, DefaultRootWindow(im->disp), */
-	/* 						  &root, &child, */
-	/* 							&rootX, &rootY, &winX, &winY, &mask); */
-	/* printf("pos x: %d\n", rootX); */
-	/* printf("pos y: %d\n", rootY); */
-
   glMatrixMode(GL_MODELVIEW);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
-  glTranslatef(im->pan_x, im->pan_y, -1);
-  glScalef(im->zoom, im->zoom, 1.0f);
 
   glBindTexture(GL_TEXTURE_2D, im->texture_id);
   glBegin(GL_QUADS);
@@ -162,15 +160,17 @@ void imshow_draw(imshow_t *im) {
   glEnd();
   glFlush();
 
+  glLoadIdentity();
+  glTranslatef(im->pan_x, im->pan_y, -1.0f);
+  glScalef(im->zoom, im->zoom, 1.0f);
+
   glXSwapBuffers(im->disp, im->win);
 }
 
 void imshow_update(imshow_t *im, image_t *img) {
-	for (int i = 0; i < (img->width * img->height); i++) {
-		im->data[i] = img->data[i];
-	}
-
-	glScalef(2.0, 2.0, 2.0);
+  for (int i = 0; i < (img->width * img->height); i++) {
+    im->data[i] = img->data[i];
+  }
 
   GLenum img_format = 0;
   switch (im->img_c) {
@@ -202,53 +202,56 @@ int imshow_wait(imshow_t *im) {
   /*   imshow_draw(im); */
   /* } */
 
+  /* Window root, child; */
+  /* int rootX, rootY, winX, winY; */
+  /* unsigned int mask; */
+  /* XQueryPointer(im->disp, DefaultRootWindow(im->disp), */
+  /*               &root, &child, */
+  /*               &rootX, &rootY, &winX, &winY, &mask); */
+
   /* Capture scroll events */
-	if (ev.type == ButtonPress){
-		switch (ev.xbutton.button) {
-		case Button1:
-			im->mouse_pressed = 1;
-			printf("prev_x: %d\n", ev.xbutton.x);
-			printf("prev_y: %d\n", ev.xbutton.y);
-			/* printf("pressed!\n"); */
-			im->mouse_prev_x = ev.xbutton.x;
-			im->mouse_prev_y = ev.xbutton.y;
-			break;
+  if (ev.type == ButtonPress){
+    switch (ev.xbutton.button) {
+    case Button1:
+      im->mouse_pressed = 1;
+      im->mouse_prev_x = ev.xbutton.x;
+      im->mouse_prev_y = ev.xbutton.y;
+      break;
 
-		case Button4:
-			im->zoom *= im->zoom_factor;
-			/* printf("scroll up\n"); */
-			break;
-		case Button5:
-			im->zoom /= im->zoom_factor;
-			/* printf("scroll down\n"); */
-			break;
-		}
-	}
+    case Button4:
+      /* imshow_zoom_in(im, ev.xmotion.x, ev.xmotion.y); */
+      break;
+    case Button5:
+      /* imshow_zoom_out(im, ev.xmotion.x, ev.xmotion.y); */
+      break;
+    }
+  }
 
-	if (ev.type == MotionNotify && im->mouse_pressed) {
-		im->mouse_dx = im->mouse_prev_x - ev.xmotion.x;
-		im->mouse_dy = im->mouse_prev_y - ev.xmotion.y;
-		im->pan_x -= (im->mouse_dx / (float) im->img_w) * 2.0;
-		im->pan_y += (im->mouse_dy / (float) im->img_h) * 2.0;
-		im->mouse_prev_x = ev.xmotion.x;
-		im->mouse_prev_y = ev.xmotion.y;
-		printf("dx: %d, dy: %d\n", im->mouse_dx, im->mouse_dy);
-		printf("panx: %f, pany: %f\n", im->pan_x, im->pan_y);
-	}
+  if (ev.type == MotionNotify && im->mouse_pressed) {
+    im->mouse_dx = im->mouse_prev_x - ev.xmotion.x;
+    im->mouse_dy = im->mouse_prev_y - ev.xmotion.y;
 
-	if (ev.type == ButtonRelease) {
-		switch (ev.xbutton.button) {
-		case Button1:
-			im->mouse_pressed = 0;
-			im->mouse_dx = 0;
-			im->mouse_dy = 0;
-			/* printf("x: %d\n", ev.xbutton.x); */
-			/* printf("y: %d\n", ev.xbutton.y); */
-			/* printf("release!\n"); */
-			break;
-		}
-	}
+    im->pan_x -= (im->mouse_dx / (float) im->img_w) * 2.0 * im->zoom;
+    im->pan_y += (im->mouse_dy / (float) im->img_h) * 2.0 * im->zoom;
 
+    im->mouse_prev_x = ev.xmotion.x;
+    im->mouse_prev_y = ev.xmotion.y;
+    /* printf("dx: %d, dy: %d\n", im->mouse_dx, im->mouse_dy); */
+    /* printf("panx: %f, pany: %f\n", im->pan_x, im->pan_y); */
+  }
+
+  if (ev.type == ButtonRelease) {
+    switch (ev.xbutton.button) {
+    case Button1:
+      im->mouse_pressed = 0;
+      im->mouse_dx = 0;
+      im->mouse_dy = 0;
+      /* printf("x: %d\n", ev.xbutton.x); */
+      /* printf("y: %d\n", ev.xbutton.y); */
+      /* printf("release!\n"); */
+      break;
+    }
+  }
 
   /* Keyboard listener */
   if (ev.type == KeyPress) {
@@ -260,6 +263,14 @@ int imshow_wait(imshow_t *im) {
                                          &keysyms_per_keycode_return);
     retval = keysym[0];
     XFree(keysym);
+
+    /* Reset view */
+    if (retval == XK_r) {
+      im->zoom = 1.0;
+      im->pan_x = 0;
+      im->pan_y = 0;
+    }
+
     return retval;
   }
 
@@ -274,7 +285,7 @@ void imshow_loop(imshow_t *im) {
     }
   }
 
-	imshow_free(im);
+  imshow_free(im);
 }
 
 void *imshow_thread(void *data) {

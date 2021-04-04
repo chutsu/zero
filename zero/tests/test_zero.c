@@ -315,7 +315,7 @@ int test_vec_sub() {
 int test_dot() {
   real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
   real_t B[3] = {1.0, 2.0, 3.0};
-  real_t C[9] = {0.0};
+  real_t C[3] = {0.0};
 
   /* Multiply matrix A and B */
   dot(A, 3, 3, B, 3, 1, C);

@@ -280,7 +280,7 @@ typedef struct image_t {
   uint8_t *data;
 } image_t;
 
-void image_setup(image_t *img, uint8_t *data, int width, int height);
+void image_setup(image_t *img, int width, int height, uint8_t *data);
 image_t *image_load(const char *file_path);
 void image_print_stats(const image_t *img);
 void image_free(image_t *img);

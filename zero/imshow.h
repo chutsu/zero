@@ -27,18 +27,18 @@ typedef struct imshow_t {
   int y;
   int border_width;
 
-	int mouse_pressed;
-	int mouse_prev_x;
-	int mouse_prev_y;
-	int mouse_dx;
-	int mouse_dy;
+  int mouse_pressed;
+  int mouse_prev_x;
+  int mouse_prev_y;
+  int mouse_dx;
+  int mouse_dy;
 
-	float pan_x;
-	float pan_y;
-	float pan_factor;
+  float pan_x;
+  float pan_y;
+  float pan_factor;
 
-	float zoom;
-	float zoom_factor;
+  float zoom;
+  float zoom_factor;
 
   XVisualInfo *vi;
   Colormap cmap;
@@ -52,8 +52,15 @@ typedef struct imshow_t {
 void imshow_setup(imshow_t *im);
 void imshow_load(imshow_t *im, const char *title, const char *image_path);
 void imshow_free(imshow_t *im);
+
+void imshow_reset(imshow_t *im);
+void imshow_pan(imshow_t *im, double dx, double dy);
+void imshow_zoom_in(imshow_t *im, double x, double y);
+void imshow_zoom_out(imshow_t *im, double x, double y);
+
 void imshow_draw(imshow_t *im);
 void imshow_update(imshow_t *im, image_t *img);
+
 int imshow_wait(imshow_t *im);
 void imshow_loop(imshow_t *im);
 void *imshow_thread(void *data);

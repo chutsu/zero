@@ -102,8 +102,17 @@ cd ./build/bin
 # time ./test_traj_eval
 
 # ./test_gui
-# valgrind --leak-check=full --show-leak-kinds=all ./test_imshow
-./test_imshow
+# ./test_gui --target test_gl_zeros
+# ./test_gui --target test_gl_ones
+# ./test_gui --target test_gl_eye
+# ./test_gui --target test_gl_equals
+# ./test_gui --target test_gl_vec3_cross
+# ./test_gui --target test_gl_dot
+# ./test_gui --target test_gl_norm
+# ./test_gui --target test_gl_normalize
+
+# ./test_imshow
+# ./test_imshow2
 # gdb -ex run -ex bt ./test_imshow
 
 # ./test_se --target test_pose_setup

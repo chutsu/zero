@@ -11,7 +11,7 @@ char **list_files(const char *path, int *nb_files) {
   struct dirent **namelist;
   int N = scandir(path, &namelist, 0, alphasort);
   if (N < 0) {
-		return NULL;
+    return NULL;
   }
 
   /* The first two are '.' and '..' */
@@ -33,9 +33,9 @@ char **list_files(const char *path, int *nb_files) {
     strcpy(files[*nb_files], fp);
     (*nb_files)++;
 
-		free(namelist[i]);
-	}
-	free(namelist);
+    free(namelist[i]);
+  }
+  free(namelist);
 
   return files;
 }
@@ -1958,8 +1958,8 @@ void quat_delta(const real_t dalpha[3], real_t dq[4]) {
  *                                  IMAGE
  *****************************************************************************/
 
-void image_setup(image_t *img, uint8_t *data, int width, int height) {
-	assert(img != NULL);
+void image_setup(image_t *img, int width, int height, uint8_t *data) {
+  assert(img != NULL);
 
   img->data = data;
   img->width = width;
@@ -1985,7 +1985,7 @@ image_t *image_load(const char *file_path) {
 }
 
 void image_print_stats(const image_t *img) {
-	assert(img != NULL);
+  assert(img != NULL);
   printf("img.width: %d\n", img->width);
   printf("img.height: %d\n", img->height);
   printf("img.channels: %d\n", img->channels);

@@ -22,15 +22,15 @@ int main() {
     struct timespec t = tic();
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(A_, Eigen::ComputeFullV | Eigen::ComputeFullU);
     Eigen::MatrixXd U = svd.matrixU();
-		Eigen::VectorXd d = svd.singularValues();
-		Eigen::MatrixXd S = d.asDiagonal();
+    Eigen::VectorXd d = svd.singularValues();
+    Eigen::MatrixXd S = d.asDiagonal();
     Eigen::MatrixXd V = svd.matrixV();
     printf("matrix_size: %ld\tEigen SVD: %fs\n", A_.rows(), toc(&t));
 
-		bool retval = A_.isApprox(U * S * V.transpose());
-		if (retval == false) {
-			exit(-1);
-		}
+    bool retval = A_.isApprox(U * S * V.transpose());
+    if (retval == false) {
+      exit(-1);
+    }
 
     free(A);
   }

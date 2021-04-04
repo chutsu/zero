@@ -224,9 +224,9 @@ int test_cam_factor_eval() {
   cam_factor_t cam_factor;
   real_t var[2] = {1.0, 1.0};
   cam_factor_setup(&cam_factor, &pose, &extrinsics, &camera, var);
-	cam_factor_eval(&cam_factor);
+  cam_factor_eval(&cam_factor);
 
-	return 0;
+  return 0;
 }
 
 int test_imu_buf_setup() {
@@ -246,16 +246,16 @@ int test_imu_buf_add() {
   imu_buf_add(&imu_buf, ts, acc, gyr);
   imu_buf_print(&imu_buf);
 
-	MU_CHECK(imu_buf.size == 1);
-	MU_CHECK(imu_buf.ts[0] == ts);
-	MU_CHECK(fltcmp(imu_buf.acc[0][0], 1.0) == 0);
-	MU_CHECK(fltcmp(imu_buf.acc[0][1], 2.0) == 0);
-	MU_CHECK(fltcmp(imu_buf.acc[0][2], 3.0) == 0);
-	MU_CHECK(fltcmp(imu_buf.gyr[0][0], 1.0) == 0);
-	MU_CHECK(fltcmp(imu_buf.gyr[0][1], 2.0) == 0);
-	MU_CHECK(fltcmp(imu_buf.gyr[0][2], 3.0) == 0);
+  MU_CHECK(imu_buf.size == 1);
+  MU_CHECK(imu_buf.ts[0] == ts);
+  MU_CHECK(fltcmp(imu_buf.acc[0][0], 1.0) == 0);
+  MU_CHECK(fltcmp(imu_buf.acc[0][1], 2.0) == 0);
+  MU_CHECK(fltcmp(imu_buf.acc[0][2], 3.0) == 0);
+  MU_CHECK(fltcmp(imu_buf.gyr[0][0], 1.0) == 0);
+  MU_CHECK(fltcmp(imu_buf.gyr[0][1], 2.0) == 0);
+  MU_CHECK(fltcmp(imu_buf.gyr[0][2], 3.0) == 0);
 
-	return 0;
+  return 0;
 }
 
 int test_imu_buf_clear() {
@@ -266,18 +266,18 @@ int test_imu_buf_clear() {
   real_t acc[3] = {1.0, 2.0, 3.0};
   real_t gyr[3] = {1.0, 2.0, 3.0};
   imu_buf_add(&imu_buf, ts, acc, gyr);
-	imu_buf_clear(&imu_buf);
+  imu_buf_clear(&imu_buf);
 
-	MU_CHECK(imu_buf.size == 0);
-	MU_CHECK(imu_buf.ts[0] == 0);
-	MU_CHECK(fltcmp(imu_buf.acc[0][0], 0.0) == 0);
-	MU_CHECK(fltcmp(imu_buf.acc[0][1], 0.0) == 0);
-	MU_CHECK(fltcmp(imu_buf.acc[0][2], 0.0) == 0);
-	MU_CHECK(fltcmp(imu_buf.gyr[0][0], 0.0) == 0);
-	MU_CHECK(fltcmp(imu_buf.gyr[0][1], 0.0) == 0);
-	MU_CHECK(fltcmp(imu_buf.gyr[0][2], 0.0) == 0);
+  MU_CHECK(imu_buf.size == 0);
+  MU_CHECK(imu_buf.ts[0] == 0);
+  MU_CHECK(fltcmp(imu_buf.acc[0][0], 0.0) == 0);
+  MU_CHECK(fltcmp(imu_buf.acc[0][1], 0.0) == 0);
+  MU_CHECK(fltcmp(imu_buf.acc[0][2], 0.0) == 0);
+  MU_CHECK(fltcmp(imu_buf.gyr[0][0], 0.0) == 0);
+  MU_CHECK(fltcmp(imu_buf.gyr[0][1], 0.0) == 0);
+  MU_CHECK(fltcmp(imu_buf.gyr[0][2], 0.0) == 0);
 
-	return 0;
+  return 0;
 }
 
 int test_imu_buf_copy() {
@@ -290,19 +290,19 @@ int test_imu_buf_copy() {
   imu_buf_add(&imu_buf, ts, acc, gyr);
 
   imu_buf_t imu_buf2;
-	imu_buf_setup(&imu_buf2);
-	imu_buf_copy(&imu_buf, &imu_buf2);
+  imu_buf_setup(&imu_buf2);
+  imu_buf_copy(&imu_buf, &imu_buf2);
 
-	MU_CHECK(imu_buf2.size == 1);
-	MU_CHECK(imu_buf2.ts[0] == ts);
-	MU_CHECK(fltcmp(imu_buf2.acc[0][0], 1.0) == 0);
-	MU_CHECK(fltcmp(imu_buf2.acc[0][1], 2.0) == 0);
-	MU_CHECK(fltcmp(imu_buf2.acc[0][2], 3.0) == 0);
-	MU_CHECK(fltcmp(imu_buf2.gyr[0][0], 1.0) == 0);
-	MU_CHECK(fltcmp(imu_buf2.gyr[0][1], 2.0) == 0);
-	MU_CHECK(fltcmp(imu_buf2.gyr[0][2], 3.0) == 0);
+  MU_CHECK(imu_buf2.size == 1);
+  MU_CHECK(imu_buf2.ts[0] == ts);
+  MU_CHECK(fltcmp(imu_buf2.acc[0][0], 1.0) == 0);
+  MU_CHECK(fltcmp(imu_buf2.acc[0][1], 2.0) == 0);
+  MU_CHECK(fltcmp(imu_buf2.acc[0][2], 3.0) == 0);
+  MU_CHECK(fltcmp(imu_buf2.gyr[0][0], 1.0) == 0);
+  MU_CHECK(fltcmp(imu_buf2.gyr[0][1], 2.0) == 0);
+  MU_CHECK(fltcmp(imu_buf2.gyr[0][2], 3.0) == 0);
 
-	return 0;
+  return 0;
 }
 
 int test_imu_buf_print() {

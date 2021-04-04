@@ -149,7 +149,7 @@ void pose_factor_setup(pose_factor_t *factor,
 }
 
 void pose_factor_reset(pose_factor_t *factor) {
-	zeros(factor->r, 6, 1);
+  zeros(factor->r, 6, 1);
   zeros(factor->J0, 6, 6);
 }
 
@@ -305,7 +305,7 @@ void imu_buf_setup(imu_buf_t *imu_buf) {
     imu_buf->gyr[k][2] = 0.0;
   }
 
-	imu_buf->size = 0;
+  imu_buf->size = 0;
 }
 
 void imu_buf_print(const imu_buf_t *imu_buf) {
