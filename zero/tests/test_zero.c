@@ -246,6 +246,12 @@ int test_mat_transpose() {
   mat_transpose(A, 3, 3, C);
   print_matrix("C", C, 3, 3);
 
+  real_t B[3*4] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0};
+  real_t D[9] = {0.0};
+  print_matrix("B", B, 3, 4);
+  mat_transpose(B, 3, 4, D);
+  print_matrix("D", D, 4, 3);
+
   return 0;
 }
 
@@ -265,6 +271,14 @@ int test_mat_sub() {
   real_t C[9] = {0.0};
   mat_sub(A, B, C, 3, 3);
   print_matrix("C", C, 3, 3);
+
+  return 0;
+}
+
+int test_mat_scale() {
+  real_t A[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+  mat_scale(A, 3, 3, 2.0);
+  print_matrix("A", A, 3, 3);
 
   return 0;
 }
@@ -1069,6 +1083,7 @@ void test_suite() {
   MU_ADD_TEST(test_mat_transpose);
   MU_ADD_TEST(test_mat_add);
   MU_ADD_TEST(test_mat_sub);
+  MU_ADD_TEST(test_mat_scale);
   MU_ADD_TEST(test_vec_add);
   MU_ADD_TEST(test_vec_sub);
   MU_ADD_TEST(test_dot);

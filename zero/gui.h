@@ -8,7 +8,9 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glut.h>
+/* #include <GL/freeglut.h> */
+
+#include <GLFW/glfw3.h>
 
 /* #include <glad/glad.h> */
 
@@ -30,6 +32,19 @@ int gl_equals(const GLfloat *A,
               const int nb_rows,
               const int nb_cols,
               const GLfloat tol);
+void gl_matf_set(GLfloat *A,
+                    const int m,
+                     const int n,
+                    const int i,
+                 const int j,
+                     const GLfloat val);
+GLfloat gl_matf_val(const GLfloat *A,
+                    const int m,
+                    const int n,
+                    const int i,
+                         const int j);
+void gl_copy(const GLfloat *src, const int m, const int n, GLfloat *dest);
+void gl_transpose(const real_t *A, size_t m, size_t n, real_t *A_t);
 void gl_zeros(GLfloat *A, const int nb_rows, const int nb_cols);
 void gl_ones(GLfloat *A, const int nb_rows, const int nb_cols);
 void gl_eye(GLfloat *A, const int nb_rows, const int nb_cols);
@@ -59,16 +74,11 @@ void gl_scale(GLfloat factor, GLfloat *A, const int nb_rows, const int nb_cols);
 GLfloat gl_norm(const GLfloat *x, const int size);
 void gl_normalize(GLfloat *x, const int size);
 
-
 void gl_perspective(const GLfloat fov,
-			 	 		 	 	    const GLfloat near,
-				 	 	 	      const GLfloat far,
-									  GLfloat P[4*4]);
-void gl_frustrum(const GLfloat fov,
-								 const GLfloat ratio,
-                 const GLfloat near,
-                 const GLfloat far,
-                 GLfloat P[4*4]);
+                    const GLfloat aspect,
+                        const GLfloat near,
+                       const GLfloat far,
+                    GLfloat P[4*4]);
 void gl_lookat(const GLfloat eye[3],
                const GLfloat at[3],
                const GLfloat up[3],
@@ -79,22 +89,26 @@ void gl_lookat(const GLfloat eye[3],
  ******************************************************************************/
 
 GLuint shader_compile(const char *shader_src, const int type);
-GLuint shaders_link(const int vertex_shader,
-                 	 	const int fragment_shader,
-                 	 	const int geometry_shader);
+GLuint shaders_link(const GLuint vertex_shader,
+                      const GLuint fragment_shader,
+                      const GLuint geometry_shader);
 
 /*******************************************************************************
  *                                GL PROGRAM
  ******************************************************************************/
 
 typedef struct gl_entity_t {
+  GLfloat T[4*4];
+
   GLint program_id;
   GLuint vao;
   GLuint vbo;
   GLuint ebo;
 } gl_entity_t;
 
-int gl_prog_setup(const char *vs_src, const char *fs_src);
+GLuint gl_prog_setup(const char *vs_src,
+                     const char *fs_src,
+                     const char *gs_src);
 
 int gl_prog_set_int(const GLint id, const char *k, const GLint v);
 int gl_prog_set_vec2i(const GLint id, const char *k, const GLint v[2]);
@@ -114,6 +128,9 @@ int gl_prog_set_mat4f(const GLint id, const char *k, const GLfloat v[4*4]);
  ******************************************************************************/
 
 typedef struct gl_camera_t {
+  int *window_width;
+  int *window_height;
+
   GLfloat focal[3];
   GLfloat world_up[3];
   GLfloat position[3];
@@ -122,25 +139,77 @@ typedef struct gl_camera_t {
   GLfloat front[3];
   GLfloat yaw;
   GLfloat pitch;
+  GLfloat radius;
 
-  GLfloat movement_speed;
-  GLfloat mouse_sensitivity;
   GLfloat fov;
   GLfloat near;
   GLfloat far;
+
+  GLfloat P[4*4];  /* Projection matrix */
+  GLfloat V[4*4];  /* View matrix */
 } gl_camera_t;
 
-void gl_camera_setup(gl_camera_t *camera);
+void gl_camera_setup(gl_camera_t *camera,
+                     int *screen_width,
+                     int *screen_height);
 void gl_camera_update(gl_camera_t *camera);
-void gl_camera_projection_matrix(gl_camera_t *camera, GLfloat P[4*4]);
-void gl_camera_view_matrix(gl_camera_t *camera, GLfloat V[4*4]);
+void gl_camera_rotate(gl_camera_t *camera,
+                      const float factor,
+                      const float dx,
+                      const float dy);
+void gl_camera_pan(gl_camera_t *camera,
+                   const float factor,
+                   const float dx,
+                   const float dy);
+void gl_camera_zoom(gl_camera_t *camera,
+                    const float factor,
+                    const float dx,
+                    const float dy);
 
 /*******************************************************************************
  *                                    GUI
  ******************************************************************************/
 
-void gui_setup(int argc, char **argv);
-void gui_add_cube(gl_entity_t *entity);
+typedef struct gui_t {
+  int screen_width;
+  int screen_height;
+
+  GLFWwindow *window;
+  char *window_title;
+  int window_width;
+  int window_height;
+
+  gl_camera_t camera;
+  GLfloat movement_speed;
+  GLfloat mouse_sensitivity;
+
+  int left_click;
+  int right_click;
+  int last_cursor_set;
+  float last_cursor_x;
+  float last_cursor_y;
+} gui_t;
+
+void gui_framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void gui_event_handler(GLFWwindow *window);
+void gui_error_callback(int error, const char *description);
+void gui_mouse_cursor_callback(GLFWwindow *window, double x, double y);
+void gui_mouse_button_callback(GLFWwindow *window,
+                               int btn,
+                               int action,
+                               int mods);
+void gui_mouse_scroll_callback(GLFWwindow *window, double dx, double dy);
+void gui_keyboard_callback(GLFWwindow* window,
+                           int key,
+                           int scancode,
+                           int action,
+                           int mods);
+
+void gui_setup(gui_t *gui);
+void gui_reset(gui_t *gui);
+void gui_loop(gui_t *gui);
+void gui_add_cube(gl_entity_t *entity, GLfloat pos[3]);
 void gui_remove_cube(const gl_entity_t *entity);
+void gui_draw_cube(gl_camera_t *camera, const gl_entity_t *entity);
 
 #endif /* ZERO_GUI_H */

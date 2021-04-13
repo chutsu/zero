@@ -30,7 +30,7 @@ void gl_print_matrix(const char *prefix,
   printf("%s:\n", prefix);
   for (int i = 0; i < nb_rows; i++) {
     for (int j = 0; j < nb_cols; j++) {
-      printf("%f", A[i + (j * 3)]);
+      printf("%f", A[i + (j * nb_rows)]);
       if ((j + 1) != nb_cols) {
         printf(", ");
       }
@@ -53,9 +53,10 @@ void gl_ones(GLfloat *A, const int nb_rows, const int nb_cols) {
 }
 
 void gl_eye(GLfloat *A, const int nb_rows, const int nb_cols) {
-  for (int i = 0; i < nb_rows; i++) {
-    for (int j = 0; j < nb_cols; j++) {
-      A[i + (j * nb_rows)] = (i == j) ? 1.0f : 0.0f;
+  int idx = 0;
+  for (int j = 0; j < nb_cols; j++) {
+    for (int i = 0; i < nb_rows; i++) {
+      A[idx++] = (i == j) ? 1.0f : 0.0f;
     }
   }
 }
@@ -96,6 +97,43 @@ int gl_equals(const GLfloat *A,
   return 1;
 }
 
+void gl_matf_set(GLfloat *A,
+                    const int m,
+                     const int n,
+                    const int i,
+                 const int j,
+                     const GLfloat val) {
+  UNUSED(n);
+  A[i + (j * m)] = val;
+}
+
+GLfloat gl_matf_val(const GLfloat *A,
+                    const int m,
+                    const int n,
+                    const int i,
+                         const int j) {
+  UNUSED(n);
+  return A[i + (j * m)];
+}
+
+void gl_copy(const GLfloat *src, const int m, const int n, GLfloat *dest) {
+  for (int i = 0; i < (m * n); i++) {
+    dest[i] = src[i];
+  }
+}
+
+void gl_transpose(const real_t *A, size_t m, size_t n, real_t *A_t) {
+  assert(A != NULL && A != A_t);
+  assert(m > 0 && n > 0);
+
+  int idx = 0;
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < n; j++) {
+      A_t[idx++] = gl_matf_val(A, m, n, i, j);
+    }
+  }
+}
+
 void gl_vec3f_cross(const GLfloat u[3], const GLfloat v[3], GLfloat n[3]) {
   assert(u);
   assert(v);
@@ -129,6 +167,7 @@ void gl_sub(const GLfloat *A,
 void gl_dot(const GLfloat *A, const int A_m, const int A_n,
             const GLfloat *B, const int B_m, const int B_n,
             GLfloat *C) {
+  assert(A != C && B != C);
   assert(A_n == B_m);
 
   int m = A_m;
@@ -166,50 +205,31 @@ void gl_normalize(GLfloat *x, const int size) {
 }
 
 void gl_perspective(const GLfloat fov,
-			 	 		 	 	    const GLfloat near,
-				 	 	 	      const GLfloat far,
-									  GLfloat P[4*4]) {
-	const GLfloat scale = 1.0f / tan(fov * 0.5f * M_PI / 180.0f);
-	const GLfloat a = -far / (far - near);
-	const GLfloat b = -far * near / (far - near);
+                    const GLfloat aspect,
+                        const GLfloat near,
+                       const GLfloat far,
+                    GLfloat P[4*4]) {
+  const GLfloat f = 1.0f / tan(fov * 0.5f);
 
-	/* clang-format off */
-	P[0] = scale; P[4] = 0.0f;  P[8] = 0.0f; P[12] = 0.0f;
-	P[1] = 0.0f;  P[5] = scale; P[9] = 0.0f; P[13] = 0.0f;
-	P[2] = 0.0f;  P[6] = 0.0f;  P[10] = -a;  P[14] = -1.0f;
-	P[3] = 0.0f;  P[7] = 0.0f;  P[11] = -b;  P[15] = 0.0f;
-	/* clang-format on */
-}
-
-void gl_frustrum(const GLfloat fov,
-                 const GLfloat ratio,
-                 const GLfloat near,
-                 const GLfloat far,
-                 GLfloat P[4*4]) {
-  const GLfloat scale = tan(fov * 0.5f * M_PI / 180.0f) * near;
-  const GLfloat right = ratio * scale;
-  const GLfloat left = -1.0f * right;
-  const GLfloat top = scale;
-  const GLfloat bottom = -1.0f * top;
-
-  P[0] = 2.0f * near / (right - left);
+  gl_zeros(P, 4, 4);
+  P[0] = f / aspect;
   P[1] = 0.0f;
   P[2] = 0.0f;
   P[3] = 0.0f;
 
   P[4] = 0.0f;
-  P[5] = 2.0f * near / (top - bottom);
+  P[5] = f;
   P[6] = 0.0f;
   P[7] = 0.0f;
 
-  P[8] = (right + left) / (right - left);
-  P[9] = (top + bottom) / (top - bottom);
-  P[10] = -(far + near) / (far - near);
+  P[8] = 0.0f;
+  P[9] = 0.0f;
+  P[10] = (far + near) / (near - far);
   P[11] = -1;
 
   P[12] = 0.0f;
   P[13] = 0.0f;
-  P[14] = -2.0f * far * near / (far - near);
+  P[14] = (2 * far * near) / (near - far);
   P[15] = 0.0f;
 }
 
@@ -231,13 +251,56 @@ void gl_lookat(const GLfloat eye[3],
   GLfloat y[3] = {0};
   gl_vec3f_cross(x, z, y);
 
-  /* View matrix - column order */
-	/* clang-format off */
-  /* V[0] = x[0]; V[4] = x[1]; V[8] = x[2];  V[12] = -a; */
-  /* V[1] = y[0]; V[5] = y[1]; V[9] = y[2];  V[13] = -b; */
-  /* V[2] = z[0]; V[6] = z[1]; V[10] = z[2]; V[14] = -c; */
-  /* V[3] = 0.0f; V[7] = 0.0f; V[11] = 0.0f; V[15] = 1.0f; */
-	/* clang-format on */
+  /* Negate z-axis */
+  gl_scale(-1.0f, z, 3, 1);
+
+  /* Form rotation component */
+  GLfloat R[4*4] = {0};
+  R[0] = x[0];
+  R[1] = y[0];
+  R[2] = z[0];
+  R[3] = 0.0f;
+
+  R[4] = x[1];
+  R[5] = y[1];
+  R[6] = z[1];
+  R[7] = 0.0f;
+
+  R[8] = x[2];
+  R[9] = y[2];
+  R[10] = z[2];
+  R[11] = 0.0f;
+
+  R[12] = 0.0f;
+  R[13] = 0.0f;
+  R[14] = 0.0f;
+  R[15] = 1.0f;
+
+  /* Form translation component */
+  GLfloat T[4*4] = {0};
+  T[0] = 1.0f;
+  T[1] = 0.0f;
+  T[2] = 0.0f;
+  T[3] = 0.0f;
+
+  T[4] = 0.0f;
+  T[5] = 1.0f;
+  T[6] = 0.0f;
+  T[7] = 0.0f;
+
+  T[8] = 0.0f;
+  T[9] = 0.0f;
+  T[10] = 1.0f;
+  T[11] = 0.0f;
+
+  T[12] = -eye[0];
+  T[13] = -eye[1];
+  T[14] = -eye[2];
+  T[15] = 1.0f;
+
+  /* Form view matrix */
+  gl_zeros(V, 4, 4);
+  gl_dot(R, 4, 4, T, 4, 4, V);
 }
 
 /*******************************************************************************
@@ -245,53 +308,52 @@ void gl_lookat(const GLfloat eye[3],
  ******************************************************************************/
 
 GLuint shader_compile(const char *shader_src, const int type) {
-  assert(shader_src != NULL);
+  if (shader_src == NULL) {
+    return GL_FALSE;
+  }
 
-  GLuint shader = glCreateShader(type);
+  const GLuint shader = glCreateShader(type);
   glShaderSource(shader, 1, &shader_src, NULL);
   glCompileShader(shader);
 
-  GLint success = 0;
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    char log[512];
-    glGetShaderInfoLog(shader, 512, NULL, log);
-    printf("Failed to compile fragment shader:\n%s\n", log);
-    return -1;
+  GLint retval = 0;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &retval);
+  if (retval == GL_FALSE) {
+    char log[9046] = {0};
+    glGetShaderInfoLog(shader, 9046, NULL, log);
+    LOG_ERROR("Failed to compile shader:\n%s\n", log);
+    return retval;
   }
 
   return shader;
 }
 
-GLuint shaders_link(const int vertex_shader,
-                 	 	const int fragment_shader,
-                 	 	const int geometry_shader) {
-  assert(vertex_shader != -1);
-  assert(fragment_shader != -1);
-
+GLuint shaders_link(const GLuint vertex_shader,
+                      const GLuint fragment_shader,
+                      const GLuint geometry_shader) {
   // Attach shaders to link
   GLuint program = glCreateProgram();
   glAttachShader(program, vertex_shader);
   glAttachShader(program, fragment_shader);
-  if (geometry_shader != -1) {
+  if (geometry_shader != GL_FALSE) {
     glAttachShader(program, geometry_shader);
   }
   glLinkProgram(program);
 
   // Link program
   GLint success = 0;
-  char log[1024];
+  char log[9046];
   glGetProgramiv(program, GL_LINK_STATUS, &success);
-  if (!success) {
-    glGetProgramInfoLog(program, 1024, NULL, log);
-    printf("Failed to link shaders:\nReason: %s\n", log);
-    exit(-1);
+  if (success == GL_FALSE) {
+    glGetProgramInfoLog(program, 9046, NULL, log);
+    LOG_ERROR("Failed to link shaders:\nReason: %s\n", log);
+    return GL_FALSE;
   }
 
   // Delete shaders
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
-  if (geometry_shader == -1) {
+  if (geometry_shader == GL_FALSE) {
     glDeleteShader(geometry_shader);
   }
 
@@ -302,10 +364,13 @@ GLuint shaders_link(const int vertex_shader,
  *                                GL PROGRAM
  ******************************************************************************/
 
-int gl_prog_setup(const char *vs_src, const char *fs_src) {
+GLuint gl_prog_setup(const char *vs_src,
+                     const char *fs_src,
+                     const char *gs_src) {
   const GLuint vs = shader_compile(vs_src, GL_VERTEX_SHADER);
   const GLuint fs = shader_compile(fs_src, GL_FRAGMENT_SHADER);
-  const GLuint program_id = shaders_link(vs, fs, -1);
+  const GLuint gs = shader_compile(gs_src, GL_GEOMETRY_SHADER);
+  const GLuint program_id = shaders_link(vs, fs, gs);
   return program_id;
 }
 
@@ -423,7 +488,12 @@ int gl_prog_set_mat4f(const GLint id, const char *k, const GLfloat v[4*4]) {
  *                                 GL-CAMERA
  ******************************************************************************/
 
-void gl_camera_setup(gl_camera_t *camera) {
+void gl_camera_setup(gl_camera_t *camera,
+                     int *window_width,
+                     int *window_height) {
+  camera->window_width = window_width;
+  camera->window_height = window_height;
+
   gl_zeros(camera->focal, 3, 1);
   gl_vec3f(camera->world_up, 0.0f, 1.0f, 0.0f);
   gl_vec3f(camera->position, 0.0f, 0.0f, 0.0f);
@@ -432,200 +502,314 @@ void gl_camera_setup(gl_camera_t *camera) {
   gl_vec3f(camera->front, 0.0f, 0.0f, -1.0f);
   camera->yaw = gl_deg2rad(0.0f);
   camera->pitch = gl_deg2rad(0.0f);
+  camera->radius = 10.0f;
 
-  camera->movement_speed = 50.0f;
-  camera->mouse_sensitivity = 0.02f;
-  camera->fov = gl_deg2rad(45.0f);
+  camera->fov = gl_deg2rad(60.0f);
   camera->near = 0.1f;
   camera->far = 100.0f;
+
+  gl_camera_update(camera);
 }
 
 void gl_camera_update(gl_camera_t *camera) {
-	camera->front[0] = sin(camera->yaw) * cos(camera->pitch);
-	camera->front[1] = sin(camera->pitch);
-	camera->front[2] = cos(camera->yaw) * cos(camera->pitch);
-	gl_normalize(camera->front, 3);
+  /* Front vector */
+  camera->front[0] = sin(camera->yaw) * cos(camera->pitch);
+  camera->front[1] = sin(camera->pitch);
+  camera->front[2] = cos(camera->yaw) * cos(camera->pitch);
+  gl_normalize(camera->front, 3);
 
-	gl_vec3f_cross(camera->front, camera->world_up, camera->right);
-	gl_normalize(camera->right, 3);
+  /* Right vector */
+  gl_vec3f_cross(camera->front, camera->world_up, camera->right);
+  gl_normalize(camera->right, 3);
 
-	gl_vec3f_cross(camera->right, camera->front, camera->up);
-	gl_normalize(camera->up, 3);
+  /* Up vector */
+  gl_vec3f_cross(camera->right, camera->front, camera->up);
+  gl_normalize(camera->up, 3);
+
+  /* Projection matrix */
+  const float width = (float) *(camera->window_width);
+  const float height = (float) *(camera->window_height);
+  const float aspect = width / height;
+  gl_perspective(camera->fov, aspect, camera->near, camera->far, camera->P);
+
+  /* View matrix */
+  GLfloat eye[3] = {0};
+  eye[0] = camera->focal[0] + camera->radius * sin(camera->yaw);
+  eye[1] = camera->focal[1] + camera->radius * cos(camera->pitch);
+  eye[2] = camera->focal[2] + camera->radius * cos(camera->yaw);
+  gl_lookat(eye, camera->focal, camera->world_up, camera->V);
 }
 
-void gl_camera_projection_matrix(gl_camera_t *camera, GLfloat P[4*4]) {
-	gl_perspective(camera->fov, camera->near, camera->far, P);
+void gl_camera_rotate(gl_camera_t *camera,
+                      const float factor,
+                      const float dx,
+                           const float dy) {
+  /* Update yaw and pitch */
+  float pitch = camera->pitch;
+  float yaw = camera->yaw;
+  yaw -= dx * factor;
+  pitch += dy * factor;
+
+  /* Constrain pitch and yaw */
+  pitch = (pitch <= (-M_PI / 2.0) + 1e-5) ? (-M_PI / 2.0) + 1e-5 : pitch;
+  pitch = (pitch > 0.0) ? 0.0 : pitch;
+  yaw = (yaw > M_PI) ? yaw - 2 * M_PI : yaw;
+  yaw = (yaw < -M_PI) ? yaw + 2 * M_PI : yaw;
+
+  /* Update camera attitude */
+  camera->pitch = pitch;
+  camera->yaw = yaw;
+  gl_camera_update(camera);
 }
 
-void gl_camera_view_matrix(gl_camera_t *camera, GLfloat V[4*4]) {
-	const GLfloat radius = 10.0f;
-	GLfloat eye[3] = {0};
-	eye[0] = camera->focal[0] + radius * sin(camera->yaw);
-	eye[1] = camera->focal[1] - radius * sin(camera->pitch);
-	eye[2] = camera->focal[2] + radius * cos(camera->yaw);
-	gl_lookat(eye, camera->focal, camera->world_up, V);
+void gl_camera_pan(gl_camera_t *camera,
+                   const float factor,
+                   const float dx,
+                   const float dy) {
+  /* camera->focal -= (dy * mouse_sensitivity) * camera->front; */
+  /* camera->focal += (dx * mouse_sensitivity) * camera->right; */
+  const GLfloat dx_scaled = dx * factor;
+  const GLfloat dy_scaled = dy * factor;
+  GLfloat front[3] = {camera->front[0], camera->front[1], camera->front[2]};
+  GLfloat right[3] = {camera->right[0], camera->right[1], camera->right[2]};
+  gl_scale(dy_scaled, front, 3, 1);
+  gl_scale(dx_scaled, right, 3, 1);
+  gl_sub(camera->focal, front, 3, 1, camera->focal);
+  gl_add(camera->focal, right, 3, 1, camera->focal);
+
+  /* limit focal point y-axis */
+  camera->focal[1] = (camera->focal[1] < 0) ? 0 : camera->focal[1];
+  gl_camera_update(camera);
+}
+
+void gl_camera_zoom(gl_camera_t *camera,
+                    const float factor,
+                    const float dx,
+                    const float dy) {
+  UNUSED(factor);
+  UNUSED(dx);
+
+  if (camera->fov >= gl_deg2rad(0.5f) && camera->fov <= gl_deg2rad(90.0f)) {
+    camera->fov -= dy * 0.1;
+  }
+
+  if (camera->fov <= gl_deg2rad(0.5f)) {
+    camera->fov = gl_deg2rad(5.0f);
+  } else if (camera->fov >= gl_deg2rad(90.0f)) {
+    camera->fov = gl_deg2rad(90.0f);
+  }
+
+  gl_camera_update(camera);
 }
 
 /*******************************************************************************
  *                                    GUI
  ******************************************************************************/
 
-double step = 10;
-double scale = 1.2;
-double win_w, win_h;
-double pan_x = 0.0;
-double pan_y = 0.0;
-double zoom_k = 200.0;
-
-/* static void error(const char *msg) { */
-/*   fprintf(stderr, "%s ", msg); */
-/*   exit(1); */
-/* } */
-
-static void reset(void) {
-  pan_x = 0.0;
-  pan_y = 0.0;
-  zoom_k = 200.0;
+void gui_framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+  gui_t *gui = glfwGetWindowUserPointer(window);
+  gui->window_width = width;
+  gui->window_height = height;
+  glViewport(0, 0, gui->window_width, gui->window_height);
 }
 
-static void zoom(double factor) {
-  zoom_k *= factor;
-}
-
-static void pan(double dx, double dy) {
-  pan_x += dx / zoom_k;
-  pan_y += dy / zoom_k;
-}
-
-static void zoom_at(double x, double y, double factor) {
-  pan(-x, -y);
-  zoom(factor);
-  pan(x, y);
-}
-
-static void keyboard_callback(unsigned char key, int x, int y) {
-  UNUSED(x);
-  UNUSED(y);
-
-  if (key == '\033' || key == 'q') {
-    exit(0);
+void gui_event_handler(GLFWwindow *window) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, 1);
+  }
+  if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, 1);
   }
 }
 
-static void special_callback(int key, int x, int y) {
-  UNUSED(x);
-  UNUSED(y);
+void gui_error_callback(int error, const char *description) {
+  fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
 
-  switch (key) {
-    case GLUT_KEY_HOME: reset(); break;
-    case GLUT_KEY_LEFT: pan(-step, 0); break;
-    case GLUT_KEY_RIGHT: pan(step, 0); break;
-    case GLUT_KEY_DOWN: pan(0, -step); break;
-    case GLUT_KEY_UP: pan(0, step); break;
+void gui_mouse_cursor_callback(GLFWwindow *window, double x, double y) {
+  gui_t *gui = (gui_t *) glfwGetWindowUserPointer(window);
+  const float dx = x - gui->last_cursor_x;
+  const float dy = y - gui->last_cursor_y;
+  gui->last_cursor_x = x;
+  gui->last_cursor_y = y;
+
+  /* Rotate camera */
+  if (gui->left_click) {
+    if (gui->last_cursor_set == 0) {
+      gui->last_cursor_set = 1;
+    } else if (gui->last_cursor_set) {
+      gl_camera_rotate(&gui->camera, gui->mouse_sensitivity, dx, dy);
+    }
   }
 
-  glutPostRedisplay();
-}
-
-static void mouse(int b, int s, int x, int y) {
-  if (s != GLUT_DOWN)
-    return;
-  y = win_h - 1 - y;
-
-  switch (b) {
-  case GLUT_LEFT_BUTTON: zoom_at(x, y, scale); break;
-  case GLUT_RIGHT_BUTTON: zoom_at(x, y, 1 / scale); break;
+  /* Pan camera */
+  if (gui->right_click) {
+    if (gui->last_cursor_set == 0) {
+      gui->last_cursor_set = 1;
+    } else if (gui->last_cursor_set) {
+      gl_camera_pan(&gui->camera, gui->mouse_sensitivity, dx, dy);
+    }
   }
 
-  glutPostRedisplay();
-}
-
-static void draw_callback(void) {
-  glMatrixMode(GL_MODELVIEW);
-
-  glClearColor(0.5, 0.5, 1.0, 1);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glLoadIdentity();
-  glScalef(1.0, 1.0, 1.0);
-  glTranslatef(0.0, 0.0, -1.0f);
-
-  glutSwapBuffers();
-}
-
-static void resize_callback(int width, int height) {
-  /* Avoid division by zero */
-  if (height == 0) {
-    height = 1;
+  /* Reset cursor */
+  if (gui->left_click == 0 && gui->right_click == 0) {
+    gui->left_click = 0;
+    gui->right_click = 0;
+    gui->last_cursor_set = 0;
+    gui->last_cursor_x = 0.0;
+    gui->last_cursor_y = 0.0;
   }
-  win_w = width;
-  win_h = height;
-
-  glViewport(0, 0, width, height);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  /* gluOrtho2D(0, width, 0, height); */
 }
 
-void gui_setup(int argc, char **argv) {
-  glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+void gui_mouse_button_callback(GLFWwindow *window,
+                               int btn,
+                               int action,
+                               int mods) {
+  UNUSED(mods);
 
-  int screen_width = glutGet(GLUT_SCREEN_WIDTH);
-  int screen_height = glutGet(GLUT_SCREEN_HEIGHT);
-  char *window_title = "Test";
-  int window_width = 1024;
-  int window_height = 768;
-  int window_x = (screen_width - window_width) / 2.0;
-  int window_y = (screen_height - window_height) / 2.0;
-
-  glutInitWindowSize(window_width, window_height);
-  glutCreateWindow(window_title);
-  glutPositionWindow(window_x, window_y);
-  glutDisplayFunc(draw_callback);
-  glutReshapeFunc(resize_callback);
-  glutKeyboardFunc(keyboard_callback);
-  glutSpecialFunc(special_callback);
-  glutMouseFunc(mouse);
-
-  glFrontFace(GL_CCW);
-  glEnable(GL_CULL_FACE);
-  glEnable(GL_TEXTURE_2D);
-
-  reset();
-  glutMainLoop();
+  gui_t *gui = (gui_t *) glfwGetWindowUserPointer(window);
+  if (btn == GLFW_MOUSE_BUTTON_LEFT) {
+    gui->left_click = (action == GLFW_PRESS) ? 1 : 0;
+  } else if (btn == GLFW_MOUSE_BUTTON_RIGHT) {
+    gui->right_click = (action == GLFW_PRESS) ? 1 : 0;
+  }
 }
 
-void gui_add_cube(gl_entity_t *entity) {
-  /* Vertex shader source */
-  const char *glcube_vs = "                                                    \
-#version 330 core                                                               \
-layout (location = 0) in vec3 in_pos;                                           \
-layout (location = 1) in vec3 in_color;                                        \
-                                                                               \
-out vec3 color;                                                                 \
-                                                                               \
-uniform mat4 model;                                                             \
-uniform mat4 view;                                                             \
-uniform mat4 projection;                                                       \
-                                                                               \
-void main() {                                                                  \
-  gl_Position = projection * view * model * vec4(in_pos, 1.0);                 \
-  color = in_color;                                                             \
-}";
+void gui_mouse_scroll_callback(GLFWwindow *window, double dx, double dy) {
+  gui_t *gui = (gui_t *) glfwGetWindowUserPointer(window);
+  gl_camera_zoom(&gui->camera, gui->mouse_sensitivity, dx, dy);
+}
 
-  /* Fragment shader source */
-  const char *glcube_fs = "                                                    \
-#version 150 core                                                             \
-in vec3 color;                                                                \
-out vec4 frag_color;                                                          \
-                                                                              \
-void main() {                                                                 \
-  frag_color = vec4(color, 1.0f);                                             \
-}";
+void gui_keyboard_callback(GLFWwindow* window,
+                                    int key,
+                           int scancode,
+                           int action,
+                           int mods) {
+  UNUSED(scancode);
+  UNUSED(mods);
+
+  gui_t *gui = (gui_t *) glfwGetWindowUserPointer(window);
+  if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
+    glfwSetWindowShouldClose(gui->window, 1);
+  }
+}
+
+void gui_setup(gui_t *gui) {
+  /* GLFW */
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  gui->window = glfwCreateWindow(gui->window_width,
+                                 gui->window_height,
+                                 gui->window_title,
+                                 NULL, NULL);
+  if (gui->window == NULL) {
+    glfwTerminate();
+    FATAL("Failed to create GLFW window");
+  }
+  glfwMakeContextCurrent(gui->window);
+  glfwSetWindowAspectRatio(gui->window, gui->window_width, gui->window_height);
+
+  /* Get screen width, height and center the window */
+  int xpos = 0;
+  int ypos = 0;
+  GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+  glfwGetMonitorWorkarea(monitor,
+                         &xpos,
+                         &ypos,
+                         &gui->screen_width,
+                         &gui->screen_height);
+  int window_x = (gui->screen_width - gui->window_width) / 2.0;
+  int window_y = (gui->screen_height - gui->window_height) / 2.0;
+  glfwSetWindowPos(gui->window, window_x, window_y);
+
+  /* Event handlers */
+  glfwSwapInterval(1);
+  glfwSetWindowUserPointer(gui->window, gui);
+  glfwSetCursorPosCallback(gui->window, gui_mouse_cursor_callback);
+  glfwSetMouseButtonCallback(gui->window, gui_mouse_button_callback);
+  glfwSetScrollCallback(gui->window, gui_mouse_scroll_callback);
+  glfwSetFramebufferSizeCallback(gui->window, gui_framebuffer_size_callback);
+
+  /* GLEW */
+  GLenum err = glewInit();
+  if (err != GLEW_OK) {
+    FATAL("glewInit failed: %s", glewGetErrorString(err));
+  }
+
+  /* Camera */
+  gl_camera_setup(&gui->camera, &gui->window_width, &gui->window_height);
+  gui->movement_speed = 50.0f;
+  gui->mouse_sensitivity = 0.02f;
+
+  /* Cursor */
+  gui->left_click = 0;
+  gui->right_click = 0;
+  gui->last_cursor_set = 0;
+  gui->last_cursor_x = 0.0f;
+  gui->last_cursor_y = 0.0f;
+}
+
+void gui_reset(gui_t *gui) {
+  /* Camera */
+  gui->movement_speed = 50.0f;
+  gui->mouse_sensitivity = 0.02f;
+
+  /* Cursor */
+  gui->left_click = 0;
+  gui->right_click = 0;
+  gui->last_cursor_set = 0;
+  gui->last_cursor_x = 0.0f;
+  gui->last_cursor_y = 0.0f;
+}
+
+void gui_loop(gui_t *gui) {
+  gl_entity_t cube;
+  GLfloat cube_pos[3] = {0.0, 0.0, 0.0};
+  gui_add_cube(&cube, cube_pos);
+
+  gl_entity_t cube2;
+  GLfloat cube2_pos[3] = {2.0, 0.0, 0.0};
+  gui_add_cube(&cube2, cube2_pos);
+
+  gl_entity_t cube3;
+  GLfloat cube3_pos[3] = {-2.0, 0.0, 0.0};
+  gui_add_cube(&cube3, cube3_pos);
+
+  while (!glfwWindowShouldClose(gui->window)) {
+    gui_event_handler(gui->window);
+    glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    gui_draw_cube(&gui->camera, &cube);
+    gui_draw_cube(&gui->camera, &cube2);
+    gui_draw_cube(&gui->camera, &cube3);
+
+    glEnable(GL_CULL_FACE);
+    glfwSwapBuffers(gui->window);
+    glfwPollEvents();
+  }
+
+  glfwTerminate();
+}
+
+void gui_add_cube(gl_entity_t *entity, GLfloat pos[3]) {
+  /* Entity transform */
+  gl_eye(entity->T, 4, 4);
+  entity->T[12] = pos[0];
+  entity->T[13] = pos[1];
+  entity->T[14] = pos[2];
 
   /* Shader program */
-  entity->program_id = gl_prog_setup(glcube_vs, glcube_fs);
+  char *glcube_vs = file_read("./shaders/cube.vert");
+  char *glcube_fs = file_read("./shaders/cube.frag");
+  entity->program_id = gl_prog_setup(glcube_vs, glcube_fs, NULL);
+  free(glcube_vs);
+  free(glcube_fs);
+  if (entity->program_id == GL_FALSE) {
+    FATAL("Failed to create shaders to draw cube!");
+  }
 
   // Vertices
   // clang-format off
@@ -634,7 +818,7 @@ void main() {                                                                 \
   const float r = color[0];
   const float g = color[1];
   const float b = color[2];
-  const GLfloat vertices[] = {
+  GLfloat vertices[12 * 3 * 6] = {
     // Triangle 1
     -cube_size, -cube_size, -cube_size, r, g, b,
     -cube_size, -cube_size, cube_size, r, g, b,
@@ -719,11 +903,11 @@ void gui_remove_cube(const gl_entity_t *entity) {
   glDeleteBuffers(1, &entity->vbo);
 }
 
-void gui_draw_cube(const gl_entity_t *entity) {
+void gui_draw_cube(gl_camera_t *camera, const gl_entity_t *entity) {
   glUseProgram(entity->program_id);
-  /* gl_prog_set_mat4f("projection", camera.projection()); */
-  /* gl_prog_set_mat4f("view", camera.view()); */
-  /* gl_prog_set_mat4f("model", T_SM_); */
+  gl_prog_set_mat4f(entity->program_id, "projection", camera->P);
+  gl_prog_set_mat4f(entity->program_id, "view", camera->V);
+  gl_prog_set_mat4f(entity->program_id, "model", entity->T);
 
   // 12 x 3 indices starting at 0 -> 12 triangles -> 6 squares
   glBindVertexArray(entity->vao);

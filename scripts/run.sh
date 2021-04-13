@@ -19,6 +19,7 @@ debug() {
 # python3 scripts/tf_point.py
 
 # make format_code
+ctags -R zero
 make clean
 # cp -rv zero/tests/test_data/ build/bin/
 time make
@@ -46,6 +47,7 @@ cd ./build/bin
 # ./test_zero --target test_mat_transpose
 # ./test_zero --target test_mat_add
 # ./test_zero --target test_mat_sub
+# ./test_zero --target test_mat_scale
 # ./test_zero --target test_vec_add
 # ./test_zero --target test_vec_sub
 # ./test_zero --target test_dot
@@ -105,11 +107,22 @@ cd ./build/bin
 # ./test_gui --target test_gl_zeros
 # ./test_gui --target test_gl_ones
 # ./test_gui --target test_gl_eye
+# ./test_gui --target test_gl_matf_set
+# ./test_gui --target test_gl_matf_val
+# ./test_gui --target test_gl_transpose
 # ./test_gui --target test_gl_equals
 # ./test_gui --target test_gl_vec3_cross
 # ./test_gui --target test_gl_dot
 # ./test_gui --target test_gl_norm
 # ./test_gui --target test_gl_normalize
+# ./test_gui --target test_gl_perspective
+# ./test_gui --target test_gl_lookat
+# ./test_gui --target test_shader_compile
+# ./test_gui --target test_shader_link
+# ./test_gui --target test_gl_prog_setup
+# ./test_gui --target test_gl_camera_setup
+./test_gui --target test_gui
+# gdb -ex run -ex bt -args ./test_gui --target test_gui_setup
 
 # ./test_imshow
 # ./test_imshow2

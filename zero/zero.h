@@ -62,6 +62,7 @@
 
 char **list_files(const char *path, int *nb_files);
 void list_files_free(char **data, const int n);
+char *file_read(const char *fpath);
 
 /******************************************************************************
  *                                   DATA

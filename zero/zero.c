@@ -47,6 +47,26 @@ void list_files_free(char **data, const int n) {
   free(data);
 }
 
+char *file_read(const char *fpath) {
+  FILE *f = fopen(fpath, "rb");
+  if (f == NULL) {
+    return NULL;
+  }
+
+
+  fseek(f, 0, SEEK_END);
+  long int length = ftell(f);
+  fseek(f, 0, SEEK_SET);
+
+  char *buffer = malloc(length);
+  if (buffer) {
+    fread(buffer, 1, length, f);
+  }
+  fclose(f);
+
+  return buffer;
+}
+
 /******************************************************************************
  *                                   DATA
  ******************************************************************************/
@@ -787,10 +807,8 @@ void mat_add(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
   assert(A != NULL && B != NULL && C != NULL && B != C && A != C);
   assert(m > 0 && n > 0);
 
-  for (size_t i = 0; i < m; i++) {
-    for (size_t j = 0; j < n; j++) {
-      mat_set(C, n, i, j, mat_val(A, n, i, j) + mat_val(B, n, i, j));
-    }
+  for (size_t i = 0; i < (m * n); i++) {
+    C[i] = A[i] + B[i];
   }
 }
 
@@ -798,10 +816,8 @@ void mat_sub(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
   assert(A != NULL && B != NULL && C != NULL && B != C && A != C);
   assert(m > 0 && n > 0);
 
-  for (size_t i = 0; i < m; i++) {
-    for (size_t j = 0; j < n; j++) {
-      mat_set(C, n, i, j, mat_val(A, n, i, j) - mat_val(B, n, i, j));
-    }
+  for (size_t i = 0; i < (m * n); i++) {
+    C[i] = A[i] - B[i];
   }
 }
 
@@ -809,10 +825,8 @@ void mat_scale(real_t *A, const size_t m, const size_t n, const real_t scale) {
   assert(A != NULL);
   assert(m > 0 && n > 0);
 
-  for (size_t i = 0; i < m; i++) {
-    for (size_t j = 0; j < n; j++) {
-      mat_set(A, n, i, j, mat_val(A, n, i, j) * scale);
-    }
+  for (size_t i = 0; i < (m * n); i++) {
+    A[i] = A[i] * scale;
   }
 }
 

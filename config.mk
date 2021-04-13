@@ -5,18 +5,20 @@ DEPS_DIR=$(PWD)/deps
 TESTS_DIR=$(PWD)/tests
 
 # COMPILER SETTINGS
-# CC=tcc
-CC=gcc
+CC=tcc
+# CC=gcc
 CFLAGS=-g -Wall -I$(INC_DIR) -I$(DEPS_DIR)/include
+
+GLFW3_LIBS=-L$(DEPS_DIR)/lib -lglfw3 -lrt -lm -ldl
+GLEW_LIBS=-lGLEW
+OPENGL_LIBS=$(GLFW3_LIBS) $(GLEW_LIBS) -lGL -L/usr/X11R6/lib -lX11
+BLAS_LIBS=-lblas -llapack
 
 LIBS=-L$(BLD_DIR) \
 	-lzero \
-	-lblas \
-	-llapack \
-	-lpthread \
-	-lm \
-	-L/usr/X11R6/lib -lX11 \
-	-lXi -lXmu -lglut -lGL -lGLU -lGLEW
+	$(OPENGL_LIBS) \
+	$(BLAS_LIBS) \
+	-lpthread
 
 # ARCHIVER SETTTINGS
 AR = ar
