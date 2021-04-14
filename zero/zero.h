@@ -1,5 +1,8 @@
 #ifndef ZERO_H
 #define ZERO_H
+/**
+ * @file zero.h
+ */
 
 #define PRECISION 1
 #define MAX_LINE_LENGTH 9046
@@ -62,7 +65,10 @@
 
 char **list_files(const char *path, int *nb_files);
 void list_files_free(char **data, const int n);
-char *file_read(const char *fpath);
+char *file_read(const char *fp);
+void skip_line(FILE *fp);
+int file_rows(const char *fp);
+int file_copy(const char *src, const char *dest);
 
 /******************************************************************************
  *                                   DATA
@@ -121,10 +127,10 @@ real_t stddev(const real_t *x, const size_t length);
  ******************************************************************************/
 
 void print_matrix(const char *prefix,
-                  const real_t *data,
+                  const real_t *A,
                   const size_t m,
                   const size_t n);
-void print_vector(const char *prefix, const real_t *data, const size_t length);
+void print_vector(const char *prefix, const real_t *v, const size_t n);
 
 void eye(real_t *A, const size_t m, const size_t n);
 void ones(real_t *A, const size_t m, const size_t n);
@@ -195,7 +201,7 @@ int check_jacobian(const char *jac_name,
                    const size_t m,
                    const size_t n,
                    const real_t tol,
-                   const int print);
+                   const int verbose);
 
 #ifdef USE_CBLAS
 void cblas_dot(const real_t *A,
@@ -281,9 +287,12 @@ typedef struct image_t {
   uint8_t *data;
 } image_t;
 
-void image_setup(image_t *img, int width, int height, uint8_t *data);
+void image_setup(image_t *img,
+                 const int width,
+                 const int height,
+                 uint8_t *data);
 image_t *image_load(const char *file_path);
-void image_print_stats(const image_t *img);
+void image_print_properties(const image_t *img);
 void image_free(image_t *img);
 
 /******************************************************************************
@@ -313,7 +322,7 @@ void equi4_params_jacobian(const real_t params[4],
 /******************************** PINHOLE *************************************/
 
 real_t pinhole_focal(const int image_width, const real_t fov);
-int pinhole_project(const real_t params[4], const real_t p_C[3], real_t x[2]);
+void pinhole_project(const real_t params[4], const real_t p_C[3], real_t x[2]);
 
 void pinhole_point_jacobian(const real_t params[4], real_t J_point[2 * 3]);
 void pinhole_params_jacobian(const real_t params[4],

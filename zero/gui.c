@@ -767,34 +767,55 @@ void gui_reset(gui_t *gui) {
 void gui_loop(gui_t *gui) {
   gl_entity_t cube;
   GLfloat cube_pos[3] = {0.0, 0.0, 0.0};
-  gui_add_cube(&cube, cube_pos);
+  gl_cube_setup(&cube, cube_pos);
 
   gl_entity_t cube2;
   GLfloat cube2_pos[3] = {2.0, 0.0, 0.0};
-  gui_add_cube(&cube2, cube2_pos);
+  gl_cube_setup(&cube2, cube2_pos);
 
   gl_entity_t cube3;
   GLfloat cube3_pos[3] = {-2.0, 0.0, 0.0};
-  gui_add_cube(&cube3, cube3_pos);
+  gl_cube_setup(&cube3, cube3_pos);
+
+  gl_entity_t cf;
+	gl_camera_frame_setup(&cf);
+
+  gl_entity_t frame;
+	gl_axis_frame_setup(&frame);
+
+  gl_entity_t grid;
+	gl_grid_setup(&grid);
 
   while (!glfwWindowShouldClose(gui->window)) {
     gui_event_handler(gui->window);
     glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    gui_draw_cube(&gui->camera, &cube);
-    gui_draw_cube(&gui->camera, &cube2);
-    gui_draw_cube(&gui->camera, &cube3);
+    /* gl_cube_draw(&cube, &gui->camera); */
+    /* gl_cube_draw(&cube2, &gui->camera); */
+    /* gl_cube_draw(&cube3, &gui->camera); */
+
+		gl_camera_frame_draw(&cf, &gui->camera);
+		gl_axis_frame_draw(&frame, &gui->camera);
+		gl_grid_draw(&grid, &gui->camera);
 
     glEnable(GL_CULL_FACE);
     glfwSwapBuffers(gui->window);
     glfwPollEvents();
   }
 
+	gl_cube_cleanup(&cube);
+	gl_cube_cleanup(&cube2);
+	gl_cube_cleanup(&cube3);
+	gl_camera_frame_cleanup(&cf);
+	gl_grid_cleanup(&grid);
+
   glfwTerminate();
 }
 
-void gui_add_cube(gl_entity_t *entity, GLfloat pos[3]) {
+/********************************** GL CUBE ***********************************/
+
+void gl_cube_setup(gl_entity_t *entity, GLfloat pos[3]) {
   /* Entity transform */
   gl_eye(entity->T, 4, 4);
   entity->T[12] = pos[0];
@@ -898,12 +919,12 @@ void gui_add_cube(gl_entity_t *entity, GLfloat pos[3]) {
   glBindVertexArray(0);             // Unbind VAO
 }
 
-void gui_remove_cube(const gl_entity_t *entity) {
+void gl_cube_cleanup(const gl_entity_t *entity) {
   glDeleteVertexArrays(1, &entity->vao);
   glDeleteBuffers(1, &entity->vbo);
 }
 
-void gui_draw_cube(gl_camera_t *camera, const gl_entity_t *entity) {
+void gl_cube_draw(const gl_entity_t *entity, const gl_camera_t *camera) {
   glUseProgram(entity->program_id);
   gl_prog_set_mat4f(entity->program_id, "projection", camera->P);
   gl_prog_set_mat4f(entity->program_id, "view", camera->V);
@@ -912,5 +933,307 @@ void gui_draw_cube(gl_camera_t *camera, const gl_entity_t *entity) {
   // 12 x 3 indices starting at 0 -> 12 triangles -> 6 squares
   glBindVertexArray(entity->vao);
   glDrawArrays(GL_TRIANGLES, 0, 36);
+  glBindVertexArray(0); // Unbind VAO
+}
+
+/***************************** GL CAMERA FRAME ********************************/
+
+void gl_camera_frame_setup(gl_entity_t *entity) {
+  /* Entity transform */
+  gl_eye(entity->T, 4, 4);
+
+  /* Shader program */
+  char *vs = file_read("./shaders/camera_frame.vert");
+  char *fs = file_read("./shaders/camera_frame.frag");
+  entity->program_id = gl_prog_setup(vs, fs, NULL);
+  free(vs);
+  free(fs);
+  if (entity->program_id == GL_FALSE) {
+    FATAL("Failed to create shaders to draw cube!");
+  }
+
+  // Form the camera fov frame
+	GLfloat fov = gl_deg2rad(60.0);
+  GLfloat hfov = fov / 2.0f;
+  GLfloat scale = 1.0f;
+  GLfloat z = scale;
+  GLfloat hwidth = z * tan(hfov);
+  const GLfloat lb[3] = {-hwidth, hwidth, z};  // Left bottom
+  const GLfloat lt[3] = {-hwidth, -hwidth, z}; // Left top
+  const GLfloat rt[3] = {hwidth, -hwidth, z};  // Right top
+  const GLfloat rb[3] = {hwidth, hwidth, z};   // Right bottom
+
+  // Rectangle frame
+  // clang-format off
+  const GLfloat vertices[] = {
+    // -- Left bottom to left top
+    lb[0], lb[1], lb[2], lt[0], lt[1], lt[2],
+    // -- Left top to right top
+    lt[0], lt[1], lt[2], rt[0], rt[1], rt[2],
+    // -- Right top to right bottom
+    rt[0], rt[1], rt[2], rb[0], rb[1], rb[2],
+    // -- Right bottom to left bottom
+    rb[0], rb[1], rb[2], lb[0], lb[1], lb[2],
+    // Rectangle frame to origin
+    // -- Origin to left bottom
+    0.0f, 0.0f, 0.0f, lb[0], lb[1], lb[2],
+    // -- Origin to left top
+    0.0f, 0.0f, 0.0f, lt[0], lt[1], lt[2],
+    // -- Origin to right top
+    0.0f, 0.0f, 0.0f, rt[0], rt[1], rt[2],
+    // -- Origin to right bottom
+    0.0f, 0.0f, 0.0f, rb[0], rb[1], rb[2]
+  };
+  // clang-format on
+  const size_t nb_lines = 8;
+  const size_t nb_vertices = nb_lines * 2;
+  const size_t buffer_size = sizeof(GLfloat) * nb_vertices * 3;
+
+  // VAO
+  glGenVertexArrays(1, &entity->vao);
+  glBindVertexArray(entity->vao);
+
+  // VBO
+  glGenBuffers(1, &entity->vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, entity->vbo);
+  glBufferData(GL_ARRAY_BUFFER, buffer_size, vertices, GL_STATIC_DRAW);
+  glVertexAttribPointer(0,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        3 * sizeof(float),
+                        (void *) 0);
+  glEnableVertexAttribArray(0);
+
+  // Clean up
+  glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO
+  glBindVertexArray(0);             // Unbind VAO
+}
+
+void gl_camera_frame_cleanup(const gl_entity_t *entity) {
+  glDeleteVertexArrays(1, &entity->vao);
+  glDeleteBuffers(1, &entity->vbo);
+}
+
+void gl_camera_frame_draw(const gl_entity_t *entity, const gl_camera_t *camera) {
+  glUseProgram(entity->program_id);
+  gl_prog_set_mat4f(entity->program_id, "projection", camera->P);
+  gl_prog_set_mat4f(entity->program_id, "view", camera->V);
+  gl_prog_set_mat4f(entity->program_id, "model", entity->T);
+
+  // Store original line width
+  GLfloat original_line_width = 0.0f;
+  glGetFloatv(GL_LINE_WIDTH, &original_line_width);
+
+  // Set line width
+	GLfloat line_width = 2.0f;
+  glLineWidth(line_width);
+
+  // Draw frame
+  const size_t nb_lines = 8;
+  const size_t nb_vertices = nb_lines * 2;
+  glBindVertexArray(entity->vao);
+  glDrawArrays(GL_LINES, 0, nb_vertices);
+  glBindVertexArray(0); // Unbind VAO
+
+  // Restore original line width
+  glLineWidth(original_line_width);
+}
+
+/******************************* GL AXIS FRAME ********************************/
+
+void gl_axis_frame_setup(gl_entity_t *entity) {
+  /* Entity transform */
+  gl_eye(entity->T, 4, 4);
+
+  /* Shader program */
+  char *vs = file_read("./shaders/axis_frame.vert");
+  char *fs = file_read("./shaders/axis_frame.frag");
+  entity->program_id = gl_prog_setup(vs, fs, NULL);
+  free(vs);
+  free(fs);
+  if (entity->program_id == GL_FALSE) {
+    FATAL("Failed to create shaders to draw cube!");
+  }
+
+  // Vertices
+  // clang-format off
+  static const GLfloat vertices[] = {
+    // Line 1 : x-axis + color
+    0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    // Line 2 : y-axis + color
+    0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    // Line 3 : z-axis + color
+    0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
+  };
+  const size_t nb_vertices = 6;
+  const size_t buffer_size = sizeof(GLfloat) * 6 * nb_vertices;
+  // clang-format on
+
+  // VAO
+  glGenVertexArrays(1, &entity->vao);
+  glBindVertexArray(entity->vao);
+
+  // VBO
+  glGenBuffers(1, &entity->vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, entity->vbo);
+  glBufferData(GL_ARRAY_BUFFER, buffer_size, vertices, GL_STATIC_DRAW);
+  // -- Position attribute
+  size_t vertex_size = 6 * sizeof(float);
+  void *pos_offset = (void *) 0;
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertex_size, pos_offset);
+  glEnableVertexAttribArray(0);
+  // -- Color attribute
+  void *color_offset = (void *) (3 * sizeof(float));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertex_size, color_offset);
+  glEnableVertexAttribArray(1);
+
+  // Clean up
+  glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO
+  glBindVertexArray(0);             // Unbind VAO
+}
+
+void gl_axis_frame_cleanup(const gl_entity_t *entity) {
+  glDeleteVertexArrays(1, &entity->vao);
+  glDeleteBuffers(1, &entity->vbo);
+}
+
+void gl_axis_frame_draw(const gl_entity_t *entity, const gl_camera_t *camera) {
+  glUseProgram(entity->program_id);
+  gl_prog_set_mat4f(entity->program_id, "projection", camera->P);
+  gl_prog_set_mat4f(entity->program_id, "view", camera->V);
+  gl_prog_set_mat4f(entity->program_id, "model", entity->T);
+
+  // Store original line width
+  GLfloat original_line_width = 0.0f;
+  glGetFloatv(GL_LINE_WIDTH, &original_line_width);
+
+  // Set line width
+	GLfloat line_width = 6.0f;
+  glLineWidth(line_width);
+
+  // Draw frame
+  glBindVertexArray(entity->vao);
+  glDrawArrays(GL_LINES, 0, 6);
+  glBindVertexArray(0); // Unbind VAO
+
+  // Restore original line width
+  glLineWidth(original_line_width);
+}
+
+static GLfloat *glgrid_create_vertices(int grid_size) {
+  // Allocate memory for vertices
+  int nb_lines = (grid_size + 1) * 2;
+  int nb_vertices = nb_lines * 2;
+  const size_t buffer_size = sizeof(GLfloat) * nb_vertices * 3;
+  GLfloat *vertices = (GLfloat *) malloc(buffer_size);
+
+  // Setup
+  const float min_x = -1.0f * (float) grid_size / 2.0f;
+  const float max_x = (float) grid_size / 2.0f;
+  const float min_z = -1.0f * (float) grid_size / 2.0f;
+  const float max_z = (float) grid_size / 2.0f;
+
+  // Row vertices
+  float z = min_z;
+  int vert_idx = 0;
+  for (int i = 0; i < ((grid_size + 1) * 2); i++) {
+    if ((i % 2) == 0) {
+      vertices[(vert_idx * 3)] = min_x;
+      vertices[(vert_idx * 3) + 1] = 0.0f;
+      vertices[(vert_idx * 3) + 2] = z;
+    } else {
+      vertices[(vert_idx * 3)] = max_x;
+      vertices[(vert_idx * 3) + 1] = 0.0f;
+      vertices[(vert_idx * 3) + 2] = z;
+      z += 1.0f;
+    }
+    vert_idx++;
+  }
+
+  // Column vertices
+  float x = min_x;
+  for (int j = 0; j < ((grid_size + 1) * 2); j++) {
+    if ((j % 2) == 0) {
+      vertices[(vert_idx * 3)] = x;
+      vertices[(vert_idx * 3) + 1] = 0.0f;
+      vertices[(vert_idx * 3) + 2] = min_z;
+    } else {
+      vertices[(vert_idx * 3)] = x;
+      vertices[(vert_idx * 3) + 1] = 0.0f;
+      vertices[(vert_idx * 3) + 2] = max_z;
+      x += 1.0f;
+    }
+    vert_idx++;
+  }
+
+  return vertices;
+}
+
+/********************************** GL GRID ***********************************/
+
+void gl_grid_setup(gl_entity_t *entity) {
+  /* Entity transform */
+  gl_eye(entity->T, 4, 4);
+
+  /* Shader program */
+  char *vs = file_read("./shaders/grid.vert");
+  char *fs = file_read("./shaders/grid.frag");
+  entity->program_id = gl_prog_setup(vs, fs, NULL);
+  free(vs);
+  free(fs);
+  if (entity->program_id == GL_FALSE) {
+    FATAL("Failed to create shaders to draw cube!");
+  }
+
+  // Create vertices
+	const int grid_size = 10;
+  const int nb_lines = (grid_size + 1) * 2;
+  const int nb_vertices = nb_lines * 2;
+  GLfloat *vertices = glgrid_create_vertices(grid_size);
+  const size_t buffer_size = sizeof(GLfloat) * nb_vertices * 3;
+
+  // VAO
+  glGenVertexArrays(1, &entity->vao);
+  glBindVertexArray(entity->vao);
+
+  // VBO
+  glGenBuffers(1, &entity->vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, entity->vbo);
+  glBufferData(GL_ARRAY_BUFFER, buffer_size, vertices, GL_STATIC_DRAW);
+  glVertexAttribPointer(0,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        3 * sizeof(float),
+                        (void *) 0);
+  glEnableVertexAttribArray(0);
+
+  // Clean up
+  glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO
+  glBindVertexArray(0);             // Unbind VAO
+  free(vertices);
+}
+
+void gl_grid_cleanup(const gl_entity_t *entity) {
+  glDeleteVertexArrays(1, &entity->vao);
+  glDeleteBuffers(1, &entity->vbo);
+}
+
+void gl_grid_draw(const gl_entity_t *entity, const gl_camera_t *camera) {
+  glUseProgram(entity->program_id);
+  gl_prog_set_mat4f(entity->program_id, "projection", camera->P);
+  gl_prog_set_mat4f(entity->program_id, "view", camera->V);
+  gl_prog_set_mat4f(entity->program_id, "model", entity->T);
+
+	const int grid_size = 10;
+  const int nb_lines = (grid_size + 1) * 2;
+  const int nb_vertices = nb_lines * 2;
+
+  glBindVertexArray(entity->vao);
+  glDrawArrays(GL_LINES, 0, nb_vertices);
   glBindVertexArray(0); // Unbind VAO
 }

@@ -104,16 +104,16 @@ typedef struct cam_factor_t {
   camera_t *camera;
   feature_t *feature;
 
-  real_t covar[2 * 2];
+  real_t covar[2*2];
   real_t z[2];
 
   real_t r[2];
   int r_size;
 
-  real_t J0[2 * 6];
-  real_t J1[2 * 6];
-  real_t J2[2 * 8];
-  real_t J3[2 * 3];
+  real_t J0[2*6];
+  real_t J1[2*6];
+  real_t J2[2*8];
+  real_t J3[2*3];
   real_t *jacs[4];
   int nb_params;
 } cam_factor_t;

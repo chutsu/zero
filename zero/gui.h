@@ -8,11 +8,7 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-/* #include <GL/freeglut.h> */
-
 #include <GLFW/glfw3.h>
-
-/* #include <glad/glad.h> */
 
 #include "zero/zero.h"
 
@@ -208,8 +204,21 @@ void gui_keyboard_callback(GLFWwindow* window,
 void gui_setup(gui_t *gui);
 void gui_reset(gui_t *gui);
 void gui_loop(gui_t *gui);
-void gui_add_cube(gl_entity_t *entity, GLfloat pos[3]);
-void gui_remove_cube(const gl_entity_t *entity);
-void gui_draw_cube(gl_camera_t *camera, const gl_entity_t *entity);
+
+void gl_cube_setup(gl_entity_t *entity, GLfloat pos[3]);
+void gl_cube_cleanup(const gl_entity_t *entity);
+void gl_cube_draw(const gl_entity_t *entity, const gl_camera_t *camera);
+
+void gl_camera_frame_setup(gl_entity_t *entity);
+void gl_camera_frame_cleanup(const gl_entity_t *entity);
+void gl_camera_frame_draw(const gl_entity_t *entity, const gl_camera_t *camera);
+
+void gl_axis_frame_setup(gl_entity_t *entity);
+void gl_axis_frame_cleanup(const gl_entity_t *entity);
+void gl_axis_frame_draw(const gl_entity_t *entity, const gl_camera_t *camera);
+
+void gl_grid_setup(gl_entity_t *entity);
+void gl_grid_cleanup(const gl_entity_t *entity);
+void gl_grid_draw(const gl_entity_t *entity, const gl_camera_t *camera);
 
 #endif /* ZERO_GUI_H */

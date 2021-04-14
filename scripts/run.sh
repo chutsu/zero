@@ -24,6 +24,11 @@ make clean
 # cp -rv zero/tests/test_data/ build/bin/
 time make
 
+doxygen
+# python3 scripts/api.py
+
+# doxygen
+
 cd ./build/bin
 # ZERO-DATA
 # ./test_zero --target test_malloc_string
@@ -121,7 +126,7 @@ cd ./build/bin
 # ./test_gui --target test_shader_link
 # ./test_gui --target test_gl_prog_setup
 # ./test_gui --target test_gl_camera_setup
-./test_gui --target test_gui
+# ./test_gui --target test_gui
 # gdb -ex run -ex bt -args ./test_gui --target test_gui_setup
 
 # ./test_imshow

@@ -1,3 +1,7 @@
+/**
+ * @defgroup se State Estimation Module
+ * @{
+ */
 #include "se.h"
 
 /* POSE --------------------------------------------------------------------- */
@@ -594,3 +598,5 @@ int solver_eval(solver_t *solver) {
 /*   #<{(|   printf("solver took: %.4fs\n", solve_time); |)}># */
 /*   #<{(| } |)}># */
 /* } */
+
+/** @} */

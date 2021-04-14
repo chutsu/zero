@@ -1,3 +1,26 @@
+/**
+ * @file zero.c
+ */
+
+/**
+ * @defgroup core Core
+ *
+ * The core module contains essential functions for robotics / computer
+ * vision, the core module consists of the following submoudles:
+ *
+ * - Filesystem
+ * - Data
+ * - Maths
+ * - Linear Algebra
+ * - SVD
+ * - Cholesky
+ * - Time
+ * - Transforms
+ * - Image
+ * - Computer Vision
+
+ * @{
+ */
 #include "zero/zero.h"
 
 /* #define STB_IMAGE_IMPLEMENTATION */
@@ -7,6 +30,18 @@
  *                               FILE SYSTEM
  ******************************************************************************/
 
+/**
+ * @defgroup file_system File System
+ * @{
+ */
+
+/**
+ * List files in directory.
+ *
+ * @param[in] path Path to directory
+ * @param[in,out] nb_files Number of files in directory
+ * @returns List of files in directory
+ */
 char **list_files(const char *path, int *nb_files) {
   struct dirent **namelist;
   int N = scandir(path, &namelist, 0, alphasort);
@@ -40,6 +75,12 @@ char **list_files(const char *path, int *nb_files) {
   return files;
 }
 
+/**
+ * Free list of files.
+ *
+ * @param[in] data List of files
+ * @param[in] n Number of files
+ */
 void list_files_free(char **data, const int n) {
   for (int i = 0; i < n; i++) {
     free(data[i]);
@@ -47,12 +88,19 @@ void list_files_free(char **data, const int n) {
   free(data);
 }
 
-char *file_read(const char *fpath) {
-  FILE *f = fopen(fpath, "rb");
+/**
+ * Read file contents.
+ *
+ * @param[in] fp Path to file
+ * @returns
+ * - Success: File contents
+ * - Failure: NULL
+ */
+char *file_read(const char *fp) {
+  FILE *f = fopen(fp, "rb");
   if (f == NULL) {
     return NULL;
   }
-
 
   fseek(f, 0, SEEK_END);
   long int length = ftell(f);
@@ -67,16 +115,113 @@ char *file_read(const char *fpath) {
   return buffer;
 }
 
+/**
+ * Skip line in file.
+ *
+ * @param[in,out] fp Pointer to file
+ */
+void skip_line(FILE *fp) {
+  char header[BUFSIZ];
+  char *retval = fgets(header, BUFSIZ, fp);
+  if (retval == NULL) {
+    FATAL("Failed to skip line!");
+  }
+}
+
+/**
+ * Get number of rows in file.
+ *
+ * @returns Number of rows in file else -1 for failure.
+ */
+int file_rows(const char *fp) {
+  FILE *file = fopen(fp, "rb");
+  if (file == NULL) {
+    fclose(file);
+    return -1;
+  }
+
+  /* Obtain number of lines */
+  int nb_rows = 0;
+  char *line = NULL;
+  size_t len = 0;
+  while (getline(&line, &len, file) != -1) {
+    nb_rows++;
+  }
+
+  return nb_rows;
+}
+
+/**
+ * Copy file from path src to path dest.
+ *
+ * @param[in] src Source file
+ * @param[in] dest Destination file
+ *
+ * @returns
+ * - 0 for success
+ * - -1 if src file could not be opend
+ * - -2 if dest file could not be opened
+ */
+int file_copy(const char *src, const char *dest) {
+  FILE *src_file = fopen(src, "rb");
+  if (src_file == NULL) {
+    fclose(src_file);
+    return -1;
+  }
+
+  FILE *dest_file = fopen(dest, "wb");
+  if (dest_file == NULL) {
+    fclose(src_file);
+    fclose(dest_file);
+    return -2;
+  }
+
+  /* BUFSIZE default is 8192 bytes */
+  /* BUFSIZE of 1 means one chareter at time */
+  char buf[BUFSIZ];
+  size_t read = 0;
+  while ((read = fread(buf, 1, BUFSIZ, src_file)) == 0) {
+    fwrite(buf, 1, read, dest_file);
+  }
+
+  /* Clean up */
+  fclose(src_file);
+  fclose(dest_file);
+
+  return 0;
+}
+
+/** @} */
+
 /******************************************************************************
  *                                   DATA
  ******************************************************************************/
 
+/**
+ * @defgroup data Data
+ * @{
+ */
+
+/**
+ * Allocate heap memory for string s
+ *
+ * @param[in] s String to copy from
+ * @returns A heap memory allocated string
+ */
 char *malloc_string(const char *s) {
   char *retval = malloc(sizeof(char) * strlen(s) + 1);
   strcpy(retval, s);
   return retval;
 }
 
+/**
+ * Get number of rows in a delimited file
+ *
+ * @param[in] fp Path to file
+ * @returns
+ * - Number of rows
+ * - -1 for failure
+ */
 int dsv_rows(const char *fp) {
   /* Load file */
   FILE *infile = fopen(fp, "r");
@@ -99,6 +244,16 @@ int dsv_rows(const char *fp) {
   return nb_rows;
 }
 
+/**
+ * Get number of columns in a delimited file fp.
+ *
+ * @param[in] fp Path to file
+ * @param[in] delim Delimiter
+ *
+ * @returns
+ * - Number of columns
+ * - -1 for failure
+ */
 int dsv_cols(const char *fp, const char delim) {
   /* Load file */
   FILE *infile = fopen(fp, "r");
@@ -130,6 +285,17 @@ int dsv_cols(const char *fp, const char delim) {
   return (found_separator) ? nb_elements : -1;
 }
 
+/**
+ * Get the fields of the delimited file.
+ *
+ * @param[in] fp Path to file
+ * @param[in] delim Delimiter
+ * @param[in,out] nb_fields Number of fields
+ *
+ * @returns
+ * - List of field strings
+ * - NULL for failure
+ */
 char **dsv_fields(const char *fp, const char delim, int *nb_fields) {
   /* Load file */
   FILE *infile = fopen(fp, "r");
@@ -180,6 +346,18 @@ char **dsv_fields(const char *fp, const char delim, int *nb_fields) {
   return fields;
 }
 
+/**
+ * Load delimited separated value data as a matrix.
+ *
+ * @param[in] fp Path to file
+ * @param[in] delim Delimiter
+ * @param[in,out] nb_rows Number of rows
+ * @param[in,out] nb_cols Number of cols
+ *
+ * @returns
+ * - Matrix of DSV data
+ * - NULL for failure
+ */
 real_t **dsv_data(const char *fp, const char delim, int *nb_rows, int *nb_cols) {
   assert(fp != NULL);
 
@@ -242,10 +420,30 @@ real_t **dsv_data(const char *fp, const char delim, int *nb_rows, int *nb_cols) 
   return data;
 }
 
+/**
+ * Load delimited separated value data as a matrix.
+ *
+ * @param[in] fp Path to file
+ * @param[in,out] nb_rows Number of rows
+ * @param[in,out] nb_cols Number of cols
+ *
+ * @returns
+ * - Matrix of CSV data
+ * - NULL for failure
+ */
 real_t **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
   return dsv_data(fp, ',', nb_rows, nb_cols);
 }
 
+/**
+ * Parse integer array line.
+ *
+ * @param[in] line Line to parse
+ *
+ * @returns
+ * - 1D vector of integers
+ * - NULL for failure
+ */
 static int *parse_iarray_line(char *line) {
   char entry[MAX_LINE_LENGTH] = {0};
   int index = 0;
@@ -273,6 +471,16 @@ static int *parse_iarray_line(char *line) {
   return data;
 }
 
+/**
+ * Parse 2D integer arrays from csv file.
+ *
+ * @param[in] csv_path Path to csv file
+ * @param[in,out] nb_arrays Number of integer arrays
+ *
+ * @returns
+ * - List of 1D vector of integers
+ * - NULL for failure
+ */
 int **load_iarrays(const char *csv_path, int *nb_arrays) {
   FILE *csv_file = fopen(csv_path, "r");
   *nb_arrays = dsv_rows(csv_path);
@@ -293,6 +501,15 @@ int **load_iarrays(const char *csv_path, int *nb_arrays) {
   return array;
 }
 
+/**
+ * Parse real array line.
+ *
+ * @param[in] line Line to parse
+ *
+ * @returns
+ * - 1D vector of real
+ * - NULL for failure
+ */
 static real_t *parse_darray_line(char *line) {
   char entry[MAX_LINE_LENGTH] = {0};
   int index = 0;
@@ -320,6 +537,16 @@ static real_t *parse_darray_line(char *line) {
   return data;
 }
 
+/**
+ * Parse 2D real arrays from csv file.
+ *
+ * @param[in] csv_path Path to csv file
+ * @param[in,out] nb_arrays Number of real arrays
+ *
+ * @returns
+ * - List of 1D vector of reals
+ * - NULL for failure
+ */
 real_t **load_darrays(const char *csv_path, int *nb_arrays) {
   FILE *csv_file = fopen(csv_path, "r");
   *nb_arrays = dsv_rows(csv_path);
@@ -340,6 +567,14 @@ real_t **load_darrays(const char *csv_path, int *nb_arrays) {
   return array;
 }
 
+/**
+ * Load real vector from file
+ *
+ * @param[in] file_path Path to file
+ * @returns
+ * - Real vector
+ * - Null for failure
+ */
 real_t *load_vector(const char *file_path) {
   /* Open file */
   FILE *csv = fopen(file_path, "r");
@@ -372,21 +607,55 @@ real_t *load_vector(const char *file_path) {
   return v;
 }
 
+/** @} */
+
 /******************************************************************************
  *                                 MATHS
  ******************************************************************************/
 
-float randf(float a, float b) {
+/**
+ * @defgroup maths Maths
+ * @{
+ */
+
+/**
+ * Generate random number between a and b from a uniform distribution.
+ *
+ * @param[in] a Lower bound
+ * @param[in] b Upper bound
+ * @returns Random number
+ */
+float randf(const float a, const float b) {
   float random = ((float) rand()) / (float) RAND_MAX;
   float diff = b - a;
   float r = random * diff;
   return a + r;
 }
 
+/**
+ * Degrees to radians.
+ * @param[in] d Degrees
+ * @returns Radians
+ */
 real_t deg2rad(const real_t d) { return d * (M_PI / 180.0); }
 
+/**
+ * Radians to degrees.
+ * @param[in] r Radians
+ * @returns Degrees
+ */
 real_t rad2deg(const real_t r) { return r * (180.0 / M_PI); }
 
+/**
+ * Compare reals.
+ *
+ * @param[in] x First number
+ * @param[in] y Second number
+ * @returns
+ * - 0 if x == y
+ * - 1 if x > y
+ * - -1 if x < y
+ */
 int fltcmp(const real_t x, const real_t y) {
   if (fabs(x - y) < 1e-6) {
     return 0;
@@ -397,6 +666,15 @@ int fltcmp(const real_t x, const real_t y) {
   return -1;
 }
 
+/**
+ * Pythagoras
+ *
+ *   c = sqrt(a^2 + b^2)
+ *
+ * @param[in] a
+ * @param[in] b
+ * @returns Hypotenuse of a and b
+ */
 real_t pythag(const real_t a, const real_t b) {
   real_t at = fabs(a);
   real_t bt = fabs(b);
@@ -416,16 +694,37 @@ real_t pythag(const real_t a, const real_t b) {
   return result;
 }
 
+/**
+ * 1D Linear interpolation.
+ *
+ * @param[in] a First value
+ * @param[in] b Second value
+ * @param[in] t Interpolation parameter
+ * @returns Linear interpolated value between a and b
+ */
 real_t lerp(const real_t a, const real_t b, const real_t t) {
   return a * (1.0 - t) + b * t;
 }
 
+/**
+ * 3D Linear interpolation.
+ *
+ * @param[in] a First vector
+ * @param[in] b Second vector
+ * @param[in] t Interpolation parameter
+ * @param[in,out] x 3D linear interpolated vector between a and b
+ */
 void lerp3(const real_t *a, const real_t *b, const real_t t, real_t *x) {
   x[0] = lerp(a[0], b[0], t);
   x[1] = lerp(a[1], b[1], t);
   x[2] = lerp(a[2], b[2], t);
 }
 
+/**
+ * Sinc.
+ * @param[in] x
+ * @return Result of sinc
+ */
 real_t sinc(const real_t x) {
   if (fabs(x) > 1e-6) {
     return sin(x) / x;
@@ -440,6 +739,13 @@ real_t sinc(const real_t x) {
   }
 }
 
+/**
+ * Calculate mean from vector x of length length.
+ *
+ * @param[in] x 1D vector
+ * @param[in] length Length of x
+ * @returns Mean of x
+ */
 real_t mean(const real_t* x, const size_t length) {
   real_t sum = 0.0;
   for (size_t i = 0; i < length; i++) {
@@ -449,11 +755,25 @@ real_t mean(const real_t* x, const size_t length) {
   return sum / N;
 }
 
+/**
+ * Calculate median from vector x of length length.
+ *
+ * @param[in] x 1D vector
+ * @param[in] length Length of x
+ * @returns Median of x
+ */
 real_t median(const real_t* x, const size_t length) {
   /* qsort(x, length, sizeof(real_t), fltcmp); */
   return 0;
 }
 
+/**
+ * Calculate variance from vector x of length length.
+ *
+ * @param[in] x 1D vector
+ * @param[in] length Length of x
+ * @returns Variance of x
+ */
 real_t var(const real_t *x, const size_t length) {
   real_t mu = mean(x, length);
 
@@ -465,20 +785,42 @@ real_t var(const real_t *x, const size_t length) {
   return length;
 }
 
+/**
+ * Calculate standard deviation from vector x of length length.
+ *
+ * @param[in] x 1D vector
+ * @param[in] length Length of x
+ * @returns Standard deviation of x
+ */
 real_t stddev(const real_t *x, const size_t length) {
   return sqrt(var(x, length));
 }
+
+/** @} */
 
 /******************************************************************************
  *                              LINEAR ALGEBRA
  ******************************************************************************/
 
+/**
+ * @defgroup linalg Linear Algebra
+ * @{
+ */
+
+/**
+ * Print matrix A of size m x n.
+ *
+ * @param[in] prefix Name for the matrix
+ * @param[in] A Matrix
+ * @param[in] m Number of rows
+ * @param[in] n Number of cols
+ */
 void print_matrix(const char *prefix,
-                  const real_t *data,
+                  const real_t *A,
                   const size_t m,
                   const size_t n) {
   assert(prefix != NULL);
-  assert(data != NULL);
+  assert(A != NULL);
   assert(m != 0);
   assert(n != 0);
 
@@ -486,7 +828,7 @@ void print_matrix(const char *prefix,
   printf("%s:\n", prefix);
   for (size_t i = 0; i < m; i++) {
     for (size_t j = 0; j < n; j++) {
-      printf("%.4f\t", data[idx]);
+      printf("%.4f\t", A[idx]);
       idx++;
     }
     printf("\n");
@@ -494,20 +836,34 @@ void print_matrix(const char *prefix,
   printf("\n");
 }
 
-void print_vector(const char *prefix, const real_t *data, const size_t length) {
+/**
+ * Print vector v of length n
+ *
+ * @param[in] prefix Name for the matrix
+ * @param[in] v Vector
+ * @param[in] n Length of vector
+ */
+void print_vector(const char *prefix, const real_t *v, const size_t n) {
   assert(prefix != NULL);
-  assert(data != NULL);
-  assert(length != 0);
+  assert(v != NULL);
+  assert(n != 0);
 
   size_t idx = 0;
   printf("%s: ", prefix);
-  for (size_t i = 0; i < length; i++) {
-    printf("%.4f\t", data[idx]);
+  for (size_t i = 0; i < n; i++) {
+    printf("%.4f\t", v[idx]);
     idx++;
   }
   printf("\n");
 }
 
+/**
+ * Form identity matrix.
+ *
+ * @param[in,out] A Matrix
+ * @param[in] m Number of rows
+ * @param[in] n Number of cols
+ */
 void eye(real_t *A, const size_t m, const size_t n) {
   assert(A != NULL);
   assert(m != 0);
@@ -522,6 +878,13 @@ void eye(real_t *A, const size_t m, const size_t n) {
   }
 }
 
+/**
+ * Form ones matrix.
+ *
+ * @param[in,out] A Matrix
+ * @param[in] m Number of rows
+ * @param[in] n Number of cols
+ */
 void ones(real_t *A, const size_t m, const size_t n) {
   assert(A != NULL);
   assert(m != 0);
@@ -536,6 +899,13 @@ void ones(real_t *A, const size_t m, const size_t n) {
   }
 }
 
+/**
+ * Form zeros matrix.
+ *
+ * @param[in,out] A Matrix
+ * @param[in] m Number of rows
+ * @param[in] n Number of cols
+ */
 void zeros(real_t *A, const size_t m, const size_t n) {
   assert(A != NULL);
   assert(m != 0);
@@ -550,10 +920,30 @@ void zeros(real_t *A, const size_t m, const size_t n) {
   }
 }
 
+/**
+ * Malloc matrix.
+ *
+ * @param[in] m Number of rows
+ * @param[in] n Number of cols
+ * @returns Heap allocated matrix
+ */
 real_t *mat_new(const size_t m, const size_t n) {
   return calloc(m * n, sizeof(real_t));
 }
 
+/**
+ * Compare two matrices A and B of size m x n.
+ *
+ * @param[in] A First matrix
+ * @param[in] B Second matrix
+ * @param[in] m Number of rows
+ * @param[in] n Number of cols
+ *
+ * @returns
+ * - 0 if A == B
+ * - 1 if A > B
+ * - -1 if A < B
+ */
 int mat_cmp(const real_t *A, const real_t *B, const size_t m, const size_t n) {
   size_t index = 0;
 
@@ -571,6 +961,19 @@ int mat_cmp(const real_t *A, const real_t *B, const size_t m, const size_t n) {
   return 0;
 }
 
+/**
+ * Check to see if two matrices A and B of size m x n are equal.
+ *
+ * @param[in] A First matrix
+ * @param[in] B Second matrix
+ * @param[in] m Number of rows
+ * @param[in] n Number of cols
+ * @param[in] tol Tolerance
+ *
+ * @returns
+ * - 0 if A == B
+ * - -1 if A != B
+ */
 int mat_equals(const real_t *A,
                const real_t *B,
                const size_t m,
@@ -591,6 +994,18 @@ int mat_equals(const real_t *A,
   return 0;
 }
 
+/**
+ * Save matrix A of size m x n to save_path.
+ *
+ * @param[in] save_path Path to save matrix
+ * @param[in] A First matrix
+ * @param[in] m Number of rows
+ * @param[in] n Number of cols
+ *
+ * @returns
+ * - 0 Success
+ * - -1 Failure
+ */
 int mat_save(const char *save_path, const real_t *A, const int m, const int n) {
   FILE *csv_file = fopen(save_path, "w");
   if (csv_file == NULL) {
@@ -613,6 +1028,14 @@ int mat_save(const char *save_path, const real_t *A, const int m, const int n) {
   return 0;
 }
 
+/**
+ * Load matrix from file in mat_path.
+ *
+ * @param[in] mat_path Path to matrix file
+ * @param[in,out] nb_rows Number of rows
+ * @param[in,out] nb_cols Number of cols
+ * @returns Heap allocated matrix
+ */
 real_t *mat_load(const char *mat_path, int *nb_rows, int *nb_cols) {
   /* Obtain number of rows and columns in csv data */
   *nb_rows = dsv_rows(mat_path);
@@ -673,6 +1096,15 @@ real_t *mat_load(const char *mat_path, int *nb_rows, int *nb_cols) {
   return A;
 }
 
+/**
+ * Set matrix value at (i, j).
+ *
+ * @param[in,out] A Matrix
+ * @param[in] stride
+ * @param[in] i
+ * @param[in] j
+ * @param[in] val
+ */
 void mat_set(real_t *A,
              const size_t stride,
              const size_t i,
@@ -683,6 +1115,16 @@ void mat_set(real_t *A,
   A[(i * stride) + j] = val;
 }
 
+/**
+ * Get matrix value at (i, j).
+ *
+ * @param[in] A Matrix
+ * @param[in] stride
+ * @param[in] i
+ * @param[in] j
+ *
+ * @returns Matrix value at (i, j)
+ */
 real_t
 mat_val(const real_t *A, const size_t stride, const size_t i, const size_t j) {
   assert(A != NULL);
@@ -690,12 +1132,31 @@ mat_val(const real_t *A, const size_t stride, const size_t i, const size_t j) {
   return A[(i * stride) + j];
 }
 
+/**
+ * Copy matrix src of size m x n to dest.
+ *
+ * @param[in] src Source matrix
+ * @param[in] m Row dimension of src
+ * @param[in] n Column dimension of src
+ * @param[in] dest Destination matrix
+ */
 void mat_copy(const real_t *src, const int m, const int n, real_t *dest) {
   for (int i = 0; i < (m * n); i++) {
     dest[i] = src[i];
   }
 }
 
+/**
+ * Get matrix sub-block in A.
+ *
+ * @param[in] A Input matrix
+ * @param[in] stride Stride
+ * @param[in] rs Row start
+ * @param[in] cs Column start
+ * @param[in] re Row end
+ * @param[in] ce Column end
+ * @param[in,out] block Matrix sub-block
+ */
 void mat_block_get(const real_t *A,
                    const size_t stride,
                    const size_t rs,
@@ -715,6 +1176,17 @@ void mat_block_get(const real_t *A,
   }
 }
 
+/**
+ * Set matrix sub-block in A.
+ *
+ * @param[in,out] A Target matrix
+ * @param[in] stride Stride
+ * @param[in] rs Row start
+ * @param[in] cs Column start
+ * @param[in] re Row end
+ * @param[in] ce Column end
+ * @param[in] block Matrix sub-block
+ */
 void mat_block_set(real_t *A,
                    const size_t stride,
                    const size_t rs,
@@ -734,6 +1206,14 @@ void mat_block_set(real_t *A,
   }
 }
 
+/**
+ * Get diagonal vector from matrix A.
+ *
+ * @param[in] A Target matrix
+ * @param[in] m Row dimension of matrix A
+ * @param[in] n Column dimension of matrix A
+ * @param[in,out] d Return diagonal vector of A
+ */
 void mat_diag_get(const real_t *A, const int m, const int n, real_t *d) {
   int mat_index = 0;
   int vec_index = 0;
@@ -749,6 +1229,14 @@ void mat_diag_get(const real_t *A, const int m, const int n, real_t *d) {
   }
 }
 
+/**
+ * Set the diagonal of matrix A.
+ *
+ * @param[in,out] A Target matrix
+ * @param[in] m Row dimension of matrix A
+ * @param[in] n Column dimension of matrix A
+ * @param[in] d Diagonal vector
+ */
 void mat_diag_set(real_t *A, const int m, const int n, const real_t *d) {
   int mat_index = 0;
   int vec_index = 0;
@@ -766,6 +1254,13 @@ void mat_diag_set(real_t *A, const int m, const int n, const real_t *d) {
   }
 }
 
+/**
+ * Get upper triangular matrix of A.
+ *
+ * @param[in] A Target matrix
+ * @param[in] n Column dimension of matrix A
+ * @param[in,out] U Upper triangular matrix of A
+ */
 void mat_triu(const real_t *A, const size_t n, real_t *U) {
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < n; j++) {
@@ -774,6 +1269,13 @@ void mat_triu(const real_t *A, const size_t n, real_t *U) {
   }
 }
 
+/**
+ * Get lower triangular matrix of A.
+ *
+ * @param[in] A Target matrix
+ * @param[in] n Column dimension of matrix A
+ * @param[in,out] L Lower triangular matrix of A
+ */
 void mat_tril(const real_t *A, const size_t n, real_t *L) {
   for (size_t i = 0; i < n; i++) {
     for (size_t j = 0; j < n; j++) {
@@ -782,6 +1284,15 @@ void mat_tril(const real_t *A, const size_t n, real_t *L) {
   }
 }
 
+/**
+ * Get the trace matrix of A.
+ *
+ * @param[in] A Target matrix
+ * @param[in] m Row dimension of matrix A
+ * @param[in] n Column dimension of matrix A
+ *
+ * @returns Trace of matrix A
+ */
 real_t mat_trace(const real_t *A, const size_t m, const size_t n) {
   real_t tr = 0.0;
   for (size_t i = 0; i < m; i++) {
@@ -792,6 +1303,14 @@ real_t mat_trace(const real_t *A, const size_t m, const size_t n) {
   return tr;
 }
 
+/**
+ * Transpose of matrix A.
+ *
+ * @param[in] A Target matrix
+ * @param[in] m Row dimension of matrix A
+ * @param[in] n Column dimension of matrix A
+ * @param[in,out] A_t Transpose of matrix A
+ */
 void mat_transpose(const real_t *A, size_t m, size_t n, real_t *A_t) {
   assert(A != NULL && A != A_t);
   assert(m > 0 && n > 0);
@@ -803,6 +1322,17 @@ void mat_transpose(const real_t *A, size_t m, size_t n, real_t *A_t) {
   }
 }
 
+/**
+ * Sum two matrices A and B.
+ *
+ *    C = A + B
+ *
+ * @param[in] A First matrix
+ * @param[in] B Second matrix
+ * @param[in,out] C Result matrix
+ * @param[in] m Row dimension of matrix A
+ * @param[in] n Column dimension of matrix A
+ */
 void mat_add(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
   assert(A != NULL && B != NULL && C != NULL && B != C && A != C);
   assert(m > 0 && n > 0);
@@ -812,6 +1342,17 @@ void mat_add(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
   }
 }
 
+/**
+ * Subtract two matrices A and B.
+ *
+ *    C = A - B
+ *
+ * @param[in] A First matrix
+ * @param[in] B Second matrix
+ * @param[in,out] C Result matrix
+ * @param[in] m Row dimension of matrix A
+ * @param[in] n Column dimension of matrix A
+ */
 void mat_sub(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
   assert(A != NULL && B != NULL && C != NULL && B != C && A != C);
   assert(m > 0 && n > 0);
@@ -821,6 +1362,16 @@ void mat_sub(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
   }
 }
 
+/**
+ * Scale matrix A inplace with a scale factor.
+ *
+ *     A_new = scale * A
+ *
+ * @param[in,out] A Target matrix
+ * @param[in] m Row dimension of matrix A
+ * @param[in] n Column dimension of matrix A
+ * @param[in] scale Scale scalar
+ */
 void mat_scale(real_t *A, const size_t m, const size_t n, const real_t scale) {
   assert(A != NULL);
   assert(m > 0 && n > 0);
@@ -830,23 +1381,56 @@ void mat_scale(real_t *A, const size_t m, const size_t n, const real_t scale) {
   }
 }
 
+/**
+ * Create new vector in heap memory.
+ *
+ * @param[in] length Length of vector
+ * @returns Heap allocated vector
+ */
 real_t *vec_new(const size_t length) { return calloc(length, sizeof(real_t)); }
 
+/**
+ * Copy vector.
+ *
+ * @param[in] src Source vector
+ * @param[in] length Length of source vector
+ * @param[out] dest Destination vector
+ */
 void vec_copy(const real_t *src, const size_t length, real_t *dest) {
   for (size_t i = 0; i < length; i++) {
     dest[i] = src[i];
   }
 }
 
+/**
+ * Check if vectors x and y are equal.
+ *
+ * @param[in] x First vector
+ * @param[in] y Second vector
+ * @param[in] length Length of source vector
+ *
+ * @returns
+ * - 1 for x == 1
+ * - 0 for x != 1
+ */
 int vec_equals(const real_t *x, const real_t *y, const size_t length) {
   for (size_t i = 0; i < length; i++) {
     if (fltcmp(x[i], y[i]) != 0) {
-      return -1;
+      return 0;
     }
   }
-  return 0;
+
+  return 1;
 }
 
+/**
+ * Sum two vectors.
+ *
+ * @param[in] x First vector
+ * @param[in] y Second vector
+ * @param[in,out] z Result vector
+ * @param[in] length Length of vector x and y
+ */
 void vec_add(const real_t *x, const real_t *y, real_t *z, size_t length) {
   assert(x != NULL && y != NULL && z != NULL && x != y && x != z);
   assert(length > 0);
@@ -856,6 +1440,14 @@ void vec_add(const real_t *x, const real_t *y, real_t *z, size_t length) {
   }
 }
 
+/**
+ * Subtract two vectors.
+ *
+ * @param[in] x First vector
+ * @param[in] y Second vector
+ * @param[in,out] z Result vector
+ * @param[in] length Length of vector x and y
+ */
 void vec_sub(const real_t *x, const real_t *y, real_t *z, size_t length) {
   assert(x != NULL && y != NULL && z != NULL && x != y && x != z);
   assert(length > 0);
@@ -865,12 +1457,26 @@ void vec_sub(const real_t *x, const real_t *y, real_t *z, size_t length) {
   }
 }
 
+/**
+ * Scale a vector in-place.
+ *
+ * @param[in,out] x Vector
+ * @param[in] length Length of vector x
+ * @param[in] scale Scale factor
+ */
 void vec_scale(real_t *x, const size_t length, const real_t scale) {
   for (size_t i = 0; i < length; i++) {
     x[i] = x[i] * scale;
   }
 }
 
+/**
+ * Vector norm.
+ *
+ * @param[in] x Vector
+ * @param[in] length Length of vector x
+ * @returns Norm of vector x
+ */
 real_t vec_norm(const real_t *x, const size_t length) {
   real_t sum = 0.0;
   for (size_t i = 0; i < length; i++) {
@@ -879,6 +1485,17 @@ real_t vec_norm(const real_t *x, const size_t length) {
   return sqrt(sum);
 }
 
+/**
+ * Dot product of A and B
+ *
+ * @param[in] A Matrix / vector
+ * @param[in] A_m Row dimension of A
+ * @param[in] A_n Column dimension of A
+ * @param[in] B Matrix / vector
+ * @param[in] B_m Row dimension of B
+ * @param[in] B_n Column dimension of B
+ * @param[in,out] C Result
+ */
 void dot(const real_t *A,
          const size_t A_m,
          const size_t A_n,
@@ -902,6 +1519,12 @@ void dot(const real_t *A,
   }
 }
 
+/**
+ * Create skew-symmetric matrix.
+ *
+ * @param[in] x Vector of size 3
+ * @param[in,out] A 3x3 Skew symmetric matrix
+ */
 void skew(const real_t x[3], real_t A[3 * 3]) {
   /* First row */
   A[0] = 0.0;
@@ -919,6 +1542,14 @@ void skew(const real_t x[3], real_t A[3 * 3]) {
   A[8] = 0.0;
 }
 
+/**
+ * Forward substitution.
+ *
+ * @param[in] L Lower triangular matrix
+ * @param[in] b Vector b
+ * @param[in,out] y Vector y
+ * @param[in] n Number of columns in L
+ */
 void fwdsubs(const real_t *L, const real_t *b, real_t *y, const size_t n) {
   for (size_t i = 0; i < n; i++) {
     real_t alpha = b[i];
@@ -929,6 +1560,14 @@ void fwdsubs(const real_t *L, const real_t *b, real_t *y, const size_t n) {
   }
 }
 
+/**
+ * Backward substitution.
+ *
+ * @param[in] U Upper triangular matrix
+ * @param[in] y Vector y
+ * @param[in,out] x Vector x
+ * @param[in] n Number of columns in U
+ */
 void bwdsubs(const real_t *U, const real_t *y, real_t *x, const size_t n) {
   for (int i = n - 1; i >= 0; i--) {
     real_t alpha = y[i];
@@ -939,13 +1578,24 @@ void bwdsubs(const real_t *U, const real_t *y, real_t *x, const size_t n) {
   }
 }
 
+/**
+ * Check jacobian.
+ *
+ * @param[in] jac_name Jacobian name
+ * @param[in] fdiff Finite difference
+ * @param[in] jac Jacobian
+ * @param[in] m Row dimension of Jacobian
+ * @param[in] n Column dimension of Jacobian
+ * @param[in] tol Tolerance
+ * @param[in] verbose Verbose mode
+ */
 int check_jacobian(const char *jac_name,
                    const real_t *fdiff,
                    const real_t *jac,
                    const size_t m,
                    const size_t n,
                    const real_t tol,
-                   const int print) {
+                   const int verbose) {
   int retval = 0;
   int ok = 1;
   real_t *delta = mat_new(m, n);
@@ -962,7 +1612,7 @@ int check_jacobian(const char *jac_name,
 
   /* Print result */
   if (ok == 0) {
-    if (print) {
+    if (verbose) {
       LOG_ERROR("Bad jacobian [%s]!\n", jac_name);
       print_matrix("analytical jac", jac, m, n);
       print_matrix("num diff jac", fdiff, m, n);
@@ -970,7 +1620,7 @@ int check_jacobian(const char *jac_name,
     }
     retval = -1;
   } else {
-    if (print) {
+    if (verbose) {
       printf("Check [%s] ok!\n", jac_name);
     }
     retval = 0;
@@ -980,6 +1630,17 @@ int check_jacobian(const char *jac_name,
 }
 
 #ifdef USE_CBLAS
+/**
+ * Dot product of A and B using CBLAS
+ *
+ * @param[in] A Matrix / vector
+ * @param[in] A_m Row dimension of A
+ * @param[in] A_n Column dimension of A
+ * @param[in] B Matrix / vector
+ * @param[in] B_m Row dimension of B
+ * @param[in] B_n Column dimension of B
+ * @param[in,out] C Result
+ */
 void cblas_dot(const real_t *A,
                const size_t A_m,
                const size_t A_n,
@@ -1026,9 +1687,16 @@ void cblas_dot(const real_t *A,
 }
 #endif
 
+/** @} */
+
 /******************************************************************************
  *                                  SVD
  ******************************************************************************/
+
+/**
+ * @defgroup svd SVD
+ * @{
+ */
 
 /* int svd(real_t *A, int m, int n, real_t *U, real_t *s, real_t *V_t) { */
 /*   const int lda = n; */
@@ -1062,20 +1730,24 @@ void cblas_dot(const real_t *A,
 /* } */
 
 /**
- * svdcomp - SVD decomposition routine.
- * Takes an mxn matrix a and decomposes it into udv, where u,v are
- * left and right orthogonal transformation matrices, and d is a
- * diagonal matrix of singular values.
+ * SVD decomposition
+
+ * Takes an m x n matrix a and decomposes it into UDV, where U, V are left and
+ * right orthogonal transformation matrices, and D is a diagonal matrix of
+ * singular values.
  *
  * This routine is adapted from svdecomp.c in XLISP-STAT 2.1 which is
  * code from Numerical Recipes adapted by Luke Tierney and David Betz.
  *
- * Input to dsvd is as follows:
- *   A = mxn matrix to be decomposed, gets overwritten with U
- *   m = row dimension of a
- *   n = column dimension of a
- *   w = returns the vector of singular values of a
- *   V = returns the right orthogonal transformation matrix
+ * @param[in,out] A An mxn matrix to be decomposed, gets overwritten with U
+ * @param[in] m Row dimension of A
+ * @param[in] n Column dimension of A
+ * @param[in,out] w Returns the vector of singular values of a
+ * @param[in,out] V Returns the right orthogonal transformation matrix
+ *
+ * @returns
+ * - 0 for success
+ * - -1 for failure
  */
 int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V) {
   /* assert(m < n); */
@@ -1378,10 +2050,24 @@ int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V) {
 /*   return 0; */
 /* } */
 
+/** @} */
+
 /******************************************************************************
  *                                  CHOL
  ******************************************************************************/
 
+/**
+ * @defgroup chol Cholesky
+ * @{
+ */
+
+/**
+ * Cholesky decomposition.
+ *
+ * @param[in] A Square matrix of size n x n
+ * @param[in] n Column dimension of A
+ * @param[in,out] L Returns lower trianguloar matrix of A
+ */
 void chol(const real_t *A, const size_t n, real_t *L) {
   assert(A != NULL);
   assert(n > 0);
@@ -1408,6 +2094,14 @@ void chol(const real_t *A, const size_t n, real_t *L) {
   }
 }
 
+/**
+ * Solve Ax = b using Cholesky decomposition.
+ *
+ * @param[in] A Square matrix of size n x n
+ * @param[in] b Vector of length n
+ * @param[in,out] x Solution vector of length n
+ * @param[in] n Column dimension of A
+ */
 void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n) {
   /* Allocate memory */
   real_t *L = calloc(n * n, sizeof(real_t));
@@ -1458,6 +2152,14 @@ void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n) {
 }
 
 #ifdef USE_LAPACK
+/**
+ * Solve Ax = b using Cholesky decomposition.
+ *
+ * @param[in] A Square matrix of size n x n
+ * @param[in] b Vector of length n
+ * @param[in,out] x Solution vector of length n
+ * @param[in] n Column dimension of A
+ */
 void lapack_chol_solve(const real_t *A,
                        const real_t *b,
                        real_t *x,
@@ -1495,16 +2197,35 @@ void lapack_chol_solve(const real_t *A,
 }
 #endif
 
+/** @} */
+
 /******************************************************************************
  *                                   TIME
  ******************************************************************************/
 
+/**
+ * @defgroup time Time
+ * @{
+ */
+
+/**
+ * Tic, start timer.
+ *
+ * @returns A timespec struct encapsulating the time instance when tic() is
+ * called
+ */
 struct timespec tic() {
   struct timespec time_start;
   clock_gettime(CLOCK_MONOTONIC, &time_start);
   return time_start;
 }
 
+/**
+ * Toc, stop timer.
+ *
+ * @param[in] tic Time at start
+ * @returns Time elapsed in seconds
+ */
 float toc(struct timespec *tic) {
   struct timespec toc;
   float time_elasped;
@@ -1516,18 +2237,41 @@ float toc(struct timespec *tic) {
   return time_elasped;
 }
 
+/**
+ * Toc, stop timer.
+ *
+ * @param[in] tic Time at start
+ * @returns Time elapsed in milli-seconds
+ */
 float mtoc(struct timespec *tic) { return toc(tic) * 1000.0; }
 
+/**
+ * Get time now in seconds since epoch.
+ * @return Time now in seconds since epoch
+ */
 float time_now() {
   struct timeval t;
   gettimeofday(&t, NULL);
   return ((float) t.tv_sec + ((float) t.tv_usec) / 1000000.0);
 }
 
+/** @} */
+
 /******************************************************************************
  *                               TRANSFORMS
  ******************************************************************************/
 
+/**
+ * @defgroup tf Transforms
+ * @{
+ */
+
+/**
+ * Form 4x4 homogeneous transformation matrix.
+ *
+ * @param[in] params Pose parameters ([qw, qx, qy, qz] + [rx, ry, rz])
+ * @param[out] T 4x4 Transformation matrix
+ */
 void tf(const real_t params[7], real_t T[4 * 4]) {
   assert(params != NULL);
   assert(T != NULL);
@@ -1559,6 +2303,12 @@ void tf(const real_t params[7], real_t T[4 * 4]) {
   T[15] = 1.0;
 }
 
+/**
+ * Form pose parameter vector from 4x4 homogeneous transformation matrix.
+ *
+ * @param[in] T 4x4 Transformation matrix
+ * @param[out] params Pose parameters ([qw, qx, qy, qz] + [rx, ry, rz])
+ */
 void tf_params(const real_t T[4 * 4], real_t params[7]) {
   real_t C[3 * 3] = {0};
   tf_rot_get(T, C);
@@ -1579,6 +2329,12 @@ void tf_params(const real_t T[4 * 4], real_t params[7]) {
   params[6] = r[2];
 }
 
+/**
+ * Set the rotational component in the 4x4 transformation matrix.
+ *
+ * @param[in,out] T 4x4 Transformation matrix
+ * @param[in] C 3x3 Rotation matrix
+ */
 void tf_rot_set(real_t T[4 * 4], const real_t C[3 * 3]) {
   assert(T != NULL);
   assert(C != NULL);
@@ -1597,6 +2353,12 @@ void tf_rot_set(real_t T[4 * 4], const real_t C[3 * 3]) {
   T[10] = C[8];
 }
 
+/**
+ * Set the translational component in the 4x4 transformation matrix.
+ *
+ * @param[in,out] T 4x4 Transformation matrix
+ * @param[in] r 3x1 Translation vector
+ */
 void tf_trans_set(real_t T[4 * 4], const real_t r[3]) {
   assert(T != NULL);
   assert(r != NULL);
@@ -1607,6 +2369,12 @@ void tf_trans_set(real_t T[4 * 4], const real_t r[3]) {
   T[11] = r[2];
 }
 
+/**
+ * Get the translational component in the 4x4 transformation matrix.
+ *
+ * @param[in] T 4x4 Transformation matrix
+ * @param[out] r 3x1 Translation vector
+ */
 void tf_trans_get(const real_t T[4 * 4], real_t r[3]) {
   assert(T != NULL);
   assert(r != NULL);
@@ -1617,6 +2385,12 @@ void tf_trans_get(const real_t T[4 * 4], real_t r[3]) {
   r[2] = T[11];
 }
 
+/**
+ * Get the rotational component in the 4x4 transformation matrix.
+ *
+ * @param[in] T 4x4 Transformation matrix
+ * @param[out] C 3x3 Rotation matrix
+ */
 void tf_rot_get(const real_t T[4 * 4], real_t C[3 * 3]) {
   assert(T != NULL);
   assert(C != NULL);
@@ -1635,6 +2409,12 @@ void tf_rot_get(const real_t T[4 * 4], real_t C[3 * 3]) {
   C[8] = T[10];
 }
 
+/**
+ * Get the quaternion from the 4x4 transformation matrix.
+ *
+ * @param[in] T 4x4 Transformation matrix
+ * @param[out] q Quaternion
+ */
 void tf_quat_get(const real_t T[4 * 4], real_t q[4]) {
   assert(T != NULL);
   assert(q != NULL);
@@ -1645,6 +2425,12 @@ void tf_quat_get(const real_t T[4 * 4], real_t q[4]) {
   rot2quat(C, q);
 }
 
+/**
+ * Invert the 4x4 homogeneous transformation matrix.
+ *
+ * @param[in] T 4x4 Transformation matrix
+ * @param[out] T_inv Inverted 4x4 Transformation matrix
+ */
 void tf_inv(const real_t T[4 * 4], real_t T_inv[4 * 4]) {
   assert(T != NULL);
   assert(T_inv != NULL);
@@ -1673,6 +2459,13 @@ void tf_inv(const real_t T[4 * 4], real_t T_inv[4 * 4]) {
   T_inv[15] = 1.0;
 }
 
+/**
+ * Transform point using 4x4 homogeneous transformation matrix.
+ *
+ * @param[in] T 4x4 Transformation matrix
+ * @param[in] p 3x1 Point vector
+ * @param[out] retval Transformed point
+ */
 void tf_point(const real_t T[4 * 4], const real_t p[3], real_t retval[3]) {
   assert(T != NULL);
   assert(p != NULL);
@@ -1688,12 +2481,26 @@ void tf_point(const real_t T[4 * 4], const real_t p[3], real_t retval[3]) {
   retval[2] = hp_b[2];
 }
 
+/**
+ * Transform homogeneous point using 4x4 homogeneous transformation matrix.
+ *
+ * @param[in] T 4x4 Transformation matrix
+ * @param[in] hp 4x1 Homogeneous point vector
+ * @param[out] retval Transformed homogeneous point
+ */
 void tf_hpoint(const real_t T[4 * 4], const real_t hp[4], real_t retval[4]) {
   assert(T != NULL);
   assert(hp != retval);
   dot(T, 4, 4, hp, 4, 1, retval);
 }
 
+/**
+ * Perturb the rotational component of a 4x4 homogeneous transformation matrix.
+ *
+ * @param[in,out] T 4x4 transformation matrix
+ * @param[in] step_size Step size
+ * @param[in] i i-th parameter
+ */
 void tf_perturb_rot(real_t T[4 * 4], const real_t step_size, const int i) {
   /* Build perturb drvec */
   real_t drvec[3] = {0};
@@ -1711,6 +2518,13 @@ void tf_perturb_rot(real_t T[4 * 4], const real_t step_size, const int i) {
   tf_rot_set(T, C_diff);
 }
 
+/**
+ * Perturb the translation component of a 4x4 homogeneous transformation matrix.
+ *
+ * @param[in,out] T 4x4 transformation matrix
+ * @param[in] step_size Step size
+ * @param[in] i i-th parameter
+ */
 void tf_perturb_trans(real_t T[4 * 4], const real_t step_size, const int i) {
   /* Build perturb dr */
   real_t dr[3] = {0};
@@ -1725,6 +2539,13 @@ void tf_perturb_trans(real_t T[4 * 4], const real_t step_size, const int i) {
   tf_trans_set(T, r_diff);
 }
 
+/**
+ * Convert rotation vector to 3x3 rotation matrix.
+ *
+ * @param[in] rvec Rotation vector
+ * @param[in] eps Epsilon
+ * @param[out] R 3x3 Rotation matrix
+ */
 void rvec2rot(const real_t *rvec, const real_t eps, real_t *R) {
   /* Magnitude of rvec */
   const real_t theta = sqrt(rvec[0] * rvec[0] + rvec[1] * rvec[1]);
@@ -1781,6 +2602,12 @@ void rvec2rot(const real_t *rvec, const real_t eps, real_t *R) {
   R[8] = z * zC + c;
 }
 
+/**
+ * Convert Euler angles to 3x3 rotation matrix.
+ *
+ * @param[in] euler Euler angles in radians
+ * @param[out] C 3x3 Rotation matrix
+ */
 void euler321(const real_t euler[3], real_t C[3 * 3]) {
   assert(euler != NULL);
   assert(C != NULL);
@@ -1803,6 +2630,12 @@ void euler321(const real_t euler[3], real_t C[3 * 3]) {
   C[8] = cos(theta) * cos(phi);
 }
 
+/**
+ * Convert 3x3 rotation matrix to Quaternion.
+ *
+ * @param[in] C 3x3 Rotation matrix
+ * @param[out] q Quaternion
+ */
 void rot2quat(const real_t C[3 * 3], real_t q[4]) {
   assert(C != NULL);
   assert(q != NULL);
@@ -1856,6 +2689,12 @@ void rot2quat(const real_t C[3 * 3], real_t q[4]) {
   q[3] = qz;
 }
 
+/**
+ * Convert Quaternion to Euler angles.
+ *
+ * @param[in] q Quaternion
+ * @param[out] euler Euler angles in radians
+ */
 void quat2euler(const real_t q[4], real_t euler[3]) {
   assert(q != NULL);
   assert(euler != NULL);
@@ -1879,6 +2718,12 @@ void quat2euler(const real_t q[4], real_t euler[3]) {
   euler[2] = t3;
 }
 
+/**
+ * Convert Quaternion to 3x3 rotation matrix.
+ *
+ * @param[in] q Quaternion
+ * @param[out] C 3x3 Rotation matrix.
+ */
 void quat2rot(const real_t q[4], real_t C[3 * 3]) {
   assert(q != NULL);
   assert(C != NULL);
@@ -1908,6 +2753,13 @@ void quat2rot(const real_t q[4], real_t C[3 * 3]) {
   C[8] = qw2 - qx2 - qy2 + qz2;
 }
 
+/**
+ * Quaternion left-multiply.
+ *
+ * @param[in] p First quaternion
+ * @param[in] q Second quaternion
+ * @param[out] r Result
+ */
 void quat_lmul(const real_t p[4], const real_t q[4], real_t r[4]) {
   assert(p != NULL && q != NULL && r != NULL);
   assert(p != r && q != r);
@@ -1929,6 +2781,13 @@ void quat_lmul(const real_t p[4], const real_t q[4], real_t r[4]) {
   cblas_dot(lprod, 4, 4, q, 4, 1, r);
 }
 
+/**
+ * Quaternion right-multiply.
+ *
+ * @param[in] p First quaternion
+ * @param[in] q Second quaternion
+ * @param[out] r Result
+ */
 void quat_rmul(const real_t p[4], const real_t q[4], real_t r[4]) {
   assert(p != NULL && q != NULL && r != NULL);
   assert(p != r && q != r);
@@ -1950,12 +2809,25 @@ void quat_rmul(const real_t p[4], const real_t q[4], real_t r[4]) {
   dot(rprod, 4, 4, p, 4, 1, r);
 }
 
+/**
+ * Quaternion multiply.
+ *
+ * @param[in] p First quaternion
+ * @param[in] q Second quaternion
+ * @param[out] r Result
+ */
 void quat_mul(const real_t p[4], const real_t q[4], real_t r[4]) {
   assert(p != NULL && q != NULL && r != NULL);
   assert(p != r && q != r);
   quat_lmul(p, q, r);
 }
 
+/**
+ * Form delta quaternion from a small rotation vector.
+ *
+ * @param[in] dalpha Delta alpha
+ * @param[out] dq Delta Quaternion
+ */
 void quat_delta(const real_t dalpha[3], real_t dq[4]) {
   const real_t half_norm = 0.5 * vec_norm(dalpha, 3);
   const real_t k = sinc(half_norm) * 0.5;
@@ -1968,18 +2840,41 @@ void quat_delta(const real_t dalpha[3], real_t dq[4]) {
   dq[3] = vector[2];
 }
 
+/** @} */
+
 /*****************************************************************************
  *                                  IMAGE
  *****************************************************************************/
 
-void image_setup(image_t *img, int width, int height, uint8_t *data) {
-  assert(img != NULL);
+/**
+ * @defgroup image Image
+ * @{
+ */
 
+/**
+ * Setup image.
+ *
+ * @param[out] img Image
+ * @param[in] width Image width
+ * @param[in] height Image height
+ * @param[in] data Image data
+ */
+void image_setup(image_t *img,
+                 const int width,
+                 const int height,
+                 uint8_t *data) {
+  assert(img != NULL);
   img->data = data;
   img->width = width;
   img->height = height;
 }
 
+/**
+ * Load image.
+ *
+ * @param[in] file_path Path to image file
+ * @returns Image
+ */
 image_t *image_load(const char *file_path) {
   int img_w = 0;
   int img_h = 0;
@@ -1998,24 +2893,48 @@ image_t *image_load(const char *file_path) {
   return img;
 }
 
-void image_print_stats(const image_t *img) {
+/**
+ * Print image properties.
+ *
+ * @param[in] img Image
+ */
+void image_print_properties(const image_t *img) {
   assert(img != NULL);
   printf("img.width: %d\n", img->width);
   printf("img.height: %d\n", img->height);
   printf("img.channels: %d\n", img->channels);
 }
 
+/**
+ * Free image.
+ *
+ * @param[in] img Image
+ */
 void image_free(image_t *img) {
   free(img->data);
   free(img);
 }
 
+/** @} */
+
 /*****************************************************************************
  *                                  CV
  *****************************************************************************/
 
+/**
+ * @defgroup cv Computer Vision
+ * @{
+ */
+
 /********************************* RADTAN ************************************/
 
+/**
+ * Distort point using Radial-Tangential distortion.
+ *
+ * @param[in] params Distortion parameters (k1, k2, p1, p2)
+ * @param[in] p Image point to be distorted
+ * @param[out] p_d Distorted image point
+ */
 void radtan4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]) {
   /* Distortion parameters */
   const real_t k1 = params[0];
@@ -2046,6 +2965,13 @@ void radtan4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]) {
   p_d[1] = y_ddash;
 }
 
+/**
+ * Radial-Tangential point jacobian.
+ *
+ * @param[in] params Distortion parameters (k1, k2, p1, p2)
+ * @param[in] p Image point
+ * @param[out] J_point Point jacobian
+ */
 void radtan4_point_jacobian(const real_t params[4],
                             const real_t p[2],
                             real_t J_point[2 * 2]) {
@@ -2074,6 +3000,13 @@ void radtan4_point_jacobian(const real_t params[4],
   J_point[3] += y * (2 * k1 * y + 4 * k2 * y * r2) + 1;
 }
 
+/**
+ * Radial-Tangential parameters jacobian.
+ *
+ * @param[in] params Distortion parameters (k1, k2, p1, p2)
+ * @param[in] p Image point
+ * @param[out] J_param Parameters jacobian
+ */
 void radtan4_params_jacobian(const real_t params[4],
                              const real_t p[2],
                              real_t J_param[2 * 4]) {
@@ -2104,6 +3037,13 @@ void radtan4_params_jacobian(const real_t params[4],
 
 /********************************** EQUI *************************************/
 
+/**
+ * Distort point using Equi-Distant distortion.
+ *
+ * @param[in] params Distortion parameters (k1, k2, k3, k4)
+ * @param[in] p Image point to be distorted
+ * @param[out] p_d Distorted image point
+ */
 void equi4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]) {
   const real_t k1 = params[0];
   const real_t k2 = params[1];
@@ -2129,6 +3069,13 @@ void equi4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]) {
   p_d[1] = y_dash;
 }
 
+/**
+ * Equi-Distant point jacobian.
+ *
+ * @param[in] params Distortion parameters (k1, k2, k3, k4)
+ * @param[in] p Image point
+ * @param[out] J_point 2x2 Point jacobian
+ */
 void equi4_point_jacobian(const real_t params[4],
                           const real_t p[2],
                           real_t J_point[2 * 2]) {
@@ -2163,6 +3110,13 @@ void equi4_point_jacobian(const real_t params[4],
   J_point[3] = s + y * s_r * r_y;
 }
 
+/**
+ * Equi-distant parameters jacobian.
+ *
+ * @param[in] params Distortion parameters (k1, k2, k3, k4)
+ * @param[in] p Image point
+ * @param[out] J_param 2x4 Parameter jacobian
+ */
 void equi4_params_jacobian(const real_t params[4],
                            const real_t p[2],
                            real_t J_param[2 * 4]) {
@@ -2193,11 +3147,30 @@ void equi4_params_jacobian(const real_t params[4],
 
 /******************************** PINHOLE ************************************/
 
+/**
+ * Estimate pinhole focal length.
+ *
+ * The focal length is estimated using:
+ * - Image resolution
+ * - Field of view of the lens / camera.
+ *
+ * @param[in] image_width Image width [pixels]
+ * @param[in] fov Field of view [rads]
+ *
+ * @returns Focal length in pixels
+ */
 real_t pinhole_focal(const int image_width, const real_t fov) {
   return ((image_width / 2.0) / tan(deg2rad(fov) / 2.0));
 }
 
-int pinhole_project(const real_t params[4], const real_t p_C[3], real_t x[2]) {
+/**
+ * Project 3D point observed from the camera to the image plane.
+ *
+ * @param[in] params Pinhole parameters (fx, fy, cx, cy)
+ * @param[in] p_C 3x1 Point vector in camera frame
+ * @param[in] x 2x1 Image point in image plane
+ */
+void pinhole_project(const real_t params[4], const real_t p_C[3], real_t x[2]) {
   const real_t fx = params[0];
   const real_t fy = params[1];
   const real_t cx = params[2];
@@ -2208,10 +3181,14 @@ int pinhole_project(const real_t params[4], const real_t p_C[3], real_t x[2]) {
 
   x[0] = px * fx + cx;
   x[1] = py * fy + cy;
-
-  return 0;
 }
 
+/**
+ * Pinhole point jacobian.
+ *
+ * @param[in] params Pinhole parameters (fx, fy, cx, cy)
+ * @param[out] J 2x3 Point Jacobian
+ */
 void pinhole_point_jacobian(const real_t params[4], real_t J[2 * 3]) {
   J[0] = params[0];
   J[1] = 0.0;
@@ -2219,6 +3196,13 @@ void pinhole_point_jacobian(const real_t params[4], real_t J[2 * 3]) {
   J[3] = params[1];
 }
 
+/**
+ * Pinhole parameter jacobian.
+ *
+ * @param[in] params Pinhole parameters (fx, fy, cx, cy)
+ * @param[in] x 2x1 Image point
+ * @param[out] J 2x4 Parameter Jacobian
+ */
 void pinhole_params_jacobian(const real_t params[4],
                              const real_t x[2],
                              real_t J[2 * 4]) {
@@ -2237,6 +3221,13 @@ void pinhole_params_jacobian(const real_t params[4],
 
 /***************************** PINHOLE-RADTAN4 ********************************/
 
+/**
+ * Projection of 3D point to image plane using Pinhole + Radial-Tangential.
+ *
+ * @param[in] params Intrinsics parameters (fx, fy, cx, cy, k1, k2, p1, p2)
+ * @param[in] p_C 3x1 Point vector observed in camera frame
+ * @param[out] x 2x1 Projected image point
+ */
 void pinhole_radtan4_project(const real_t params[8],
                              const real_t p_C[3],
                              real_t x[2]) {
@@ -2258,6 +3249,13 @@ void pinhole_radtan4_project(const real_t params[8],
   x[1] = p[1] * fy + cy;
 }
 
+/**
+ * Projection Jacobian of Pinhole + Radial-Tangential.
+ *
+ * @param[in] params Intrinsics parameters (fx, fy, cx, cy, k1, k2, p1, p2)
+ * @param[in] p_C 3x1 Point vector observed in camera frame
+ * @param[out] J 2x3 Projection Jacobian
+ */
 void pinhole_radtan4_project_jacobian(const real_t params[8],
                                       const real_t p_C[3],
                                       real_t J[2 * 3]) {
@@ -2295,6 +3293,13 @@ void pinhole_radtan4_project_jacobian(const real_t params[8],
   dot(J_proj, 2, 2, J_dist_proj, 2, 3, J);
 }
 
+/**
+ * Parameter Jacobian of Pinhole + Radial-Tangential.
+ *
+ * @param[in] params Intrinsics parameters (fx, fy, cx, cy, k1, k2, p1, p2)
+ * @param[in] p_C 3x1 Point vector observed in camera frame
+ * @param[out] J 2x8 Parameter Jacobian
+ */
 void pinhole_radtan4_params_jacobian(const real_t params[8],
                                      const real_t p_C[3],
                                      real_t J[2 * 8]) {
@@ -2348,6 +3353,13 @@ void pinhole_radtan4_params_jacobian(const real_t params[8],
 
 /****************************** PINHOLE-EQUI4 *********************************/
 
+/**
+ * Projection of 3D point to image plane using Pinhole + Equi-Distant.
+ *
+ * @param[in] params Intrinsics parameters (fx, fy, cx, cy, k1, k2, k3, k4)
+ * @param[in] p_C 3x1 Point vector observed in camera frame
+ * @param[out] x 2x1 Projected image point
+ */
 void pinhole_equi4_project(const real_t params[8],
                            const real_t p_C[3],
                            real_t x[2]) {
@@ -2369,6 +3381,13 @@ void pinhole_equi4_project(const real_t params[8],
   x[1] = p[1] * fy + cy;
 }
 
+/**
+ * Projection Jacobian of Pinhole + Equi-Distant.
+ *
+ * @param[in] params Intrinsics parameters (fx, fy, cx, cy, k1, k2, k3, k4)
+ * @param[in] p_C 3x1 Point vector observed in camera frame
+ * @param[out] J 2x3 Projection Jacobian
+ */
 void pinhole_equi4_project_jacobian(const real_t params[8],
                                     const real_t p_C[3],
                                     real_t J[2 * 3]) {
@@ -2405,3 +3424,6 @@ void pinhole_equi4_project_jacobian(const real_t params[8],
   dot(J_dist_point, 2, 2, J_proj, 2, 3, J_dist_proj);
   dot(J_proj, 2, 2, J_dist_proj, 2, 3, J);
 }
+
+/** @} */ /* cv group */
+/** @} */ /* core group */
