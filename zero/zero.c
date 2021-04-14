@@ -39,7 +39,7 @@
  * List files in directory.
  *
  * @param[in] path Path to directory
- * @param[in,out] nb_files Number of files in directory
+ * @param[out] nb_files Number of files in directory
  * @returns List of files in directory
  */
 char **list_files(const char *path, int *nb_files) {
@@ -290,7 +290,7 @@ int dsv_cols(const char *fp, const char delim) {
  *
  * @param[in] fp Path to file
  * @param[in] delim Delimiter
- * @param[in,out] nb_fields Number of fields
+ * @param[out] nb_fields Number of fields
  *
  * @returns
  * - List of field strings
@@ -351,8 +351,8 @@ char **dsv_fields(const char *fp, const char delim, int *nb_fields) {
  *
  * @param[in] fp Path to file
  * @param[in] delim Delimiter
- * @param[in,out] nb_rows Number of rows
- * @param[in,out] nb_cols Number of cols
+ * @param[out] nb_rows Number of rows
+ * @param[out] nb_cols Number of cols
  *
  * @returns
  * - Matrix of DSV data
@@ -424,8 +424,8 @@ real_t **dsv_data(const char *fp, const char delim, int *nb_rows, int *nb_cols) 
  * Load delimited separated value data as a matrix.
  *
  * @param[in] fp Path to file
- * @param[in,out] nb_rows Number of rows
- * @param[in,out] nb_cols Number of cols
+ * @param[out] nb_rows Number of rows
+ * @param[out] nb_cols Number of cols
  *
  * @returns
  * - Matrix of CSV data
@@ -475,7 +475,7 @@ static int *parse_iarray_line(char *line) {
  * Parse 2D integer arrays from csv file.
  *
  * @param[in] csv_path Path to csv file
- * @param[in,out] nb_arrays Number of integer arrays
+ * @param[out] nb_arrays Number of integer arrays
  *
  * @returns
  * - List of 1D vector of integers
@@ -541,7 +541,7 @@ static real_t *parse_darray_line(char *line) {
  * Parse 2D real arrays from csv file.
  *
  * @param[in] csv_path Path to csv file
- * @param[in,out] nb_arrays Number of real arrays
+ * @param[out] nb_arrays Number of real arrays
  *
  * @returns
  * - List of 1D vector of reals
@@ -712,7 +712,7 @@ real_t lerp(const real_t a, const real_t b, const real_t t) {
  * @param[in] a First vector
  * @param[in] b Second vector
  * @param[in] t Interpolation parameter
- * @param[in,out] x 3D linear interpolated vector between a and b
+ * @param[out] x 3D linear interpolated vector between a and b
  */
 void lerp3(const real_t *a, const real_t *b, const real_t t, real_t *x) {
   x[0] = lerp(a[0], b[0], t);
@@ -860,7 +860,7 @@ void print_vector(const char *prefix, const real_t *v, const size_t n) {
 /**
  * Form identity matrix.
  *
- * @param[in,out] A Matrix
+ * @param[out] A Matrix
  * @param[in] m Number of rows
  * @param[in] n Number of cols
  */
@@ -881,7 +881,7 @@ void eye(real_t *A, const size_t m, const size_t n) {
 /**
  * Form ones matrix.
  *
- * @param[in,out] A Matrix
+ * @param[out] A Matrix
  * @param[in] m Number of rows
  * @param[in] n Number of cols
  */
@@ -902,7 +902,7 @@ void ones(real_t *A, const size_t m, const size_t n) {
 /**
  * Form zeros matrix.
  *
- * @param[in,out] A Matrix
+ * @param[out] A Matrix
  * @param[in] m Number of rows
  * @param[in] n Number of cols
  */
@@ -1032,8 +1032,8 @@ int mat_save(const char *save_path, const real_t *A, const int m, const int n) {
  * Load matrix from file in mat_path.
  *
  * @param[in] mat_path Path to matrix file
- * @param[in,out] nb_rows Number of rows
- * @param[in,out] nb_cols Number of cols
+ * @param[out] nb_rows Number of rows
+ * @param[out] nb_cols Number of cols
  * @returns Heap allocated matrix
  */
 real_t *mat_load(const char *mat_path, int *nb_rows, int *nb_cols) {
@@ -1155,7 +1155,7 @@ void mat_copy(const real_t *src, const int m, const int n, real_t *dest) {
  * @param[in] cs Column start
  * @param[in] re Row end
  * @param[in] ce Column end
- * @param[in,out] block Matrix sub-block
+ * @param[out] block Matrix sub-block
  */
 void mat_block_get(const real_t *A,
                    const size_t stride,
@@ -1212,7 +1212,7 @@ void mat_block_set(real_t *A,
  * @param[in] A Target matrix
  * @param[in] m Row dimension of matrix A
  * @param[in] n Column dimension of matrix A
- * @param[in,out] d Return diagonal vector of A
+ * @param[out] d Return diagonal vector of A
  */
 void mat_diag_get(const real_t *A, const int m, const int n, real_t *d) {
   int mat_index = 0;
@@ -1259,7 +1259,7 @@ void mat_diag_set(real_t *A, const int m, const int n, const real_t *d) {
  *
  * @param[in] A Target matrix
  * @param[in] n Column dimension of matrix A
- * @param[in,out] U Upper triangular matrix of A
+ * @param[out] U Upper triangular matrix of A
  */
 void mat_triu(const real_t *A, const size_t n, real_t *U) {
   for (size_t i = 0; i < n; i++) {
@@ -1274,7 +1274,7 @@ void mat_triu(const real_t *A, const size_t n, real_t *U) {
  *
  * @param[in] A Target matrix
  * @param[in] n Column dimension of matrix A
- * @param[in,out] L Lower triangular matrix of A
+ * @param[out] L Lower triangular matrix of A
  */
 void mat_tril(const real_t *A, const size_t n, real_t *L) {
   for (size_t i = 0; i < n; i++) {
@@ -1309,7 +1309,7 @@ real_t mat_trace(const real_t *A, const size_t m, const size_t n) {
  * @param[in] A Target matrix
  * @param[in] m Row dimension of matrix A
  * @param[in] n Column dimension of matrix A
- * @param[in,out] A_t Transpose of matrix A
+ * @param[out] A_t Transpose of matrix A
  */
 void mat_transpose(const real_t *A, size_t m, size_t n, real_t *A_t) {
   assert(A != NULL && A != A_t);
@@ -1329,7 +1329,7 @@ void mat_transpose(const real_t *A, size_t m, size_t n, real_t *A_t) {
  *
  * @param[in] A First matrix
  * @param[in] B Second matrix
- * @param[in,out] C Result matrix
+ * @param[out] C Result matrix
  * @param[in] m Row dimension of matrix A
  * @param[in] n Column dimension of matrix A
  */
@@ -1349,7 +1349,7 @@ void mat_add(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
  *
  * @param[in] A First matrix
  * @param[in] B Second matrix
- * @param[in,out] C Result matrix
+ * @param[out] C Result matrix
  * @param[in] m Row dimension of matrix A
  * @param[in] n Column dimension of matrix A
  */
@@ -1428,7 +1428,7 @@ int vec_equals(const real_t *x, const real_t *y, const size_t length) {
  *
  * @param[in] x First vector
  * @param[in] y Second vector
- * @param[in,out] z Result vector
+ * @param[out] z Result vector
  * @param[in] length Length of vector x and y
  */
 void vec_add(const real_t *x, const real_t *y, real_t *z, size_t length) {
@@ -1445,7 +1445,7 @@ void vec_add(const real_t *x, const real_t *y, real_t *z, size_t length) {
  *
  * @param[in] x First vector
  * @param[in] y Second vector
- * @param[in,out] z Result vector
+ * @param[out] z Result vector
  * @param[in] length Length of vector x and y
  */
 void vec_sub(const real_t *x, const real_t *y, real_t *z, size_t length) {
@@ -1494,7 +1494,7 @@ real_t vec_norm(const real_t *x, const size_t length) {
  * @param[in] B Matrix / vector
  * @param[in] B_m Row dimension of B
  * @param[in] B_n Column dimension of B
- * @param[in,out] C Result
+ * @param[out] C Result
  */
 void dot(const real_t *A,
          const size_t A_m,
@@ -1523,7 +1523,7 @@ void dot(const real_t *A,
  * Create skew-symmetric matrix.
  *
  * @param[in] x Vector of size 3
- * @param[in,out] A 3x3 Skew symmetric matrix
+ * @param[out] A 3x3 Skew symmetric matrix
  */
 void skew(const real_t x[3], real_t A[3 * 3]) {
   /* First row */
@@ -1547,7 +1547,7 @@ void skew(const real_t x[3], real_t A[3 * 3]) {
  *
  * @param[in] L Lower triangular matrix
  * @param[in] b Vector b
- * @param[in,out] y Vector y
+ * @param[out] y Vector y
  * @param[in] n Number of columns in L
  */
 void fwdsubs(const real_t *L, const real_t *b, real_t *y, const size_t n) {
@@ -1565,7 +1565,7 @@ void fwdsubs(const real_t *L, const real_t *b, real_t *y, const size_t n) {
  *
  * @param[in] U Upper triangular matrix
  * @param[in] y Vector y
- * @param[in,out] x Vector x
+ * @param[out] x Vector x
  * @param[in] n Number of columns in U
  */
 void bwdsubs(const real_t *U, const real_t *y, real_t *x, const size_t n) {
@@ -1639,7 +1639,7 @@ int check_jacobian(const char *jac_name,
  * @param[in] B Matrix / vector
  * @param[in] B_m Row dimension of B
  * @param[in] B_n Column dimension of B
- * @param[in,out] C Result
+ * @param[out] C Result
  */
 void cblas_dot(const real_t *A,
                const size_t A_m,
@@ -1742,8 +1742,8 @@ void cblas_dot(const real_t *A,
  * @param[in,out] A An mxn matrix to be decomposed, gets overwritten with U
  * @param[in] m Row dimension of A
  * @param[in] n Column dimension of A
- * @param[in,out] w Returns the vector of singular values of a
- * @param[in,out] V Returns the right orthogonal transformation matrix
+ * @param[out] w Returns the vector of singular values of a
+ * @param[out] V Returns the right orthogonal transformation matrix
  *
  * @returns
  * - 0 for success
@@ -2066,7 +2066,7 @@ int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V) {
  *
  * @param[in] A Square matrix of size n x n
  * @param[in] n Column dimension of A
- * @param[in,out] L Returns lower trianguloar matrix of A
+ * @param[out] L Returns lower trianguloar matrix of A
  */
 void chol(const real_t *A, const size_t n, real_t *L) {
   assert(A != NULL);
@@ -2099,7 +2099,7 @@ void chol(const real_t *A, const size_t n, real_t *L) {
  *
  * @param[in] A Square matrix of size n x n
  * @param[in] b Vector of length n
- * @param[in,out] x Solution vector of length n
+ * @param[out] x Solution vector of length n
  * @param[in] n Column dimension of A
  */
 void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n) {
@@ -2157,7 +2157,7 @@ void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n) {
  *
  * @param[in] A Square matrix of size n x n
  * @param[in] b Vector of length n
- * @param[in,out] x Solution vector of length n
+ * @param[out] x Solution vector of length n
  * @param[in] n Column dimension of A
  */
 void lapack_chol_solve(const real_t *A,
