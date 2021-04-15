@@ -7,7 +7,7 @@ TESTS_DIR=$(PWD)/tests
 # COMPILER SETTINGS
 CC=tcc
 # CC=gcc
-CFLAGS=-g -Wall -I$(INC_DIR) -I$(DEPS_DIR)/include
+CFLAGS=-g -Wall -I$(INC_DIR) -I$(DEPS_DIR)/include -ggdb
 
 GLFW3_LIBS=-L$(DEPS_DIR)/lib -lglfw3 -lrt -lm -ldl
 GLEW_LIBS=-lGLEW
