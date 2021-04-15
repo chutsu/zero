@@ -26,10 +26,14 @@ time make
 
 doxygen
 # python3 scripts/api.py
+# python3 scripts/api2.py
 
-# doxygen
 
 cd ./build/bin
+# ZERO-LOGGING
+./test_zero --target test_debug
+./test_zero --target test_log_error
+./test_zero --target test_log_warn
 # ZERO-DATA
 # ./test_zero --target test_malloc_string
 # ./test_zero --target test_csv_rows
