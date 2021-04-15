@@ -12,6 +12,9 @@ deps/include
 deps/lib
 deps/share
 
+docs/xml
+docs/html
+
 *.bin
 *.elf
 *.d
