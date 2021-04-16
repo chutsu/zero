@@ -19,21 +19,20 @@ debug() {
 # python3 scripts/tf_point.py
 
 # make format_code
-ctags -R zero
+# ctags -R zero
 make clean
-# cp -rv zero/tests/test_data/ build/bin/
 time make
 
-doxygen
+# doxygen
 # python3 scripts/api.py
 # python3 scripts/api2.py
 
 
 cd ./build/bin
 # ZERO-LOGGING
-./test_zero --target test_debug
-./test_zero --target test_log_error
-./test_zero --target test_log_warn
+# ./test_zero --target test_debug
+# ./test_zero --target test_log_error
+# ./test_zero --target test_log_warn
 # ZERO-DATA
 # ./test_zero --target test_malloc_string
 # ./test_zero --target test_csv_rows

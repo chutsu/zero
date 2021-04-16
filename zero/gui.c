@@ -1,7 +1,7 @@
 #include "gui.h"
 
-/*******************************************************************************
- *                                  UTILS
+/******************************************************************************
+ * UTILS
  ******************************************************************************/
 
 GLfloat gl_deg2rad(const GLfloat d) {
@@ -303,8 +303,8 @@ void gl_lookat(const GLfloat eye[3],
   gl_dot(R, 4, 4, T, 4, 4, V);
 }
 
-/*******************************************************************************
- *                                  SHADER
+/******************************************************************************
+ * SHADER
  ******************************************************************************/
 
 GLuint shader_compile(const char *shader_src, const int type) {
@@ -360,8 +360,8 @@ GLuint shaders_link(const GLuint vertex_shader,
   return program;
 }
 
-/*******************************************************************************
- *                                GL PROGRAM
+/******************************************************************************
+ * GL PROGRAM
  ******************************************************************************/
 
 GLuint gl_prog_setup(const char *vs_src,
@@ -484,8 +484,8 @@ int gl_prog_set_mat4f(const GLint id, const char *k, const GLfloat v[4*4]) {
   return 0;
 }
 
-/*******************************************************************************
- *                                 GL-CAMERA
+/******************************************************************************
+ * GL-CAMERA
  ******************************************************************************/
 
 void gl_camera_setup(gl_camera_t *camera,
@@ -602,8 +602,8 @@ void gl_camera_zoom(gl_camera_t *camera,
   gl_camera_update(camera);
 }
 
-/*******************************************************************************
- *                                    GUI
+/******************************************************************************
+ * GUI
  ******************************************************************************/
 
 void gui_framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -813,7 +813,7 @@ void gui_loop(gui_t *gui) {
   glfwTerminate();
 }
 
-/********************************** GL CUBE ***********************************/
+/* GL CUBE ********************************************************************/
 
 void gl_cube_setup(gl_entity_t *entity, GLfloat pos[3]) {
   /* Entity transform */
@@ -936,7 +936,7 @@ void gl_cube_draw(const gl_entity_t *entity, const gl_camera_t *camera) {
   glBindVertexArray(0); // Unbind VAO
 }
 
-/***************************** GL CAMERA FRAME ********************************/
+/* GL CAMERA FRAME ************************************************************/
 
 void gl_camera_frame_setup(gl_entity_t *entity) {
   /* Entity transform */
@@ -1040,7 +1040,7 @@ void gl_camera_frame_draw(const gl_entity_t *entity, const gl_camera_t *camera) 
   glLineWidth(original_line_width);
 }
 
-/******************************* GL AXIS FRAME ********************************/
+/* GL AXIS FRAME **************************************************************/
 
 void gl_axis_frame_setup(gl_entity_t *entity) {
   /* Entity transform */
@@ -1173,7 +1173,7 @@ static GLfloat *glgrid_create_vertices(int grid_size) {
   return vertices;
 }
 
-/********************************** GL GRID ***********************************/
+/* GL GRID ********************************************************************/
 
 void gl_grid_setup(gl_entity_t *entity) {
   /* Entity transform */

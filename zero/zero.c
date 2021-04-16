@@ -1,14 +1,11 @@
 #include "zero/zero.h"
 
 /******************************************************************************
- *                               FILE SYSTEM
+ * FILE SYSTEM
  ******************************************************************************/
 
 /**
  * List files in directory.
- *
- * @param[in] path Path to directory
- * @param[out] nb_files Number of files in directory
  * @returns List of files in directory
  */
 char **list_files(const char *path, int *nb_files) {
@@ -46,9 +43,6 @@ char **list_files(const char *path, int *nb_files) {
 
 /**
  * Free list of files.
- *
- * @param[in] data List of files
- * @param[in] n Number of files
  */
 void list_files_free(char **data, const int n) {
   for (int i = 0; i < n; i++) {
@@ -59,8 +53,6 @@ void list_files_free(char **data, const int n) {
 
 /**
  * Read file contents.
- *
- * @param[in] fp Path to file
  * @returns
  * - Success: File contents
  * - Failure: NULL
@@ -86,8 +78,6 @@ char *file_read(const char *fp) {
 
 /**
  * Skip line in file.
- *
- * @param[in,out] fp Pointer to file
  */
 void skip_line(FILE *fp) {
   char header[BUFSIZ];
@@ -99,8 +89,9 @@ void skip_line(FILE *fp) {
 
 /**
  * Get number of rows in file.
- *
- * @returns Number of rows in file else -1 for failure.
+ * @returns
+ * - Number of rows in file
+ * - -1 for failure.
  */
 int file_rows(const char *fp) {
   FILE *file = fopen(fp, "rb");
@@ -121,11 +112,7 @@ int file_rows(const char *fp) {
 }
 
 /**
- * Copy file from path src to path dest.
- *
- * @param[in] src Source file
- * @param[in] dest Destination file
- *
+ * Copy file from path `src` to path `dest`.
  * @returns
  * - 0 for success
  * - -1 if src file could not be opend
@@ -161,13 +148,11 @@ int file_copy(const char *src, const char *dest) {
 }
 
 /******************************************************************************
- *                                   DATA
+ * DATA
  ******************************************************************************/
 
 /**
- * Allocate heap memory for string s
- *
- * @param[in] s String to copy from
+ * Allocate heap memory for string `s`.
  * @returns A heap memory allocated string
  */
 char *malloc_string(const char *s) {
@@ -177,9 +162,7 @@ char *malloc_string(const char *s) {
 }
 
 /**
- * Get number of rows in a delimited file
- *
- * @param[in] fp Path to file
+ * Get number of rows in a delimited file at `fp`.
  * @returns
  * - Number of rows
  * - -1 for failure
@@ -207,11 +190,7 @@ int dsv_rows(const char *fp) {
 }
 
 /**
- * Get number of columns in a delimited file fp.
- *
- * @param[in] fp Path to file
- * @param[in] delim Delimiter
- *
+ * Get number of columns in a delimited file at `fp`.
  * @returns
  * - Number of columns
  * - -1 for failure
@@ -248,12 +227,8 @@ int dsv_cols(const char *fp, const char delim) {
 }
 
 /**
- * Get the fields of the delimited file.
- *
- * @param[in] fp Path to file
- * @param[in] delim Delimiter
- * @param[out] nb_fields Number of fields
- *
+ * Get the fields of the delimited file at `fp`, where `delim` is the value
+ * separated symbol and `nb_fields` returns the length of the fields returned.
  * @returns
  * - List of field strings
  * - NULL for failure
@@ -310,12 +285,6 @@ char **dsv_fields(const char *fp, const char delim, int *nb_fields) {
 
 /**
  * Load delimited separated value data as a matrix.
- *
- * @param[in] fp Path to file
- * @param[in] delim Delimiter
- * @param[out] nb_rows Number of rows
- * @param[out] nb_cols Number of cols
- *
  * @returns
  * - Matrix of DSV data
  * - NULL for failure
@@ -383,12 +352,8 @@ real_t **dsv_data(const char *fp, const char delim, int *nb_rows, int *nb_cols) 
 }
 
 /**
- * Load delimited separated value data as a matrix.
- *
- * @param[in] fp Path to file
- * @param[out] nb_rows Number of rows
- * @param[out] nb_cols Number of cols
- *
+ * Load comma separated data as a matrix, where `fp` is the csv file path, on
+ * success `nb_rows` and `nb_cols` will be filled.
  * @returns
  * - Matrix of CSV data
  * - NULL for failure
@@ -399,9 +364,6 @@ real_t **csv_data(const char *fp, int *nb_rows, int *nb_cols) {
 
 /**
  * Parse integer array line.
- *
- * @param[in] line Line to parse
- *
  * @returns
  * - 1D vector of integers
  * - NULL for failure
@@ -435,10 +397,6 @@ static int *parse_iarray_line(char *line) {
 
 /**
  * Parse 2D integer arrays from csv file.
- *
- * @param[in] csv_path Path to csv file
- * @param[out] nb_arrays Number of integer arrays
- *
  * @returns
  * - List of 1D vector of integers
  * - NULL for failure
@@ -465,9 +423,6 @@ int **load_iarrays(const char *csv_path, int *nb_arrays) {
 
 /**
  * Parse real array line.
- *
- * @param[in] line Line to parse
- *
  * @returns
  * - 1D vector of real
  * - NULL for failure
@@ -500,11 +455,8 @@ static real_t *parse_darray_line(char *line) {
 }
 
 /**
- * Parse 2D real arrays from csv file.
- *
- * @param[in] csv_path Path to csv file
- * @param[out] nb_arrays Number of real arrays
- *
+ * Parse 2D real arrays from csv file at `csv_path`, on success `nb_arrays`
+ * will return number of arrays.
  * @returns
  * - List of 1D vector of reals
  * - NULL for failure
@@ -531,8 +483,6 @@ real_t **load_darrays(const char *csv_path, int *nb_arrays) {
 
 /**
  * Load real vector from file
- *
- * @param[in] file_path Path to file
  * @returns
  * - Real vector
  * - Null for failure
@@ -570,12 +520,11 @@ real_t *load_vector(const char *file_path) {
 }
 
 /******************************************************************************
- *                                   TIME
+ * TIME
  ******************************************************************************/
 
 /**
  * Tic, start timer.
- *
  * @returns A timespec struct encapsulating the time instance when tic() is
  * called
  */
@@ -587,8 +536,6 @@ struct timespec tic() {
 
 /**
  * Toc, stop timer.
- *
- * @param[in] tic Time at start
  * @returns Time elapsed in seconds
  */
 float toc(struct timespec *tic) {
@@ -604,8 +551,6 @@ float toc(struct timespec *tic) {
 
 /**
  * Toc, stop timer.
- *
- * @param[in] tic Time at start
  * @returns Time elapsed in milli-seconds
  */
 float mtoc(struct timespec *tic) { return toc(tic) * 1000.0; }
@@ -627,9 +572,6 @@ float time_now() {
 
 /**
  * Generate random number between a and b from a uniform distribution.
- *
- * @param[in] a Lower bound
- * @param[in] b Upper bound
  * @returns Random number
  */
 float randf(const float a, const float b) {
@@ -641,23 +583,18 @@ float randf(const float a, const float b) {
 
 /**
  * Degrees to radians.
- * @param[in] d Degrees
  * @returns Radians
  */
 real_t deg2rad(const real_t d) { return d * (M_PI / 180.0); }
 
 /**
  * Radians to degrees.
- * @param[in] r Radians
  * @returns Degrees
  */
 real_t rad2deg(const real_t r) { return r * (180.0 / M_PI); }
 
 /**
  * Compare reals.
- *
- * @param[in] x First number
- * @param[in] y Second number
  * @returns
  * - 0 if x == y
  * - 1 if x > y
@@ -678,8 +615,6 @@ int fltcmp(const real_t x, const real_t y) {
  *
  *   c = sqrt(a^2 + b^2)
  *
- * @param[in] a
- * @param[in] b
  * @returns Hypotenuse of a and b
  */
 real_t pythag(const real_t a, const real_t b) {
@@ -702,11 +637,8 @@ real_t pythag(const real_t a, const real_t b) {
 }
 
 /**
- * 1D Linear interpolation.
- *
- * @param[in] a First value
- * @param[in] b Second value
- * @param[in] t Interpolation parameter
+ * Perform 1D Linear interpolation between `a` and `b` with `t` as the
+ * interpolation hyper-parameter.
  * @returns Linear interpolated value between a and b
  */
 real_t lerp(const real_t a, const real_t b, const real_t t) {
@@ -714,14 +646,10 @@ real_t lerp(const real_t a, const real_t b, const real_t t) {
 }
 
 /**
- * 3D Linear interpolation.
- *
- * @param[in] a First vector
- * @param[in] b Second vector
- * @param[in] t Interpolation parameter
- * @param[out] x 3D linear interpolated vector between a and b
+ * Perform 3D Linear interpolation between `a` and `b` with `t` as the
+ * interpolation hyper-parameter.
  */
-void lerp3(const real_t *a, const real_t *b, const real_t t, real_t *x) {
+void lerp3(const real_t a[3], const real_t b[3], const real_t t, real_t x[3]) {
   x[0] = lerp(a[0], b[0], t);
   x[1] = lerp(a[1], b[1], t);
   x[2] = lerp(a[2], b[2], t);
@@ -729,7 +657,6 @@ void lerp3(const real_t *a, const real_t *b, const real_t t, real_t *x) {
 
 /**
  * Sinc.
- * @param[in] x
  * @return Result of sinc
  */
 real_t sinc(const real_t x) {
@@ -747,10 +674,7 @@ real_t sinc(const real_t x) {
 }
 
 /**
- * Calculate mean from vector x of length length.
- *
- * @param[in] x 1D vector
- * @param[in] length Length of x
+ * Calculate mean from vector `x` of length `length`.
  * @returns Mean of x
  */
 real_t mean(const real_t* x, const size_t length) {
@@ -763,10 +687,7 @@ real_t mean(const real_t* x, const size_t length) {
 }
 
 /**
- * Calculate median from vector x of length length.
- *
- * @param[in] x 1D vector
- * @param[in] length Length of x
+ * Calculate median from vector `x` of length `length`.
  * @returns Median of x
  */
 real_t median(const real_t* x, const size_t length) {
@@ -775,10 +696,7 @@ real_t median(const real_t* x, const size_t length) {
 }
 
 /**
- * Calculate variance from vector x of length length.
- *
- * @param[in] x 1D vector
- * @param[in] length Length of x
+ * Calculate variance from vector `x` of length `length`.
  * @returns Variance of x
  */
 real_t var(const real_t *x, const size_t length) {
@@ -793,28 +711,19 @@ real_t var(const real_t *x, const size_t length) {
 }
 
 /**
- * Calculate standard deviation from vector x of length length.
- *
- * @param[in] x 1D vector
- * @param[in] length Length of x
+ * Calculate standard deviation from vector `x` of length `length`.
  * @returns Standard deviation of x
  */
 real_t stddev(const real_t *x, const size_t length) {
   return sqrt(var(x, length));
 }
 
-
 /******************************************************************************
- *                              LINEAR ALGEBRA
+ * LINEAR ALGEBRA
  ******************************************************************************/
 
 /**
- * Print matrix A of size m x n.
- *
- * @param[in] prefix Name for the matrix
- * @param[in] A Matrix
- * @param[in] m Number of rows
- * @param[in] n Number of cols
+ * Print matrix `A` of size `m x n`.
  */
 void print_matrix(const char *prefix,
                   const real_t *A,
@@ -838,11 +747,7 @@ void print_matrix(const char *prefix,
 }
 
 /**
- * Print vector v of length n
- *
- * @param[in] prefix Name for the matrix
- * @param[in] v Vector
- * @param[in] n Length of vector
+ * Print vector `v` of length `n`.
  */
 void print_vector(const char *prefix, const real_t *v, const size_t n) {
   assert(prefix != NULL);
@@ -859,11 +764,7 @@ void print_vector(const char *prefix, const real_t *v, const size_t n) {
 }
 
 /**
- * Form identity matrix.
- *
- * @param[out] A Matrix
- * @param[in] m Number of rows
- * @param[in] n Number of cols
+ * Form identity matrix `A` of size `m x n`.
  */
 void eye(real_t *A, const size_t m, const size_t n) {
   assert(A != NULL);
@@ -880,11 +781,7 @@ void eye(real_t *A, const size_t m, const size_t n) {
 }
 
 /**
- * Form ones matrix.
- *
- * @param[out] A Matrix
- * @param[in] m Number of rows
- * @param[in] n Number of cols
+ * Form ones matrix `A` of size `m x n`.
  */
 void ones(real_t *A, const size_t m, const size_t n) {
   assert(A != NULL);
@@ -901,11 +798,7 @@ void ones(real_t *A, const size_t m, const size_t n) {
 }
 
 /**
- * Form zeros matrix.
- *
- * @param[out] A Matrix
- * @param[in] m Number of rows
- * @param[in] n Number of cols
+ * Form zeros matrix `A` of size `m x n`.
  */
 void zeros(real_t *A, const size_t m, const size_t n) {
   assert(A != NULL);
@@ -922,24 +815,15 @@ void zeros(real_t *A, const size_t m, const size_t n) {
 }
 
 /**
- * Malloc matrix.
- *
- * @param[in] m Number of rows
- * @param[in] n Number of cols
- * @returns Heap allocated matrix
+ * Malloc matrix of size `m x n`.
+ * @returns Heap allocated memory for the matrix.
  */
 real_t *mat_new(const size_t m, const size_t n) {
   return calloc(m * n, sizeof(real_t));
 }
 
 /**
- * Compare two matrices A and B of size m x n.
- *
- * @param[in] A First matrix
- * @param[in] B Second matrix
- * @param[in] m Number of rows
- * @param[in] n Number of cols
- *
+ * Compare two matrices `A` and `B` of size `m x n`.
  * @returns
  * - 0 if A == B
  * - 1 if A > B
@@ -963,14 +847,8 @@ int mat_cmp(const real_t *A, const real_t *B, const size_t m, const size_t n) {
 }
 
 /**
- * Check to see if two matrices A and B of size m x n are equal.
- *
- * @param[in] A First matrix
- * @param[in] B Second matrix
- * @param[in] m Number of rows
- * @param[in] n Number of cols
- * @param[in] tol Tolerance
- *
+ * Check to see if two matrices `A` and `B` of size `m x n` are equal to a
+ * tolerance.
  * @returns
  * - 0 if A == B
  * - -1 if A != B
@@ -996,13 +874,7 @@ int mat_equals(const real_t *A,
 }
 
 /**
- * Save matrix A of size m x n to save_path.
- *
- * @param[in] save_path Path to save matrix
- * @param[in] A First matrix
- * @param[in] m Number of rows
- * @param[in] n Number of cols
- *
+ * Save matrix `A` of size `m x n` to `save_path`.
  * @returns
  * - 0 Success
  * - -1 Failure
@@ -1030,12 +902,9 @@ int mat_save(const char *save_path, const real_t *A, const int m, const int n) {
 }
 
 /**
- * Load matrix from file in mat_path.
- *
- * @param[in] mat_path Path to matrix file
- * @param[out] nb_rows Number of rows
- * @param[out] nb_cols Number of cols
- * @returns Heap allocated matrix
+ * Load matrix from file in `mat_path`, on success `nb_rows` and `nb_cols` will
+ * be set respectively.
+ * @returns Loaded matrix matrix
  */
 real_t *mat_load(const char *mat_path, int *nb_rows, int *nb_cols) {
   /* Obtain number of rows and columns in csv data */
@@ -1098,13 +967,7 @@ real_t *mat_load(const char *mat_path, int *nb_rows, int *nb_cols) {
 }
 
 /**
- * Set matrix value at (i, j).
- *
- * @param[in,out] A Matrix
- * @param[in] stride
- * @param[in] i
- * @param[in] j
- * @param[in] val
+ * Set matrix `A` with value `val` at `(i, j)`.
  */
 void mat_set(real_t *A,
              const size_t stride,
@@ -1117,13 +980,7 @@ void mat_set(real_t *A,
 }
 
 /**
- * Get matrix value at (i, j).
- *
- * @param[in] A Matrix
- * @param[in] stride
- * @param[in] i
- * @param[in] j
- *
+ * Get value from matrix `A` with `stride` at `(i, j)`.
  * @returns Matrix value at (i, j)
  */
 real_t
@@ -1134,12 +991,7 @@ mat_val(const real_t *A, const size_t stride, const size_t i, const size_t j) {
 }
 
 /**
- * Copy matrix src of size m x n to dest.
- *
- * @param[in] src Source matrix
- * @param[in] m Row dimension of src
- * @param[in] n Column dimension of src
- * @param[in] dest Destination matrix
+ * Copy matrix `src` of size `m x n` to `dest`.
  */
 void mat_copy(const real_t *src, const int m, const int n, real_t *dest) {
   for (int i = 0; i < (m * n); i++) {
@@ -1148,15 +1000,9 @@ void mat_copy(const real_t *src, const int m, const int n, real_t *dest) {
 }
 
 /**
- * Get matrix sub-block in A.
- *
- * @param[in] A Input matrix
- * @param[in] stride Stride
- * @param[in] rs Row start
- * @param[in] cs Column start
- * @param[in] re Row end
- * @param[in] ce Column end
- * @param[out] block Matrix sub-block
+ * Get matrix sub-block from `A` with `stride` from row and column start `rs`
+ * and `cs`, to row and column end `re` and `ce`. The sub-block is written to
+ * `block`.
  */
 void mat_block_get(const real_t *A,
                    const size_t stride,
@@ -1178,15 +1024,8 @@ void mat_block_get(const real_t *A,
 }
 
 /**
- * Set matrix sub-block in A.
- *
- * @param[in,out] A Target matrix
- * @param[in] stride Stride
- * @param[in] rs Row start
- * @param[in] cs Column start
- * @param[in] re Row end
- * @param[in] ce Column end
- * @param[in] block Matrix sub-block
+ * Set matrix sub-block `block` to `A` with `stride` from row and column start `rs`
+ * and `cs`, to row and column end `re` and `ce`.
  */
 void mat_block_set(real_t *A,
                    const size_t stride,
@@ -1208,12 +1047,7 @@ void mat_block_set(real_t *A,
 }
 
 /**
- * Get diagonal vector from matrix A.
- *
- * @param[in] A Target matrix
- * @param[in] m Row dimension of matrix A
- * @param[in] n Column dimension of matrix A
- * @param[out] d Return diagonal vector of A
+ * Get diagonal vector `d` from matrix `A` of size `m x n`.
  */
 void mat_diag_get(const real_t *A, const int m, const int n, real_t *d) {
   int mat_index = 0;
@@ -1231,12 +1065,7 @@ void mat_diag_get(const real_t *A, const int m, const int n, real_t *d) {
 }
 
 /**
- * Set the diagonal of matrix A.
- *
- * @param[in,out] A Target matrix
- * @param[in] m Row dimension of matrix A
- * @param[in] n Column dimension of matrix A
- * @param[in] d Diagonal vector
+ * Set the diagonal of matrix `A` of size `m x n` with vector `d`.
  */
 void mat_diag_set(real_t *A, const int m, const int n, const real_t *d) {
   int mat_index = 0;
@@ -1256,42 +1085,31 @@ void mat_diag_set(real_t *A, const int m, const int n, const real_t *d) {
 }
 
 /**
- * Get upper triangular matrix of A.
- *
- * @param[in] A Target matrix
- * @param[in] n Column dimension of matrix A
- * @param[out] U Upper triangular matrix of A
+ * Get upper triangular square matrix of `A` of size `m x m`, results are
+ * outputted to `U`.
  */
-void mat_triu(const real_t *A, const size_t n, real_t *U) {
-  for (size_t i = 0; i < n; i++) {
-    for (size_t j = 0; j < n; j++) {
-      U[i * n + j] = (j >= i) ? A[i * n + j] : 0.0;
+void mat_triu(const real_t *A, const size_t m, real_t *U) {
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < m; j++) {
+      U[i * m + j] = (j >= i) ? A[i * m + j] : 0.0;
     }
   }
 }
 
 /**
- * Get lower triangular matrix of A.
- *
- * @param[in] A Target matrix
- * @param[in] n Column dimension of matrix A
- * @param[out] L Lower triangular matrix of A
+ * Get lower triangular square matrix of `A` of size `m x m`, results are
+ * outputted to `L`.
  */
-void mat_tril(const real_t *A, const size_t n, real_t *L) {
-  for (size_t i = 0; i < n; i++) {
-    for (size_t j = 0; j < n; j++) {
-      L[i * n + j] = (j <= i) ? A[i * n + j] : 0.0;
+void mat_tril(const real_t *A, const size_t m, real_t *L) {
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = 0; j < m; j++) {
+      L[i * m + j] = (j <= i) ? A[i * m + j] : 0.0;
     }
   }
 }
 
 /**
- * Get the trace matrix of A.
- *
- * @param[in] A Target matrix
- * @param[in] m Row dimension of matrix A
- * @param[in] n Column dimension of matrix A
- *
+ * Get the trace matrix of `A` of size `m x n`.
  * @returns Trace of matrix A
  */
 real_t mat_trace(const real_t *A, const size_t m, const size_t n) {
@@ -1305,12 +1123,7 @@ real_t mat_trace(const real_t *A, const size_t m, const size_t n) {
 }
 
 /**
- * Transpose of matrix A.
- *
- * @param[in] A Target matrix
- * @param[in] m Row dimension of matrix A
- * @param[in] n Column dimension of matrix A
- * @param[out] A_t Transpose of matrix A
+ * Transpose of matrix `A` of size `m x n`, results are outputted to `A_t`.
  */
 void mat_transpose(const real_t *A, size_t m, size_t n, real_t *A_t) {
   assert(A != NULL && A != A_t);
@@ -1324,15 +1137,9 @@ void mat_transpose(const real_t *A, size_t m, size_t n, real_t *A_t) {
 }
 
 /**
- * Sum two matrices A and B.
+ * Add two matrices `A` and `B` of size `m x n`, results are outputted to `C`.
  *
- *    C = A + B
- *
- * @param[in] A First matrix
- * @param[in] B Second matrix
- * @param[out] C Result matrix
- * @param[in] m Row dimension of matrix A
- * @param[in] n Column dimension of matrix A
+ *     C = A + B
  */
 void mat_add(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
   assert(A != NULL && B != NULL && C != NULL && B != C && A != C);
@@ -1344,15 +1151,11 @@ void mat_add(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
 }
 
 /**
- * Subtract two matrices A and B.
+ * Subtract two matrices `A` and `B` of size `m x n`, results are outputted to
+ * matrix `C`.
  *
- *    C = A - B
+ *     C = A - B
  *
- * @param[in] A First matrix
- * @param[in] B Second matrix
- * @param[out] C Result matrix
- * @param[in] m Row dimension of matrix A
- * @param[in] n Column dimension of matrix A
  */
 void mat_sub(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
   assert(A != NULL && B != NULL && C != NULL && B != C && A != C);
@@ -1364,14 +1167,10 @@ void mat_sub(const real_t *A, const real_t *B, real_t *C, size_t m, size_t n) {
 }
 
 /**
- * Scale matrix A inplace with a scale factor.
+ * Scale matrix `A` of size `m x n` inplace with `scale`.
  *
  *     A_new = scale * A
  *
- * @param[in,out] A Target matrix
- * @param[in] m Row dimension of matrix A
- * @param[in] n Column dimension of matrix A
- * @param[in] scale Scale scalar
  */
 void mat_scale(real_t *A, const size_t m, const size_t n, const real_t scale) {
   assert(A != NULL);
@@ -1383,19 +1182,13 @@ void mat_scale(real_t *A, const size_t m, const size_t n, const real_t scale) {
 }
 
 /**
- * Create new vector in heap memory.
- *
- * @param[in] length Length of vector
+ * Create new vector of `length` in heap memory.
  * @returns Heap allocated vector
  */
 real_t *vec_new(const size_t length) { return calloc(length, sizeof(real_t)); }
 
 /**
- * Copy vector.
- *
- * @param[in] src Source vector
- * @param[in] length Length of source vector
- * @param[out] dest Destination vector
+ * Copy vector `src` of `length` to `dest`.
  */
 void vec_copy(const real_t *src, const size_t length, real_t *dest) {
   for (size_t i = 0; i < length; i++) {
@@ -1404,15 +1197,10 @@ void vec_copy(const real_t *src, const size_t length, real_t *dest) {
 }
 
 /**
- * Check if vectors x and y are equal.
- *
- * @param[in] x First vector
- * @param[in] y Second vector
- * @param[in] length Length of source vector
- *
+ * Check if vectors `x` and `y` of `length` are equal.
  * @returns
- * - 1 for x == 1
- * - 0 for x != 1
+ * - 1 for x == y
+ * - 0 for x != y
  */
 int vec_equals(const real_t *x, const real_t *y, const size_t length) {
   for (size_t i = 0; i < length; i++) {
@@ -1425,12 +1213,7 @@ int vec_equals(const real_t *x, const real_t *y, const size_t length) {
 }
 
 /**
- * Sum two vectors.
- *
- * @param[in] x First vector
- * @param[in] y Second vector
- * @param[out] z Result vector
- * @param[in] length Length of vector x and y
+ * Sum two vectors `x` and `y` of `length` to `z`.
  */
 void vec_add(const real_t *x, const real_t *y, real_t *z, size_t length) {
   assert(x != NULL && y != NULL && z != NULL && x != y && x != z);
@@ -1442,12 +1225,7 @@ void vec_add(const real_t *x, const real_t *y, real_t *z, size_t length) {
 }
 
 /**
- * Subtract two vectors.
- *
- * @param[in] x First vector
- * @param[in] y Second vector
- * @param[out] z Result vector
- * @param[in] length Length of vector x and y
+ * Subtract two vectors `x` and `y` of `length` to `z`.
  */
 void vec_sub(const real_t *x, const real_t *y, real_t *z, size_t length) {
   assert(x != NULL && y != NULL && z != NULL && x != y && x != z);
@@ -1459,11 +1237,7 @@ void vec_sub(const real_t *x, const real_t *y, real_t *z, size_t length) {
 }
 
 /**
- * Scale a vector in-place.
- *
- * @param[in,out] x Vector
- * @param[in] length Length of vector x
- * @param[in] scale Scale factor
+ * Scale a vector `x` of `length` with `scale` in-place.
  */
 void vec_scale(real_t *x, const size_t length, const real_t scale) {
   for (size_t i = 0; i < length; i++) {
@@ -1472,10 +1246,7 @@ void vec_scale(real_t *x, const size_t length, const real_t scale) {
 }
 
 /**
- * Vector norm.
- *
- * @param[in] x Vector
- * @param[in] length Length of vector x
+ * Calculate vector norm of `x` of size `length`.
  * @returns Norm of vector x
  */
 real_t vec_norm(const real_t *x, const size_t length) {
@@ -1487,15 +1258,8 @@ real_t vec_norm(const real_t *x, const size_t length) {
 }
 
 /**
- * Dot product of A and B
- *
- * @param[in] A Matrix / vector
- * @param[in] A_m Row dimension of A
- * @param[in] A_n Column dimension of A
- * @param[in] B Matrix / vector
- * @param[in] B_m Row dimension of B
- * @param[in] B_n Column dimension of B
- * @param[out] C Result
+ * Dot product of two matrices or vectors `A` and `B` of size `A_m x A_n` and
+ * `B_m x B_n`. Results are written to `C`.
  */
 void dot(const real_t *A,
          const size_t A_m,
@@ -1521,10 +1285,7 @@ void dot(const real_t *A,
 }
 
 /**
- * Create skew-symmetric matrix.
- *
- * @param[in] x Vector of size 3
- * @param[out] A 3x3 Skew symmetric matrix
+ * Create skew-symmetric matrix `A` from a 3x1 vector `x`.
  */
 void skew(const real_t x[3], real_t A[3 * 3]) {
   /* First row */
@@ -1544,12 +1305,8 @@ void skew(const real_t x[3], real_t A[3 * 3]) {
 }
 
 /**
- * Forward substitution.
- *
- * @param[in] L Lower triangular matrix
- * @param[in] b Vector b
- * @param[out] y Vector y
- * @param[in] n Number of columns in L
+ * Perform forward substitution with a lower triangular matrix `L`, column
+ * vector `b` and solve for vector `y` of size `n`.
  */
 void fwdsubs(const real_t *L, const real_t *b, real_t *y, const size_t n) {
   for (size_t i = 0; i < n; i++) {
@@ -1562,12 +1319,8 @@ void fwdsubs(const real_t *L, const real_t *b, real_t *y, const size_t n) {
 }
 
 /**
- * Backward substitution.
- *
- * @param[in] U Upper triangular matrix
- * @param[in] y Vector y
- * @param[out] x Vector x
- * @param[in] n Number of columns in U
+ * Perform backward substitution with a upper triangular matrix `U`, column
+ * vector `y` and solve for vector `x` of size `n`.
  */
 void bwdsubs(const real_t *U, const real_t *y, real_t *x, const size_t n) {
   for (int i = n - 1; i >= 0; i--) {
@@ -1580,15 +1333,15 @@ void bwdsubs(const real_t *U, const real_t *y, real_t *x, const size_t n) {
 }
 
 /**
- * Check jacobian.
+ * Check analytical jacobian `jac` with name `jac_name` and compare it with a
+ * numerically differentiated jacobian `fdiff` (finite diff). Where both
+ * matrices are of size `m x n`, `tol` denotes the tolerance to consider both
+ * `jac` and `fdiff` to be close enough. For debugging purposes use `verbose`
+ * to show the matrices and differences.
  *
- * @param[in] jac_name Jacobian name
- * @param[in] fdiff Finite difference
- * @param[in] jac Jacobian
- * @param[in] m Row dimension of Jacobian
- * @param[in] n Column dimension of Jacobian
- * @param[in] tol Tolerance
- * @param[in] verbose Verbose mode
+ * @returns
+ * - 0 for success
+ * - -1 for failure
  */
 int check_jacobian(const char *jac_name,
                    const real_t *fdiff,
@@ -1632,15 +1385,8 @@ int check_jacobian(const char *jac_name,
 
 #ifdef USE_CBLAS
 /**
- * Dot product of A and B using CBLAS
- *
- * @param[in] A Matrix / vector
- * @param[in] A_m Row dimension of A
- * @param[in] A_n Column dimension of A
- * @param[in] B Matrix / vector
- * @param[in] B_m Row dimension of B
- * @param[in] B_n Column dimension of B
- * @param[out] C Result
+ * Dot product of two matrices or vectors `A` and `B` of size `A_m x A_n` and
+ * `B_m x B_n` using CBLAS. Results are written to `C`.
  */
 void cblas_dot(const real_t *A,
                const size_t A_m,
@@ -1690,61 +1436,28 @@ void cblas_dot(const real_t *A,
 
 
 /******************************************************************************
- *                                  SVD
+ * SVD
  ******************************************************************************/
-
-/* int svd(real_t *A, int m, int n, real_t *U, real_t *s, real_t *V_t) { */
-/*   const int lda = n; */
-/*   const int ldu = m; */
-/*   const int ldvt = n; */
-/*   const char jobu = 'A'; */
-/*   const char jobvt = 'A'; */
-/*   const int superb_size = (m < n) ? m : n; */
-/*   real_t *superb = malloc(sizeof(real_t) * (superb_size - 1)); */
-/*   int retval = LAPACKE_dgesvd(LAPACK_ROW_MAJOR, */
-/*                               jobu, */
-/*                               jobvt, */
-/*                               m, */
-/*                               n, */
-/*                               A, */
-/*                               lda, */
-/*                               s, */
-/*                               U, */
-/*                               ldu, */
-/*                               V_t, */
-/*                               ldvt, */
-/*                               superb); */
-/*   if (retval > 0) { */
-/*     return -1; */
-/*   } */
-/*  */
-/*   #<{(| Clean up |)}># */
-/*   free(superb); */
-/*  */
-/*   return 0; */
-/* } */
 
 /**
  * SVD decomposition
 
- * Takes an m x n matrix a and decomposes it into UDV, where U, V are left and
- * right orthogonal transformation matrices, and D is a diagonal matrix of
- * singular values.
+ * Takes a `m x n` matrix `A` and decomposes it into `UDV`, where `U`, `V` are
+ * left and right orthogonal transformation matrices, and `D` is a diagonal
+ * matrix of singular values.
  *
- * This routine is adapted from svdecomp.c in XLISP-STAT 2.1 which is
- * code from Numerical Recipes adapted by Luke Tierney and David Betz.
+ * The input matrix `A` to be decomposed, gets overwritten with `U`. Where `w`
+ * is the singular values of `A` and `V` is the right orthogonal transformation
+ * matrix.
  *
- * @param[in,out] A An mxn matrix to be decomposed, gets overwritten with U
- * @param[in] m Row dimension of A
- * @param[in] n Column dimension of A
- * @param[out] w Returns the vector of singular values of a
- * @param[out] V Returns the right orthogonal transformation matrix
+ * This routine is adapted from svdecomp.c in XLISP-STAT 2.1 which is code from
+ * Numerical Recipes adapted by Luke Tierney and David Betz.
  *
  * @returns
  * - 0 for success
  * - -1 for failure
  */
-int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V) {
+int svd(real_t *A, const int m, const int n, real_t *w, real_t *V) {
   /* assert(m < n); */
   int flag, i, its, j, jj, k, l, nm;
   real_t c, f, h, s, x, y, z;
@@ -1769,7 +1482,7 @@ int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V) {
         }
 
         f = A[i * n + i];
-        g = -SIGN(sqrt(s), f);
+        g = -SIGN2(sqrt(s), f);
         h = f * g - s;
         A[i * n + i] = (f - g);
 
@@ -1806,7 +1519,7 @@ int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V) {
         }
 
         f = A[i * n + l];
-        g = -SIGN(sqrt(s), f);
+        g = -SIGN2(sqrt(s), f);
         h = f * g - s;
         A[i * n + l] = (f - g);
 
@@ -1948,7 +1661,7 @@ int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V) {
       h = rv1[k];
       f = ((y - z) * (y + z) + (g - h) * (g + h)) / (2.0 * h * y);
       g = pythag(f, 1.0);
-      f = ((x - z) * (x + z) + h * ((y / (f + SIGN(g, f))) - h)) / x;
+      f = ((x - z) * (x + z) + h * ((y / (f + SIGN2(g, f))) - h)) / x;
 
       /* next QR transformation */
       c = s = 1.0;
@@ -1998,98 +1711,44 @@ int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V) {
   return 0;
 }
 
-/* int pinv(real_t *A, const int m, const int n, real_t *A_inv) { */
-/*   #<{(| Decompose A with SVD |)}># */
-/*   real_t *U = malloc(sizeof(real_t) * m * n); */
-/*   real_t *d = malloc(sizeof(real_t) * n); */
-/*   real_t *V_t = malloc(sizeof(real_t) * n * n); */
-/*   if (svd(A, m, n, U, d, V_t) != 0) { */
-/*     return -1; */
-/*   } */
-/*  */
-/*   #<{(| Form reciprocal singular matrix S_inv from singular vector d |)}># */
-/*   real_t *S_inv = malloc(sizeof(real_t) * n * n); */
-/*   zeros(S_inv, n, n); */
-/*   int mat_index = 0; */
-/*   int vec_index = 0; */
-/*   for (int i = 0; i < n; i++) { */
-/*     for (int j = 0; j < n; j++) { */
-/*       if (i == j) { */
-/*         S_inv[mat_index] = 1.0 / d[vec_index]; */
-/*         vec_index++; */
-/*       } */
-/*       mat_index++; */
-/*     } */
-/*   } */
-/*  */
-/*   #<{(| pinv(H) = V S^-1 U' |)}># */
-/*   real_t *V = malloc(sizeof(real_t) * n * n); */
-/*   mat_transpose(V_t, n, n, V); */
-/*  */
-/*   real_t *U_t = malloc(sizeof(real_t) * n * n); */
-/*   mat_transpose(U, n, n, U_t); */
-/*  */
-/*   real_t *VSi = malloc(sizeof(real_t) * n * n); */
-/*   dot(V, n, n, S_inv, n, n, VSi); */
-/*   dot(VSi, n, n, U_t, n, n, A_inv); */
-/*  */
-/*   #<{(| Clean up |)}># */
-/*   free(U); */
-/*   free(U_t); */
-/*   free(d); */
-/*   free(S_inv); */
-/*   free(V); */
-/*   free(V_t); */
-/*   free(VSi); */
-/*  */
-/*   return 0; */
-/* } */
-
-
 /******************************************************************************
- *                                  CHOL
+ * CHOL
  ******************************************************************************/
 
 /**
- * Cholesky decomposition.
- *
- * @param[in] A Square matrix of size n x n
- * @param[in] n Column dimension of A
- * @param[out] L Returns lower trianguloar matrix of A
+ * Cholesky decomposition. Takes a `m x m` matrix `A` and decomposes it into a
+ * lower and upper triangular matrix `L` and `U` with Cholesky decomposition.
+ * This function only returns the `L` triangular matrix.
  */
-void chol(const real_t *A, const size_t n, real_t *L) {
+void chol(const real_t *A, const size_t m, real_t *L) {
   assert(A != NULL);
-  assert(n > 0);
-  /* real_t *L = calloc(n * n, sizeof(real_t)); */
+  assert(m > 0);
+  /* real_t *L = calloc(m * m, sizeof(real_t)); */
 
-  for (size_t i = 0; i < n; i++) {
+  for (size_t i = 0; i < m; i++) {
     for (size_t j = 0; j < (i + 1); j++) {
 
       if (i == j) {
         real_t s = 0.0;
         for (size_t k = 0; k < j; k++) {
-          s += L[j * n + k] * L[j * n + k];
+          s += L[j * m + k] * L[j * m + k];
         }
-        L[i * n + j] = sqrt(A[i * n + i] - s);
+        L[i * m + j] = sqrt(A[i * m + i] - s);
 
       } else {
         real_t s = 0.0;
         for (size_t k = 0; k < j; k++) {
-          s += L[i * n + k] * L[j * n + k];
+          s += L[i * m + k] * L[j * m + k];
         }
-        L[i * n + j] = (1.0 / L[j * n + j] * (A[i * n + j] - s));
+        L[i * m + j] = (1.0 / L[j * m + j] * (A[i * m + j] - s));
       }
     }
   }
 }
 
 /**
- * Solve Ax = b using Cholesky decomposition.
- *
- * @param[in] A Square matrix of size n x n
- * @param[in] b Vector of length n
- * @param[out] x Solution vector of length n
- * @param[in] n Column dimension of A
+ * Solve `Ax = b` using Cholesky decomposition, where `A` is a square matrix,
+ * `b` is a vector and `x` is the solution vector of size `n`.
  */
 void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n) {
   /* Allocate memory */
@@ -2142,12 +1801,9 @@ void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n) {
 
 #ifdef USE_LAPACK
 /**
- * Solve Ax = b using Cholesky decomposition.
- *
- * @param[in] A Square matrix of size n x n
- * @param[in] b Vector of length n
- * @param[out] x Solution vector of length n
- * @param[in] n Column dimension of A
+ * Solve Ax = b using LAPACK's implementation of Cholesky decomposition, where
+ * `A` is a square matrix, `b` is a vector and `x` is the solution vector of
+ * size `n`.
  */
 void lapack_chol_solve(const real_t *A,
                        const real_t *b,
@@ -2187,14 +1843,15 @@ void lapack_chol_solve(const real_t *A,
 #endif
 
 /******************************************************************************
- *                               TRANSFORMS
+ * TRANSFORMS
  ******************************************************************************/
 
 /**
- * Form 4x4 homogeneous transformation matrix.
+ * Form 4x4 homogeneous transformation matrix `T` from a 7x1 pose vector
+ * `params`.
  *
- * @param[in] params Pose parameters ([qw, qx, qy, qz] + [rx, ry, rz])
- * @param[out] T 4x4 Transformation matrix
+ *    pose = ([qw, qx, qy, qz] + [rx, ry, rz])
+ *
  */
 void tf(const real_t params[7], real_t T[4 * 4]) {
   assert(params != NULL);
@@ -2228,10 +1885,8 @@ void tf(const real_t params[7], real_t T[4 * 4]) {
 }
 
 /**
- * Form pose parameter vector from 4x4 homogeneous transformation matrix.
- *
- * @param[in] T 4x4 Transformation matrix
- * @param[out] params Pose parameters ([qw, qx, qy, qz] + [rx, ry, rz])
+ * Form 7x1 pose parameter vector `params` from 4x4 homogeneous transformation
+ * matrix `T`.
  */
 void tf_params(const real_t T[4 * 4], real_t params[7]) {
   real_t C[3 * 3] = {0};
@@ -2254,10 +1909,8 @@ void tf_params(const real_t T[4 * 4], real_t params[7]) {
 }
 
 /**
- * Set the rotational component in the 4x4 transformation matrix.
- *
- * @param[in,out] T 4x4 Transformation matrix
- * @param[in] C 3x3 Rotation matrix
+ * Set the rotational component in the 4x4 transformation matrix `T` using a
+ * 3x3 rotation matrix `C`.
  */
 void tf_rot_set(real_t T[4 * 4], const real_t C[3 * 3]) {
   assert(T != NULL);
@@ -2278,10 +1931,8 @@ void tf_rot_set(real_t T[4 * 4], const real_t C[3 * 3]) {
 }
 
 /**
- * Set the translational component in the 4x4 transformation matrix.
- *
- * @param[in,out] T 4x4 Transformation matrix
- * @param[in] r 3x1 Translation vector
+ * Set the translational component in the 4x4 transformation matrix `T` using a
+ * 3x1 translation vector `r`.
  */
 void tf_trans_set(real_t T[4 * 4], const real_t r[3]) {
   assert(T != NULL);
@@ -2294,10 +1945,7 @@ void tf_trans_set(real_t T[4 * 4], const real_t r[3]) {
 }
 
 /**
- * Get the translational component in the 4x4 transformation matrix.
- *
- * @param[in] T 4x4 Transformation matrix
- * @param[out] r 3x1 Translation vector
+ * Get the translational vector `r` from the 4x4 transformation matrix `T`.
  */
 void tf_trans_get(const real_t T[4 * 4], real_t r[3]) {
   assert(T != NULL);
@@ -2310,10 +1958,7 @@ void tf_trans_get(const real_t T[4 * 4], real_t r[3]) {
 }
 
 /**
- * Get the rotational component in the 4x4 transformation matrix.
- *
- * @param[in] T 4x4 Transformation matrix
- * @param[out] C 3x3 Rotation matrix
+ * Get the rotation matrix `C` from the 4x4 transformation matrix `T`.
  */
 void tf_rot_get(const real_t T[4 * 4], real_t C[3 * 3]) {
   assert(T != NULL);
@@ -2334,10 +1979,7 @@ void tf_rot_get(const real_t T[4 * 4], real_t C[3 * 3]) {
 }
 
 /**
- * Get the quaternion from the 4x4 transformation matrix.
- *
- * @param[in] T 4x4 Transformation matrix
- * @param[out] q Quaternion
+ * Get the quaternion `q` from the 4x4 transformation matrix `T`.
  */
 void tf_quat_get(const real_t T[4 * 4], real_t q[4]) {
   assert(T != NULL);
@@ -2350,10 +1992,8 @@ void tf_quat_get(const real_t T[4 * 4], real_t q[4]) {
 }
 
 /**
- * Invert the 4x4 homogeneous transformation matrix.
- *
- * @param[in] T 4x4 Transformation matrix
- * @param[out] T_inv Inverted 4x4 Transformation matrix
+ * Invert the 4x4 homogeneous transformation matrix `T` where results are
+ * written to `T_inv`.
  */
 void tf_inv(const real_t T[4 * 4], real_t T_inv[4 * 4]) {
   assert(T != NULL);
@@ -2384,11 +2024,8 @@ void tf_inv(const real_t T[4 * 4], real_t T_inv[4 * 4]) {
 }
 
 /**
- * Transform point using 4x4 homogeneous transformation matrix.
- *
- * @param[in] T 4x4 Transformation matrix
- * @param[in] p 3x1 Point vector
- * @param[out] retval Transformed point
+ * Transform 3x1 point `p` using 4x4 homogeneous transformation matrix `T` and
+ * output to 3x1 `retval`.
  */
 void tf_point(const real_t T[4 * 4], const real_t p[3], real_t retval[3]) {
   assert(T != NULL);
@@ -2406,11 +2043,8 @@ void tf_point(const real_t T[4 * 4], const real_t p[3], real_t retval[3]) {
 }
 
 /**
- * Transform homogeneous point using 4x4 homogeneous transformation matrix.
- *
- * @param[in] T 4x4 Transformation matrix
- * @param[in] hp 4x1 Homogeneous point vector
- * @param[out] retval Transformed homogeneous point
+ * Transform 4x1 homogeneous point `hp` using 4x4 homogeneous transformation
+ * matrix `T` and output to 4x1 `retval`.
  */
 void tf_hpoint(const real_t T[4 * 4], const real_t hp[4], real_t retval[4]) {
   assert(T != NULL);
@@ -2419,13 +2053,12 @@ void tf_hpoint(const real_t T[4 * 4], const real_t hp[4], real_t retval[4]) {
 }
 
 /**
- * Perturb the rotational component of a 4x4 homogeneous transformation matrix.
- *
- * @param[in,out] T 4x4 transformation matrix
- * @param[in] step_size Step size
- * @param[in] i i-th parameter
+ * Perturb the `i`-th rotational component of a 4x4 homogeneous transformation matrix
+ * `T` with `step_size`.
  */
 void tf_perturb_rot(real_t T[4 * 4], const real_t step_size, const int i) {
+  assert(i >= 0 && i <= 2);
+
   /* Build perturb drvec */
   real_t drvec[3] = {0};
   drvec[i] = step_size;
@@ -2443,13 +2076,12 @@ void tf_perturb_rot(real_t T[4 * 4], const real_t step_size, const int i) {
 }
 
 /**
- * Perturb the translation component of a 4x4 homogeneous transformation matrix.
- *
- * @param[in,out] T 4x4 transformation matrix
- * @param[in] step_size Step size
- * @param[in] i i-th parameter
+ * Perturb the `i`-th translation component of a 4x4 homogeneous transformation
+ * matrix with `step_size`.
  */
 void tf_perturb_trans(real_t T[4 * 4], const real_t step_size, const int i) {
+  assert(i >= 0 && i <= 2);
+
   /* Build perturb dr */
   real_t dr[3] = {0};
   dr[i] = step_size;
@@ -2464,11 +2096,8 @@ void tf_perturb_trans(real_t T[4 * 4], const real_t step_size, const int i) {
 }
 
 /**
- * Convert rotation vector to 3x3 rotation matrix.
- *
- * @param[in] rvec Rotation vector
- * @param[in] eps Epsilon
- * @param[out] R 3x3 Rotation matrix
+ * Convert rotation vector `rvec` to 3x3 rotation matrix `R`, where `eps` is
+ * the tolerance to determine if the rotation is too small.
  */
 void rvec2rot(const real_t *rvec, const real_t eps, real_t *R) {
   /* Magnitude of rvec */
@@ -2527,10 +2156,8 @@ void rvec2rot(const real_t *rvec, const real_t eps, real_t *R) {
 }
 
 /**
- * Convert Euler angles to 3x3 rotation matrix.
- *
- * @param[in] euler Euler angles in radians
- * @param[out] C 3x3 Rotation matrix
+ * Convert Euler angles represented as a 3x1 vector `euler` to 3x3 rotation
+ * matrix `C`.
  */
 void euler321(const real_t euler[3], real_t C[3 * 3]) {
   assert(euler != NULL);
@@ -2555,10 +2182,7 @@ void euler321(const real_t euler[3], real_t C[3 * 3]) {
 }
 
 /**
- * Convert 3x3 rotation matrix to Quaternion.
- *
- * @param[in] C 3x3 Rotation matrix
- * @param[out] q Quaternion
+ * Convert 3x3 rotation matrix `C` to Quaternion `q`.
  */
 void rot2quat(const real_t C[3 * 3], real_t q[4]) {
   assert(C != NULL);
@@ -2614,10 +2238,7 @@ void rot2quat(const real_t C[3 * 3], real_t q[4]) {
 }
 
 /**
- * Convert Quaternion to Euler angles.
- *
- * @param[in] q Quaternion
- * @param[out] euler Euler angles in radians
+ * Convert Quaternion `q` to Euler angles 3x1 vector `euler`.
  */
 void quat2euler(const real_t q[4], real_t euler[3]) {
   assert(q != NULL);
@@ -2643,10 +2264,7 @@ void quat2euler(const real_t q[4], real_t euler[3]) {
 }
 
 /**
- * Convert Quaternion to 3x3 rotation matrix.
- *
- * @param[in] q Quaternion
- * @param[out] C 3x3 Rotation matrix.
+ * Convert Quaternion `q` to 3x3 rotation matrix `C`.
  */
 void quat2rot(const real_t q[4], real_t C[3 * 3]) {
   assert(q != NULL);
@@ -2678,11 +2296,7 @@ void quat2rot(const real_t q[4], real_t C[3 * 3]) {
 }
 
 /**
- * Quaternion left-multiply.
- *
- * @param[in] p First quaternion
- * @param[in] q Second quaternion
- * @param[out] r Result
+ * Quaternion left-multiply `p` with `q`, results are outputted to `r`.
  */
 void quat_lmul(const real_t p[4], const real_t q[4], real_t r[4]) {
   assert(p != NULL && q != NULL && r != NULL);
@@ -2706,11 +2320,7 @@ void quat_lmul(const real_t p[4], const real_t q[4], real_t r[4]) {
 }
 
 /**
- * Quaternion right-multiply.
- *
- * @param[in] p First quaternion
- * @param[in] q Second quaternion
- * @param[out] r Result
+ * Quaternion right-multiply `p` with `q`, results are outputted to `r`.
  */
 void quat_rmul(const real_t p[4], const real_t q[4], real_t r[4]) {
   assert(p != NULL && q != NULL && r != NULL);
@@ -2734,11 +2344,7 @@ void quat_rmul(const real_t p[4], const real_t q[4], real_t r[4]) {
 }
 
 /**
- * Quaternion multiply.
- *
- * @param[in] p First quaternion
- * @param[in] q Second quaternion
- * @param[out] r Result
+ * Quaternion multiply `p` with `q`, results are outputted to `r`.
  */
 void quat_mul(const real_t p[4], const real_t q[4], real_t r[4]) {
   assert(p != NULL && q != NULL && r != NULL);
@@ -2747,10 +2353,7 @@ void quat_mul(const real_t p[4], const real_t q[4], real_t r[4]) {
 }
 
 /**
- * Form delta quaternion from a small rotation vector.
- *
- * @param[in] dalpha Delta alpha
- * @param[out] dq Delta Quaternion
+ * Form delta quaternion `dq` from a small rotation vector `dalpha`.
  */
 void quat_delta(const real_t dalpha[3], real_t dq[4]) {
   const real_t half_norm = 0.5 * vec_norm(dalpha, 3);
@@ -2764,9 +2367,8 @@ void quat_delta(const real_t dalpha[3], real_t dq[4]) {
   dq[3] = vector[2];
 }
 
-
 /*****************************************************************************
- *                                  IMAGE
+ * IMAGE
  *****************************************************************************/
 
 /**
@@ -2834,10 +2436,10 @@ void image_free(image_t *img) {
 }
 
 /*****************************************************************************
- *                                  CV
+ * CV
  *****************************************************************************/
 
-/********************************* RADTAN ************************************/
+/* RADTAN --------------------------------------------------------------------*/
 
 /**
  * Distort point using Radial-Tangential distortion.
@@ -2946,7 +2548,7 @@ void radtan4_params_jacobian(const real_t params[4],
   J_param[7] = 2 * xy;
 }
 
-/********************************** EQUI *************************************/
+/* EQUI ----------------------------------------------------------------------*/
 
 /**
  * Distort point using Equi-Distant distortion.
@@ -3056,7 +2658,7 @@ void equi4_params_jacobian(const real_t params[4],
   J_param[7] = y * th9 / r;
 }
 
-/******************************** PINHOLE ************************************/
+/* PINHOLE -------------------------------------------------------------------*/
 
 /**
  * Estimate pinhole focal length.
@@ -3130,7 +2732,7 @@ void pinhole_params_jacobian(const real_t params[4],
   J[7] = 1.0;
 }
 
-/***************************** PINHOLE-RADTAN4 ********************************/
+/* PINHOLE-RADTAN4 -----------------------------------------------------------*/
 
 /**
  * Projection of 3D point to image plane using Pinhole + Radial-Tangential.
@@ -3258,11 +2860,9 @@ void pinhole_radtan4_params_jacobian(const real_t params[8],
   J[9] = J_proj_params[5];
   J[10] = J_proj_params[6];
   J[11] = J_proj_params[7];
-
-
 }
 
-/****************************** PINHOLE-EQUI4 *********************************/
+/* PINHOLE-EQUI4 -------------------------------------------------------------*/
 
 /**
  * Projection of 3D point to image plane using Pinhole + Equi-Distant.
@@ -3337,7 +2937,7 @@ void pinhole_equi4_project_jacobian(const real_t params[8],
 }
 
 /******************************************************************************
- *                              SENSOR FUSION
+ * SENSOR FUSION
  ******************************************************************************/
 
 /* POSE --------------------------------------------------------------------- */

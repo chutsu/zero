@@ -1,22 +1,6 @@
 #ifndef ZERO_H
 #define ZERO_H
 
-/**
- * @defgroup macros Macros
- * @defgroup logging Logging
- * @defgroup fs Filesystem
- * @defgroup data Data
- * @defgroup time Time
- * @defgroup maths Maths
- * @defgroup lm Linear Algebra
- * @defgroup svd SVD
- * @defgroup chol Cholesky
- * @defgroup tf Transforms
- * @defgroup image Image
- * @defgroup cv Computer Vision
- * @defgroup sf Sensor Fusion
- */
-
 #define PRECISION 1
 #define MAX_LINE_LENGTH 9046
 #define USE_CBLAS
@@ -43,13 +27,8 @@
 #endif
 
 /******************************************************************************
- *                                MACROS
+ * MACROS
  ******************************************************************************/
-
-/**
- * @ingroup macros
- * @{
- */
 
 /**
  * Mark variable unused.
@@ -76,16 +55,9 @@
     goto error;                                                                \
   }
 
-/* @} */ /* ingroup macros */
-
 /******************************************************************************
- *                                LOGGING
+ * LOGGING
  ******************************************************************************/
-
-/**
- * @ingroup logging
- * @{
- */
 
 #define KRED "\x1B[1;31m" ///< Console color red
 #define KGRN "\x1B[1;32m" ///< Console color green
@@ -96,7 +68,7 @@
 #define KWHT "\x1B[1;37m" ///< Console color white
 #define KNRM "\x1B[1;0m"  ///< Reset console color
 
-/// Macro function that returns the caller's filename
+/** Macro function that returns the caller's filename */
 #define __FILENAME__                                                           \
   (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
@@ -131,9 +103,9 @@
  * @param[in] M Message
  * @param[in] ... Varadic arguments
  */
-#define LOG_INFO(M, ...)																											 \
+#define LOG_INFO(M, ...)                                                       \
   fprintf(stderr,                                                              \
-          "[INFO] [%s:%d] " M "\n",																					   \
+          "[INFO] [%s:%d] " M "\n",                                            \
           __FILENAME__,                                                        \
           __LINE__,                                                            \
           ##__VA_ARGS__)
@@ -146,7 +118,7 @@
  */
 #define LOG_WARN(M, ...)                                                       \
   fprintf(stderr,                                                              \
-          KYEL "[WARN] [%s:%d] " M KNRM "\n",																   \
+          KYEL "[WARN] [%s:%d] " M KNRM "\n",                                  \
           __FILENAME__,                                                        \
           __LINE__,                                                            \
           ##__VA_ARGS__)
@@ -165,16 +137,9 @@
           ##__VA_ARGS__);                                                      \
   exit(-1)
 
-/* @} */ /* ingroup logging */
-
 /******************************************************************************
- *                               FILESYSTEM
+ * FILESYSTEM
  ******************************************************************************/
-
-/**
- * @ingroup fs
- * @{
- */
 
 char **list_files(const char *path, int *nb_files);
 void list_files_free(char **data, const int n);
@@ -183,16 +148,9 @@ void skip_line(FILE *fp);
 int file_rows(const char *fp);
 int file_copy(const char *src, const char *dest);
 
-/* @} */ /* ingroup fs */
-
 /******************************************************************************
- *                                   DATA
+ * DATA
  ******************************************************************************/
-
-/**
- * @ingroup data
- * @{
- */
 
 #if PRECISION == 1
 typedef float real_t;
@@ -212,17 +170,11 @@ int **load_iarrays(const char *csv_path, int *nb_arrays);
 real_t **load_darrays(const char *csv_path, int *nb_arrays);
 real_t *load_vector(const char *file_path);
 
-/* @} */ /* ingroup data */
-
 /******************************************************************************
- *                                  TIME
+ * TIME
  ******************************************************************************/
 
-/**
- * @ingroup time
- * @{
- */
-
+/** Timestamp Type */
 typedef uint64_t timestamp_t;
 
 struct timespec tic();
@@ -230,24 +182,31 @@ float toc(struct timespec *tic);
 float mtoc(struct timespec *tic);
 float time_now();
 
-/* @} */ /* ingroup time */
-
 /******************************************************************************
- *                                  MATHS
+ * MATHS
  ******************************************************************************/
 
 /**
- * @ingroup maths
- * @{
+ * Mathematical Pi constant (i.e. 3.1415..)
  */
-
 #ifndef M_PI
 #define M_PI (3.14159265358979323846)
 #endif
 
+/**
+ * Min of two numbers, X or Y.
+ */
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
+
+/**
+ * Max of two numbers, X or Y.
+ */
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
-#define SIGN(a, b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
+
+/**
+ * Based on sign of b, return +ve or -ve a.
+ */
+#define SIGN2(a, b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
 
 float randf(float a, float b);
 real_t deg2rad(const real_t d);
@@ -255,23 +214,16 @@ real_t rad2deg(const real_t r);
 int fltcmp(const real_t x, const real_t y);
 real_t pythag(const real_t a, const real_t b);
 real_t lerp(const real_t a, const real_t b, const real_t t);
-void lerp3(const real_t *a, const real_t *b, const real_t t, real_t *x);
+void lerp3(const real_t a[3], const real_t b[3], const real_t t, real_t x[3]);
 real_t sinc(const real_t x);
 real_t mean(const real_t* x, const size_t length);
 real_t median(const real_t* x, const size_t length);
 real_t var(const real_t *x, const size_t length);
 real_t stddev(const real_t *x, const size_t length);
 
-/* @} */ /* ingroup maths */
-
 /******************************************************************************
- *                              LINEAR ALGEBRA
+ * LINEAR ALGEBRA
  ******************************************************************************/
-
-/**
- * @ingroup lm
- * @{
- */
 
 void print_matrix(const char *prefix,
                   const real_t *A,
@@ -360,35 +312,15 @@ void cblas_dot(const real_t *A,
                real_t *C);
 #endif
 
-/* @} */ /* ingroup lm */
-
 /******************************************************************************
- *                                   SVD
+ * SVD
  ******************************************************************************/
 
-/**
- * @ingroup svd
- * @{
- */
-
-int svd(real_t *A, int m, int n, real_t *U, real_t *s, real_t *V_t);
-int svdcomp(real_t *A, int m, int n, real_t *w, real_t *V);
-int pinv(real_t *A, const int m, const int n, real_t *A_inv);
-
-#ifdef USE_LAPACK
-
-#endif
-
-/* @} */ /* ingroup svd */
+int svd(real_t *A, const int m, const int n, real_t *w, real_t *V);
 
 /******************************************************************************
- *                                   CHOL
+ * CHOL
  ******************************************************************************/
-
-/**
- * @ingroup chol
- * @{
- */
 
 void chol(const real_t *A, const size_t n, real_t *L);
 void chol_solve(const real_t *A, const real_t *b, real_t *x, const size_t n);
@@ -400,16 +332,9 @@ void lapack_chol_solve(const real_t *A,
                        const size_t n);
 #endif
 
-/* @} */ /* ingroup chol */
-
 /******************************************************************************
- *                                TRANSFORMS
+ * TRANSFORMS
  ******************************************************************************/
-
-/**
- * @ingroup tf
- * @{
- */
 
 void tf(const real_t params[7], real_t T[4 * 4]);
 void tf_params(const real_t T[4 * 4], real_t params[7]);
@@ -433,16 +358,9 @@ void quat_rmul(const real_t p[4], const real_t q[4], real_t r[4]);
 void quat_mul(const real_t p[4], const real_t q[4], real_t r[4]);
 void quat_delta(const real_t dalpha[3], real_t dq[4]);
 
-/* @} */ /* ingroup tf */
-
 /******************************************************************************
- *                                 IMAGE
+ * IMAGE
  ******************************************************************************/
-
-/**
- * @ingroup image
- * @{
- */
 
 typedef struct image_t {
   int width;
@@ -459,18 +377,11 @@ image_t *image_load(const char *file_path);
 void image_print_properties(const image_t *img);
 void image_free(image_t *img);
 
-/* @} */ /* ingroup image */
-
 /******************************************************************************
- *                                  CV
+ * CV
  ******************************************************************************/
 
-/**
- * @ingroup cv
- * @{
- */
-
-/******************************** RADTAN **************************************/
+/* RADTAN --------------------------------------------------------------------*/
 
 void radtan4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]);
 void radtan4_point_jacobian(const real_t params[4],
@@ -480,7 +391,7 @@ void radtan4_params_jacobian(const real_t params[4],
                              const real_t p[2],
                              real_t J_param[2 * 4]);
 
-/********************************* EQUI ***************************************/
+/* EQUI ----------------------------------------------------------------------*/
 
 void equi4_distort(const real_t params[4], const real_t p[2], real_t p_d[2]);
 void equi4_point_jacobian(const real_t params[4],
@@ -490,7 +401,7 @@ void equi4_params_jacobian(const real_t params[4],
                            const real_t p[2],
                            real_t J_param[2 * 4]);
 
-/******************************** PINHOLE *************************************/
+/* PINHOLE -------------------------------------------------------------------*/
 
 real_t pinhole_focal(const int image_width, const real_t fov);
 void pinhole_project(const real_t params[4], const real_t p_C[3], real_t x[2]);
@@ -500,7 +411,7 @@ void pinhole_params_jacobian(const real_t params[4],
                              const real_t x[2],
                              real_t J[2 * 4]);
 
-/**************************** PINHOLE-RADTAN4 *********************************/
+/* PINHOLE-RADTAN4 -----------------------------------------------------------*/
 
 void pinhole_radtan4_project(const real_t params[8],
                              const real_t p_C[3],
@@ -512,7 +423,7 @@ void pinhole_radtan4_params_jacobian(const real_t params[8],
                                      const real_t p_C[3],
                                      real_t J[2 * 8]);
 
-/***************************** PINHOLE-EQUI4 **********************************/
+/* PINHOLE-EQUI4 -------------------------------------------------------------*/
 
 void pinhole_equi4_project(const real_t params[8],
                            const real_t p_C[3],
@@ -525,13 +436,8 @@ void pinhole_equi4_params_jacobian(const real_t params[8],
                                    real_t J[2 * 8]);
 
 /******************************************************************************
- *                              SENSOR FUSION
+ * SENSOR FUSION
  ******************************************************************************/
-
-/**
- * @ingroup sf
- * @{
- */
 
 /* POSE --------------------------------------------------------------------- */
 
@@ -760,7 +666,5 @@ void solver_setup(solver_t *solver);
 void solver_print(solver_t *solver);
 int solver_eval(solver_t *solver);
 void solver_optimize(solver_t *solver);
-
-/* @} */ /* ingroup sf */
 
 #endif // ZERO_H

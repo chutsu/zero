@@ -416,43 +416,7 @@ int test_check_jacobian() {
   return 0;
 }
 
-/* int test_svd() { */
-/*   real_t A[M * N]; */
-/*   real_t A_orig[M * N]; */
-/*   for (int i = 0; i < (M * N); i++) { */
-/*     A[i] = randf(0.0, 1.0); */
-/*     A_orig[i] = A[i]; */
-/*   } */
-/*  */
-/*   struct timespec t = tic(); */
-/*   real_t U[M * M]; */
-/*   real_t d[N]; */
-/*   real_t V_t[N * N]; */
-/*   int retval = svd(A, M, N, U, d, V_t); */
-/*   printf("time taken: %fs\n", toc(&t)); */
-/*   if (retval != 0) { */
-/*     printf("The algorithm computing SVD failed to converge.\n"); */
-/*     exit(1); */
-/*   } */
-/*  */
-/*   #<{(| A = U * S * V_t |)}># */
-/*   real_t S[N * N]; */
-/*   mat_diag_set(S, N, N, d); */
-/*  */
-/*   real_t US[M * N]; */
-/*   real_t USV[M * M]; */
-/*   dot(U, M, N, S, N, N, US); */
-/*   dot(US, M, N, V_t, N, N, USV); */
-/*  */
-/*   print_matrix("A", A_orig, M, N); */
-/*   printf("\n"); */
-/*   print_matrix("USV'", USV, M, N); */
-/*   MU_CHECK(mat_equals(A_orig, USV, M, N, 1e-5) == 0); */
-/*  */
-/*   return 0; */
-/* } */
-
-int test_svdcomp() {
+int test_svd() {
   real_t A[M * N];
   real_t A_orig[M * N];
   for (int i = 0; i < (M * N); i++) {
@@ -463,7 +427,7 @@ int test_svdcomp() {
   real_t d[N];
   real_t V[N * N];
   struct timespec t = tic();
-  int retval = svdcomp(A, M, N, d, V);
+  int retval = svd(A, M, N, d, V);
   printf("time taken: %fs\n", toc(&t));
   if (retval != 0) {
     printf("The algorithm computing SVD failed to converge.\n");
@@ -488,30 +452,6 @@ int test_svdcomp() {
 
   return 0;
 }
-
-/* int test_pinv() { */
-/*   real_t A[M * N]; */
-/*   real_t A_orig[M * N]; */
-/*   for (int i = 0; i < (M * N); i++) { */
-/*     A[i] = randf(0.0, 1.0); */
-/*     A_orig[i] = A[i]; */
-/*   } */
-/*  */
-/*   struct timespec t = tic(); */
-/*   real_t A_inv[M * N]; */
-/*   int retval = pinv(A, M, N, A_inv); */
-/*   printf("time taken: %fs\n", toc(&t)); */
-/*   MU_CHECK(retval == 0); */
-/*  */
-/*   real_t AiA[M * N]; */
-/*   dot(A_inv, M, N, A_orig, M, N, AiA); */
-/*  */
-/*   real_t Imn[M * N]; */
-/*   eye(Imn, M, N); */
-/*   MU_CHECK(mat_equals(AiA, Imn, M, N, 1e-5) == 0); */
-/*  */
-/*   return 0; */
-/* } */
 
 int test_chol() {
   /* clang-format off */
@@ -1332,9 +1272,7 @@ void test_suite() {
   MU_ADD_TEST(test_check_jacobian);
 
   /* SVD */
-  /* MU_ADD_TEST(test_svd); */
-  MU_ADD_TEST(test_svdcomp);
-  /* MU_ADD_TEST(test_pinv); */
+  MU_ADD_TEST(test_svd);
 
   /* CHOL */
   MU_ADD_TEST(test_chol);
